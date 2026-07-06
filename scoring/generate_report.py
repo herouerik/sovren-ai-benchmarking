@@ -13,10 +13,32 @@ from datetime import datetime
 from pathlib import Path
 
 
-def aggregate(raw: list[dict]) -> dict:
+def load_config_models(config_path: Path) -> list[str]:
+    """Extract ordered model list from config.yaml without requiring PyYAML."""
+    models = []
+    in_models = False
+    try:
+        for line in config_path.read_text().splitlines():
+            stripped = line.strip()
+            if stripped == "models:":
+                in_models = True
+                continue
+            if in_models:
+                if stripped.startswith("- "):
+                    m = stripped[2:].split("#")[0].strip()
+                    if m:
+                        models.append(m)
+                elif stripped and not stripped.startswith("#"):
+                    in_models = False
+    except Exception:
+        pass
+    return models
+
+
+def aggregate(raw: list[dict], all_models: list[str] | None = None) -> dict:
     """Aggregate per-sample records into a dashboard-ready payload."""
-    models = sorted(set(r["model"] for r in raw))
-    benchmarks = list(dict.fromkeys(r["benchmark"] for r in raw))  # preserve order
+    models = list(dict.fromkeys(r["model"] for r in raw))  # run order
+    benchmarks = [b for b in dict.fromkeys(r["benchmark"] for r in raw) if b != "speed"]
 
     scores: dict[str, dict[str, float]] = {}
     speeds: dict[str, float] = {}
@@ -33,15 +55,18 @@ def aggregate(raw: list[dict]) -> dict:
 
     run_id = raw[0].get("run_id", "UNKNOWN") if raw else "UNKNOWN"
 
-    return {
+    payload: dict = {
         "run_id": run_id,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "total_samples": len(raw),
+        "total_samples": len([r for r in raw if r.get("benchmark") != "speed"]),
         "models": models,
         "benchmarks": benchmarks,
         "scores": scores,
         "speeds": speeds,
     }
+    if all_models:
+        payload["all_models"] = all_models
+    return payload
 
 
 def find_template() -> Path:
@@ -63,6 +88,7 @@ def main() -> None:
     parser.add_argument("input", help="Path to results JSON file")
     parser.add_argument("--output", default=None, help="Output HTML path (default: same dir as input, report.html)")
     parser.add_argument("--template", default=None, help="Path to dashboard HTML template")
+    parser.add_argument("--config", default=None, help="Path to config.yaml (injects all_models for status markers)")
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -72,7 +98,11 @@ def main() -> None:
     if not isinstance(raw, list):
         raise ValueError("Results JSON must be a list of per-sample records.")
 
-    data = aggregate(raw)
+    # Auto-detect config.yaml if not specified
+    config_path = Path(args.config) if args.config else (input_path.parent.parent / "config.yaml")
+    all_models = load_config_models(config_path) if config_path.exists() else []
+
+    data = aggregate(raw, all_models=all_models or None)
 
     template_path = Path(args.template) if args.template else find_template()
     with open(template_path) as f:

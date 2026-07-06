@@ -97,8 +97,45 @@ body::after{
 /* DROPZONE */
 .dropzone{border:1px dashed var(--border);padding:16px 10px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
 .dropzone:hover,.dropzone.drag-over{border-color:var(--accent);background:var(--accentA)}
+.dropzone-sm{padding:8px 10px}
 .drop-text{font-size:10px;letter-spacing:.08em;color:var(--dim);margin-bottom:3px}
+.dropzone-sm .drop-text{font-size:9px;margin-bottom:0}
 .drop-sub{font-size:9px;color:var(--muted)}
+
+/* LOADER ROWS */
+.loader-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.loader-item:last-of-type{margin-bottom:0}
+.loader-tag{
+  font-size:7px;letter-spacing:.12em;text-transform:uppercase;
+  padding:2px 5px;border:1px solid;flex-shrink:0;width:54px;text-align:center
+}
+.tag-current{color:#2d8a5a;border-color:#2d8a5a}
+.tag-prev   {color:#9e8818;border-color:#9e8818}
+.tag-config {color:var(--muted);border-color:var(--muted)}
+
+/* RUN STATUS */
+.rank-card{position:relative}
+.s-bar{position:absolute;top:0;left:0;bottom:0;width:3px;pointer-events:none}
+.s-current  .s-bar{background:#2d8a5a}
+.s-previous .s-bar{background:#9e8818}
+.s-pending  .s-bar{background:var(--border)}
+.rank-card.s-pending{opacity:.38}
+.rank-score-pending{color:var(--muted) !important}
+.pending-label{color:var(--border) !important}
+
+.bench-table tbody tr.s-current  .td-model{box-shadow:inset 3px 0 0 #2d8a5a}
+.bench-table tbody tr.s-previous .td-model{box-shadow:inset 3px 0 0 #9e8818}
+.bench-table tbody tr.s-pending  .td-model{box-shadow:inset 3px 0 0 var(--border)}
+.bench-table tbody tr.s-pending{opacity:.32;pointer-events:none}
+
+/* STATUS PILL (header) */
+.status-pill{display:flex;align-items:center;gap:5px}
+.status-pill .s-dot{width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.status-pill.live .s-dot{background:#2d8a5a;animation:blink 2.4s ease-in-out infinite}
+.status-pill.done .s-dot{background:#2d8a5a}
+
+/* speed rows for pending */
+.speed-row.s-pending{opacity:.25}
 
 /* TOOLTIP */
 #tip{
@@ -125,6 +162,11 @@ body::after{
     <div class="meta-cell"><span class="pulse"></span><span class="meta-label">MODELS</span><span class="meta-value" id="run-models">—</span></div>
     <div class="meta-cell"><span class="meta-label">BENCHMARKS</span><span class="meta-value" id="run-benchmarks">—</span></div>
     <div class="meta-cell"><span class="meta-label">SAMPLES</span><span class="meta-value" id="run-samples">—</span></div>
+    <div class="meta-cell" id="status-cell" style="display:none">
+      <span id="status-pill" class="status-pill"><span class="s-dot"></span></span>
+      <span class="meta-value" id="status-text"></span>
+      <span class="meta-label">STATUS</span>
+    </div>
   </div>
   <div class="topbar-brand">SOVREN&thinsp;/&thinsp;BENCHMARK</div>
 </div>
@@ -155,12 +197,22 @@ body::after{
       <div id="speed-bars"></div>
     </div>
     <div class="sb-block">
-      <div class="sb-label">LOAD RESULTS</div>
-      <div class="dropzone" id="dropzone">
-        <div class="drop-text">results/*.json</div>
-        <div class="drop-sub">drag &amp; drop or click to browse</div>
+      <div class="sb-label">LOAD DATA</div>
+      <div class="loader-item">
+        <span class="loader-tag tag-current">CURRENT</span>
+        <div class="dropzone dropzone-sm" id="dz-current"><div class="drop-text">results/*.json</div></div>
       </div>
-      <input type="file" id="file-input" accept=".json" style="display:none">
+      <div class="loader-item">
+        <span class="loader-tag tag-prev">BASELINE</span>
+        <div class="dropzone dropzone-sm" id="dz-prev"><div class="drop-text">previous run (optional)</div></div>
+      </div>
+      <div class="loader-item">
+        <span class="loader-tag tag-config">CONFIG</span>
+        <div class="dropzone dropzone-sm" id="dz-config"><div class="drop-text">config.yaml (optional)</div></div>
+      </div>
+      <input type="file" id="fi-current" accept=".json" style="display:none">
+      <input type="file" id="fi-prev"    accept=".json" style="display:none">
+      <input type="file" id="fi-config"  accept=".yaml,.yml" style="display:none">
     </div>
   </aside>
 </div>
@@ -170,6 +222,7 @@ body::after{
 <script>
 // __INJECT_DATA__
 
+// Sample shows all three states: green (run), yellow (previous), gray (pending)
 const SAMPLE_DATA = {
   run_id: 'SAMPLE-20260702', timestamp: '2026-07-02 14:30',
   total_samples: 1024, is_sample: true,
@@ -182,13 +235,30 @@ const SAMPLE_DATA = {
     'qwen3-coder':             {mmlu:.58,arc:.55,gsm8k:.71,humaneval:.84,mbpp:.87,spider:.76,philosophical:.41},
     'devstral-small-2':        {mmlu:.61,arc:.58,gsm8k:.66,humaneval:.81,mbpp:.84,spider:.72,philosophical:.48}
   },
-  speeds: {'qwen3:32b':18.4,'gemma4:31b-mlx':32.1,'gemma4-12b-agentic-mtp':52.8,'qwen3-coder':38.7,'devstral-small-2':45.2}
+  speeds: {'qwen3:32b':18.4,'gemma4:31b-mlx':32.1,'gemma4-12b-agentic-mtp':52.8,'qwen3-coder':38.7,'devstral-small-2':45.2},
+  all_models: [
+    'qwen3:32b','gemma4:31b-mlx','gemma4-12b-agentic-mtp','qwen3-coder','devstral-small-2',
+    'nemotron-3-nano:30b','qwen3-32b-nothink:latest','llama3.2:3b','llama3.1:8b'
+  ]
+};
+// Sample previous-run data (two models only in older run → yellow state in demo)
+const SAMPLE_PREV = {
+  models: ['codestral:22b','gemma4:26b-mlx'],
+  benchmarks: ['mmlu','arc','gsm8k','humaneval','mbpp','spider','philosophical'],
+  scores: {
+    'codestral:22b':  {mmlu:.64,arc:.61,gsm8k:.72,humaneval:.78,mbpp:.81,spider:.68,philosophical:.52},
+    'gemma4:26b-mlx': {mmlu:.76,arc:.71,gsm8k:.79,humaneval:.70,mbpp:.66,spider:.62,philosophical:.69}
+  },
+  speeds: {'codestral:22b':31.4,'gemma4:26b-mlx':38.2}
 };
 
-let D = (typeof BENCHMARK_DATA !== 'undefined') ? BENCHMARK_DATA : SAMPLE_DATA;
+/* ── STATE ────────────────────────────────────── */
+let D    = (typeof BENCHMARK_DATA !== 'undefined') ? BENCHMARK_DATA : SAMPLE_DATA;
+let PREV = D.is_sample ? SAMPLE_PREV : null;
+let CONFIG_MODELS = D.all_models ? [...D.all_models] : [];
 
 const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.'};
-const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a'];
+const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a','#7ad4c8','#d4a0c8'];
 
 const BENCH_TIPS = {
   overall: {
@@ -225,13 +295,38 @@ const BENCH_TIPS = {
   }
 };
 
+/* ── DATA HELPERS ─────────────────────────────── */
+function getBenches()    { return D.benchmarks || PREV?.benchmarks || []; }
+function getPrimScores(m){ return D.scores?.[m] || null; }
+function getPrevScores(m){ return PREV?.scores?.[m] || null; }
+function getScores(m)    { return getPrimScores(m) || getPrevScores(m); }
+function getScore(m, b)  { return D.scores?.[m]?.[b] ?? PREV?.scores?.[m]?.[b] ?? null; }
+function getSpeed(m)     { return D.speeds?.[m] || PREV?.speeds?.[m] || null; }
+
 function overallOf(m) {
-  const v = D.benchmarks.map(b => D.scores[m][b] ?? 0);
-  return v.reduce((a,b)=>a+b,0) / v.length;
+  const sc = getScores(m);
+  if (!sc) return -1;
+  const benches = getBenches();
+  const vals = benches.map(b => sc[b] ?? 0);
+  return vals.reduce((a,b)=>a+b,0) / vals.length;
 }
-function sorted() { return [...D.models].sort((a,b)=>overallOf(b)-overallOf(a)); }
+
+function modelStatus(m) {
+  if (getPrimScores(m))  return 'current';
+  if (getPrevScores(m))  return 'previous';
+  return 'pending';
+}
+
+function allModels() {
+  const primary  = D.models || [];
+  const prev     = (PREV?.models || []).filter(m => !primary.includes(m));
+  const config   = CONFIG_MODELS.filter(m => !primary.includes(m) && !(PREV?.models||[]).includes(m));
+  const ranked   = [...primary].sort((a,b) => overallOf(b) - overallOf(a));
+  return [...ranked, ...prev, ...config];
+}
 
 function scoreBg(s) {
+  if (s === null || s === undefined) return 'transparent';
   const op = (0.06 + s * 0.50).toFixed(2);
   const rgb = s >= .75 ? '45,138,90' : s >= .50 ? '165,140,28' : '138,46,46';
   return `rgba(${rgb},${op})`;
@@ -243,20 +338,19 @@ function hexRgb(hex) {
 
 let activeModel = null;
 
-/* TOOLTIP */
-const tipEl = document.getElementById('tip');
+/* ── TOOLTIP ──────────────────────────────────── */
+const tipEl    = document.getElementById('tip');
 const tipTitle = tipEl.querySelector('.tip-title');
-const tipBody = tipEl.querySelector('.tip-body');
+const tipBody  = tipEl.querySelector('.tip-body');
 
 function showTip(e) {
-  const key = e.currentTarget.dataset.bench;
-  const tip = BENCH_TIPS[key];
+  const tip = BENCH_TIPS[e.currentTarget.dataset.bench];
   if (!tip) return;
   tipTitle.textContent = tip.title;
-  tipBody.textContent = tip.body;
+  tipBody.textContent  = tip.body;
   const rect = e.currentTarget.getBoundingClientRect();
   tipEl.style.left = rect.left + 'px';
-  tipEl.style.top = (rect.bottom + 5) + 'px';
+  tipEl.style.top  = (rect.bottom + 5) + 'px';
   tipEl.classList.add('visible');
   requestAnimationFrame(() => {
     const tr = tipEl.getBoundingClientRect();
@@ -279,113 +373,168 @@ function makeTipTh(key, label, cls) {
   return th;
 }
 
-/* META */
+/* ── META ─────────────────────────────────────── */
 function renderMeta() {
-  document.getElementById('run-id').textContent = D.run_id;
-  document.getElementById('run-date').textContent = D.timestamp;
-  document.getElementById('run-models').textContent = D.models.length;
-  document.getElementById('run-benchmarks').textContent = D.benchmarks.length;
+  document.getElementById('run-id').textContent   = D.run_id || '—';
+  document.getElementById('run-date').textContent = D.timestamp || '—';
+  const doneCount = (D.models||[]).length;
+  document.getElementById('run-models').textContent =
+    CONFIG_MODELS.length ? `${doneCount} / ${CONFIG_MODELS.length}` : String(doneCount);
+  document.getElementById('run-benchmarks').textContent = getBenches().length || '—';
   document.getElementById('run-samples').textContent = (D.total_samples||0).toLocaleString();
   document.getElementById('sample-banner').style.display = D.is_sample ? 'flex' : 'none';
+
+  // Status cell
+  const cell  = document.getElementById('status-cell');
+  const pill  = document.getElementById('status-pill');
+  const stext = document.getElementById('status-text');
+  if (D.is_sample) { cell.style.display = 'none'; return; }
+  cell.style.display = 'flex';
+  const done     = doneCount;
+  const expected = CONFIG_MODELS.length || done;
+  if (CONFIG_MODELS.length && done < CONFIG_MODELS.length) {
+    pill.className = 'status-pill live';
+    stext.textContent = `${done} / ${CONFIG_MODELS.length}`;
+  } else {
+    pill.className = 'status-pill done';
+    stext.textContent = 'COMPLETE';
+  }
 }
 
-/* RANK STRIP */
+/* ── RANK STRIP ───────────────────────────────── */
 function renderStrip() {
   const el = document.getElementById('rank-strip');
   el.innerHTML = '';
-  sorted().forEach((m, i) => {
-    const ov = overallOf(m);
-    const card = document.createElement('div');
-    card.className = 'rank-card'; card.dataset.model = m;
-    card.innerHTML =
-      `<div class="rank-score">${(ov*100).toFixed(1)}</div>` +
+  allModels().forEach(m => {
+    const status = modelStatus(m);
+    const ov     = overallOf(m);
+    const spd    = getSpeed(m);
+    const card   = document.createElement('div');
+    card.className   = `rank-card s-${status}`;
+    card.dataset.model = m;
+
+    const bar = document.createElement('div');
+    bar.className = 's-bar';
+    card.appendChild(bar);
+
+    card.innerHTML +=
+      `<div class="rank-score${ov < 0 ? ' rank-score-pending' : ''}">${ov >= 0 ? (ov*100).toFixed(1) : '—'}</div>` +
       `<div class="rank-model">${m}</div>` +
-      (D.speeds[m] ? `<div class="rank-speed">${D.speeds[m].toFixed(1)} tok/s</div>` : '');
-    card.addEventListener('click', () => setActive(activeModel===m ? null : m));
+      (spd  ? `<div class="rank-speed">${spd.toFixed(1)} tok/s</div>`
+             : status === 'pending' ? `<div class="rank-speed pending-label">not run</div>` : '');
+
+    if (status !== 'pending')
+      card.addEventListener('click', () => setActive(activeModel===m ? null : m));
     el.appendChild(card);
   });
 }
 
-/* TABLE */
+/* ── TABLE ────────────────────────────────────── */
 function renderTable() {
   const thead = document.getElementById('bench-thead');
   const tbody = document.getElementById('bench-tbody');
   thead.innerHTML = ''; tbody.innerHTML = '';
-  const models = sorted();
+  const benches = getBenches();
 
   const hr = document.createElement('tr');
-  const thModel = document.createElement('th');
-  thModel.className = 'th-model'; thModel.textContent = 'MODEL';
-  hr.appendChild(thModel);
+  const thM = document.createElement('th');
+  thM.className = 'th-model'; thM.textContent = 'MODEL';
+  hr.appendChild(thM);
   hr.appendChild(makeTipTh('overall', 'OVERALL', 'th-overall'));
-  D.benchmarks.forEach(b => hr.appendChild(makeTipTh(b, BENCH_LABELS[b]||b.toUpperCase())));
+  benches.forEach(b => hr.appendChild(makeTipTh(b, BENCH_LABELS[b]||b.toUpperCase())));
   thead.appendChild(hr);
 
-  models.forEach((m, i) => {
-    const color = COLORS[i % COLORS.length];
-    const ov = overallOf(m);
-    const tr = document.createElement('tr');
+  allModels().forEach((m, i) => {
+    const status    = modelStatus(m);
+    const color     = COLORS[i % COLORS.length];
+    const ov        = overallOf(m);
+    const isPending = status === 'pending';
+    const tr        = document.createElement('tr');
     tr.dataset.model = m;
-    tr.innerHTML =
-      `<td class="td-model"><div class="model-row">` +
-        `<span class="model-dot" style="background:${color}"></span>` +
-        `<span class="model-name">${m}</span></div></td>` +
-      `<td class="td-overall" style="background:${scoreBg(ov)}">` +
-        `<span class="overall-num">${(ov*100).toFixed(1)}</span></td>`;
-    D.benchmarks.forEach(b => {
-      const s = D.scores[m][b] ?? 0;
+    tr.className     = `s-${status}`;
+
+    // Model cell
+    const tdM = document.createElement('td');
+    tdM.className = 'td-model';
+    tdM.innerHTML = `<div class="model-row">
+      <span class="model-dot" style="background:${color}"></span>
+      <span class="model-name">${m}</span></div>`;
+    tr.appendChild(tdM);
+
+    // Overall cell
+    const tdOv = document.createElement('td');
+    tdOv.className = 'td-overall';
+    if (ov >= 0) {
+      tdOv.style.background = scoreBg(ov);
+      tdOv.innerHTML = `<span class="overall-num">${(ov*100).toFixed(1)}</span>`;
+    } else {
+      tdOv.innerHTML = `<span class="overall-num" style="color:var(--border);font-size:13px">—</span>`;
+    }
+    tr.appendChild(tdOv);
+
+    // Benchmark cells
+    benches.forEach(b => {
+      const s  = getScore(m, b);
       const td = document.createElement('td');
       td.className = 'td-score';
-      td.style.background = scoreBg(s);
-      td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>`;
+      if (s !== null) {
+        td.style.background = scoreBg(s);
+        td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>`;
+      } else {
+        td.innerHTML = `<span class="score-num" style="color:var(--border)">—</span>`;
+      }
       tr.appendChild(td);
     });
-    tr.addEventListener('mouseenter', () => setActive(m));
-    tr.addEventListener('mouseleave', () => setActive(null));
+
+    if (!isPending) {
+      tr.addEventListener('mouseenter', () => setActive(m));
+      tr.addEventListener('mouseleave', () => setActive(null));
+    }
     tbody.appendChild(tr);
   });
 }
 
-/* SPEED */
+/* ── SPEED ────────────────────────────────────── */
 function renderSpeed() {
   const wrap = document.getElementById('speed-bars');
   wrap.innerHTML = '';
-  const models = sorted();
-  const max = Math.max(...models.map(m => D.speeds[m]||0));
+  const models = allModels();
+  const max    = Math.max(...models.map(m => getSpeed(m)||0), 1);
   models.forEach((m, i) => {
-    const spd = D.speeds[m] || 0;
-    const pct = max > 0 ? (spd/max*100).toFixed(1) : 0;
+    const spd = getSpeed(m);
+    const pct = spd ? (spd/max*100).toFixed(1) : 0;
     const row = document.createElement('div');
-    row.className = 'speed-row'; row.dataset.model = m;
+    row.className    = `speed-row s-${modelStatus(m)}`;
+    row.dataset.model = m;
     row.innerHTML =
       `<span class="speed-model">${m}</span>` +
       `<div class="speed-track"><div class="speed-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div>` +
-      `<span class="speed-val">${spd.toFixed(1)}</span>`;
+      `<span class="speed-val">${spd ? spd.toFixed(1) : '—'}</span>`;
     wrap.appendChild(row);
   });
 }
 
-/* RADAR */
+/* ── RADAR ────────────────────────────────────── */
 function drawRadar(hl) {
   const canvas = document.getElementById('radar');
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, R = W*.36;
-  const B = D.benchmarks, N = B.length;
-  const models = sorted();
+  const B = getBenches(), N = B.length;
+  // Radar only for models with primary scores (excludes pending/prev-only)
+  const models = allModels().filter(m => getPrimScores(m));
 
   function pt(i, r) {
     const a = (i/N)*Math.PI*2 - Math.PI/2;
     return [cx + Math.cos(a)*r, cy + Math.sin(a)*r];
   }
-
   ctx.clearRect(0, 0, W, H);
+  if (!N) return;
 
   [.25,.5,.75,1].forEach(t => {
     ctx.beginPath();
     B.forEach((_, i) => { const [x,y]=pt(i,R*t); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
     ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1; ctx.stroke();
   });
-
   B.forEach((b, i) => {
     const [x1,y1]=pt(i,R*.06), [x2,y2]=pt(i,R);
     ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
@@ -395,30 +544,29 @@ function drawRadar(hl) {
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText((BENCH_LABELS[b]||b).toUpperCase(), lx, ly);
   });
-
   models.forEach((m, i) => {
-    const dim = hl && hl !== m;
+    const dim   = hl && hl !== m;
     const [r,g,b] = hexRgb(COLORS[i%COLORS.length]);
     ctx.beginPath();
     B.forEach((bk, j) => {
-      const s = D.scores[m][bk] ?? 0;
+      const s     = D.scores[m][bk] ?? 0;
       const [x,y] = pt(j, R*s);
       j===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
     });
     ctx.closePath();
-    ctx.fillStyle = `rgba(${r},${g},${b},${dim?.02:.09})`; ctx.fill();
-    ctx.strokeStyle = `rgba(${r},${g},${b},${dim?.1:.75})`; ctx.lineWidth = dim?1:1.5; ctx.stroke();
+    ctx.fillStyle   = `rgba(${r},${g},${b},${dim?.02:.09})`; ctx.fill();
+    ctx.strokeStyle = `rgba(${r},${g},${b},${dim?.1:.75})`; ctx.lineWidth=dim?1:1.5; ctx.stroke();
   });
 }
 
-/* LEGEND */
+/* ── LEGEND ───────────────────────────────────── */
 function renderLegend() {
   const el = document.getElementById('radar-legend');
   el.innerHTML = '';
-  sorted().forEach((m, i) => {
+  allModels().filter(m => getPrimScores(m)).forEach((m, i) => {
     const item = document.createElement('div');
-    item.className = 'legend-item'; item.dataset.model = m;
-    item.innerHTML =
+    item.className    = 'legend-item'; item.dataset.model = m;
+    item.innerHTML    =
       `<span class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></span>` +
       `<span class="legend-name">${m}</span>`;
     item.addEventListener('click', () => setActive(activeModel===m ? null : m));
@@ -426,7 +574,7 @@ function renderLegend() {
   });
 }
 
-/* ACTIVE MODEL */
+/* ── ACTIVE MODEL ─────────────────────────────── */
 function setActive(model) {
   activeModel = model;
   document.querySelectorAll('.rank-card').forEach(el =>
@@ -440,16 +588,16 @@ function setActive(model) {
   drawRadar(model);
 }
 
-/* FILE LOADER */
+/* ── FILE PROCESSING ──────────────────────────── */
 function processRaw(raw) {
-  const models = [...new Set(raw.map(r=>r.model))];
-  const benchmarks = [...new Set(raw.map(r=>r.benchmark))];
+  const models     = [...new Set(raw.map(r=>r.model))];
+  const benchmarks = [...new Set(raw.map(r=>r.benchmark).filter(b => b !== 'speed'))];
   const scores = {}, speeds = {};
   models.forEach(m => {
     scores[m] = {};
     const mrows = raw.filter(r=>r.model===m);
-    const toks = mrows.filter(r=>r.tok_per_sec>0).map(r=>r.tok_per_sec);
-    speeds[m] = toks.length ? toks.reduce((a,b)=>a+b,0)/toks.length : 0;
+    const toks  = mrows.filter(r=>r.tok_per_sec>0).map(r=>r.tok_per_sec);
+    speeds[m]   = toks.length ? toks.reduce((a,b)=>a+b,0)/toks.length : 0;
     benchmarks.forEach(b => {
       const brows = mrows.filter(r=>r.benchmark===b);
       if (brows.length) scores[m][b] = brows.reduce((a,r)=>a+r.score,0)/brows.length;
@@ -458,35 +606,91 @@ function processRaw(raw) {
   return {
     run_id: raw[0]?.run_id || 'LOADED',
     timestamp: new Date().toISOString().slice(0,16).replace('T',' '),
-    total_samples: raw.length, models, benchmarks, scores, speeds
+    total_samples: raw.filter(r=>r.benchmark!=='speed').length,
+    models, benchmarks, scores, speeds
   };
 }
 
-function rerender(data) {
-  D = data; activeModel = null;
+function parseConfigModels(text) {
+  const models = [];
+  let inModels = false;
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed === 'models:') { inModels = true; continue; }
+    if (inModels) {
+      if (trimmed.startsWith('- ')) {
+        const m = trimmed.slice(2).replace(/#.*/, '').trim();
+        if (m) models.push(m);
+      } else if (trimmed && !trimmed.startsWith('#')) {
+        inModels = false;
+      }
+    }
+  }
+  return models;
+}
+
+/* ── LOADERS ──────────────────────────────────── */
+function rerender() {
+  activeModel = null;
   renderMeta(); renderStrip(); renderTable(); renderSpeed(); drawRadar(null); renderLegend();
 }
 
-function loadFile(file) {
+function loadPrimary(file) {
   const reader = new FileReader();
   reader.onload = e => {
-    try { rerender(processRaw(JSON.parse(e.target.result))); }
-    catch(err) { console.error('Parse error:', err); }
+    try {
+      const raw = JSON.parse(e.target.result);
+      D = Array.isArray(raw) ? processRaw(raw) : raw;
+      if (!CONFIG_MODELS.length && D.all_models) CONFIG_MODELS = [...D.all_models];
+      document.getElementById('dz-current').querySelector('.drop-text').textContent = file.name;
+      rerender();
+    } catch(err) { console.error('Primary load error:', err); }
   };
   reader.readAsText(file);
 }
 
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('file-input');
-dropzone.addEventListener('click', () => fileInput.click());
-dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
-dropzone.addEventListener('drop', e => {
-  e.preventDefault(); dropzone.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+function loadPrev(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const raw = JSON.parse(e.target.result);
+      PREV = Array.isArray(raw) ? processRaw(raw) : raw;
+      document.getElementById('dz-prev').querySelector('.drop-text').textContent = file.name;
+      rerender();
+    } catch(err) { console.error('Baseline load error:', err); }
+  };
+  reader.readAsText(file);
+}
 
-/* INIT */
-renderMeta(); renderStrip(); renderTable(); renderSpeed(); drawRadar(null); renderLegend();
+function loadConfig(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    CONFIG_MODELS = parseConfigModels(e.target.result);
+    document.getElementById('dz-config').querySelector('.drop-text').textContent =
+      `${CONFIG_MODELS.length} models`;
+    rerender();
+  };
+  reader.readAsText(file);
+}
+
+function wireDropzone(dzId, fiId, handler) {
+  const dz = document.getElementById(dzId);
+  const fi = document.getElementById(fiId);
+  if (!dz || !fi) return;
+  dz.addEventListener('click',     () => fi.click());
+  dz.addEventListener('dragover',  e  => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', ()  => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handler(e.dataTransfer.files[0]);
+  });
+  fi.addEventListener('change', e => { if (e.target.files[0]) handler(e.target.files[0]); });
+}
+
+wireDropzone('dz-current', 'fi-current', loadPrimary);
+wireDropzone('dz-prev',    'fi-prev',    loadPrev);
+wireDropzone('dz-config',  'fi-config',  loadConfig);
+
+/* ── INIT ─────────────────────────────────────── */
+rerender();
 </script>
