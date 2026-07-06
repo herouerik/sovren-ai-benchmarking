@@ -5,11 +5,25 @@ ollama:
   max_tokens: 2048
 
 models:
-  - devstral-small-2
-  - gemma4:31b-mlx
+  # Large frontier models
   - qwen3:32b
-  - qwen3-coder
-  - gemma4-12b-agentic-mtp
+  - qwen3-32b-nothink:latest
+  - gemma4:31b-mlx
+  - gemma4:26b-mlx
+  - nemotron-3-nano:30b
+  - nemotron-cascade-2:latest
+  # Mid-size general models
+  - gemma4-12b-agentic-mtp:latest
+  - gemma4-12b-agentic:latest
+  - codestral:22b
+  # Coding specialists
+  - devstral-small-2:latest
+  - qwen3-coder:latest
+  - qwen2.5-coder:32b
+  - qwen2.5-coder:7b
+  # Small / fast baselines
+  - llama3.1:8b
+  - llama3.2:3b
 
 judge_model: "qwen3:32b"
 
