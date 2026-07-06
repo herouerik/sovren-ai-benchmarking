@@ -153,8 +153,13 @@ def main():
             n_samples = args.n_samples or bcfg.get("n_samples", 20)
             console.print(f"  [yellow]Running {bench_name}[/yellow] ({n_samples} samples)...")
 
+            def _on_sample(i, total, r):
+                mark = "[green]✓[/green]" if r.get("passed") else "[red]✗[/red]"
+                tps = f"  {r['tok_per_sec']:.1f} t/s" if r.get("tok_per_sec") else ""
+                console.print(f"    {mark} {i}/{total}{tps}", highlight=False)
+
             try:
-                results = bench.run(model=model, n_samples=n_samples)
+                results = bench.run(model=model, n_samples=n_samples, on_sample=_on_sample)
                 passed = sum(1 for r in results if r.get("passed"))
                 score = sum(r.get("score", 0) for r in results) / max(len(results), 1)
                 console.print(f"  [green]✓[/green] {bench_name}: {passed}/{len(results)} passed ({score:.1%})")
