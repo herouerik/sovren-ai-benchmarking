@@ -21,8 +21,20 @@ class BaseBenchmark(ABC):
     def format_prompt(self, sample: dict) -> str:
         return sample["prompt"]
 
+    # Set to True in subclasses where extended reasoning is the point (e.g. philosophical).
+    # For all others, /no_think suppresses qwen3's internal thinking chain which can
+    # burn thousands of tokens per sample and make runs impractically slow.
+    allow_thinking: bool = False
+
     def system_prompt(self) -> str | None:
         return None
+
+    def _effective_system(self) -> str | None:
+        base = self.system_prompt()
+        if self.allow_thinking:
+            return base
+        tag = "/no_think"
+        return f"{base}\n{tag}" if base else tag
 
     def run(self, model: str, n_samples: int = None, on_sample=None) -> list[dict]:
         samples = self.load_samples()
@@ -35,7 +47,7 @@ class BaseBenchmark(ABC):
             response = self.client.complete(
                 model=model,
                 prompt=prompt,
-                system=self.system_prompt(),
+                system=self._effective_system(),
                 max_tokens=self.config.get("max_tokens", 2048),
             )
             scoring = self.score(sample, response["content"]) if not response["error"] else {"passed": False, "score": 0.0}

@@ -18,6 +18,7 @@ PROMPTS = [
 
 class PhilosophicalBenchmark(BaseBenchmark):
     name = "philosophical"
+    allow_thinking = True
 
     def load_samples(self) -> list[dict]:
         return PROMPTS
