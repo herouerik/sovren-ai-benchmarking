@@ -44,8 +44,8 @@ def main():
         print("\nBenchmarks using failed datasets will be skipped during runs.")
         sys.exit(1)
     else:
-        print("All datasets cached. Benchmark runs will now use local cache only.")
-        print("The HF_DATASETS_OFFLINE=1 env var is set automatically by run_benchmark.py.")
+        Path(".datasets_ready").write_text("ok")
+        print("All datasets cached. Future runs will use local cache only (no HF requests).")
 
 if __name__ == "__main__":
     main()
