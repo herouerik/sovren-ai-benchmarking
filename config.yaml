@@ -1,0 +1,59 @@
+ollama:
+  base_url: "http://localhost:11434/v1"
+  api_key: "ollama"
+  timeout: 120
+  max_tokens: 2048
+
+models:
+  - devstral-small-2
+  - gemma4:31b-mlx
+  - qwen3:32b
+  - qwen3-coder
+  - gemma4-12b-agentic-mtp
+
+judge_model: "qwen3:32b"
+
+benchmarks:
+  reasoning:
+    enabled: true
+    dataset: "cais/mmlu"
+    subjects:
+      - "abstract_algebra"
+      - "logical_fallacies"
+      - "formal_logic"
+      - "high_school_mathematics"
+      - "philosophy"
+    n_samples: 20
+
+  math:
+    enabled: true
+    dataset: "openai/gsm8k"
+    split: "test"
+    n_samples: 50
+
+  coding:
+    enabled: true
+    datasets:
+      - "openai/openai_humaneval"
+      - "google-research-datasets/mbpp"
+    n_samples: 30
+    execution_timeout: 10
+
+  sql:
+    enabled: true
+    dataset: "xlangai/spider"
+    n_samples: 30
+
+  philosophical:
+    enabled: true
+    n_samples: 10
+    judge_rubric:
+      - "Depth of reasoning (1-5)"
+      - "Coherence and logical consistency (1-5)"
+      - "Acknowledgment of multiple perspectives (1-5)"
+      - "Originality of insight (1-5)"
+      - "Clarity of expression (1-5)"
+
+output:
+  dir: "results"
+  save_raw: true
