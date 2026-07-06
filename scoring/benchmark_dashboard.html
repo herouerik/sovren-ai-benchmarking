@@ -1,0 +1,492 @@
+<title>Sovren — LLM Benchmark Results</title>
+<style>
+:root {
+  --bg:      #0c0b0b;
+  --surf:    #111010;
+  --surf2:   #161514;
+  --border:  #1f1e1d;
+  --muted:   #575350;
+  --dim:     #8c8784;
+  --text:    #dcd9d4;
+  --accent:  #c8681e;
+  --accentA: rgba(200,104,30,.11);
+  --mono: 'Menlo','Monaco','Courier New',monospace;
+  --serif: Georgia,'Times New Roman',serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.5}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.022;
+  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/></filter><rect width='256' height='256' filter='url(%23g)'/></svg>");
+}
+
+/* TOPBAR */
+.topbar{height:44px;border-bottom:1px solid var(--border);display:flex;align-items:center;background:var(--bg);flex-shrink:0}
+.topbar-cells{display:flex;align-items:stretch;height:100%;flex:1;overflow:hidden}
+.meta-cell{display:flex;align-items:center;gap:6px;padding:0 18px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0}
+.meta-label{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.meta-value{font-size:12px;color:var(--text);font-variant-numeric:tabular-nums}
+.pulse{width:5px;height:5px;border-radius:50%;background:#2d8a5a;animation:blink 2.4s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.topbar-brand{padding:0 20px;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);border-left:1px solid var(--border);height:100%;display:flex;align-items:center;flex-shrink:0}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 308px;height:calc(100vh - 44px);overflow:hidden}
+.layout-main{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+
+/* SAMPLE BANNER */
+.sample-banner{display:none;align-items:center;gap:10px;padding:7px 18px;border-bottom:1px solid var(--border);background:var(--surf);flex-shrink:0}
+.sample-badge{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:1px 6px;flex-shrink:0}
+.sample-text{font-size:9px;color:var(--muted)}
+
+/* RANK STRIP */
+.rank-strip{display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);scrollbar-width:none}
+.rank-strip::-webkit-scrollbar{display:none}
+.rank-card{flex:0 0 auto;min-width:175px;padding:15px 20px;border-right:1px solid var(--border);cursor:pointer;transition:background .12s;user-select:none}
+.rank-card:hover{background:var(--surf2)}
+.rank-card.is-active{background:var(--accentA)}
+.rank-score{font-family:var(--serif);font-size:36px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--muted);margin-bottom:4px}
+.rank-card:first-child .rank-score{color:var(--accent)}
+.rank-model{font-size:10px;letter-spacing:.06em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
+.rank-speed{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.05em}
+
+/* TABLE */
+.table-wrap{flex:1;overflow:auto}
+.bench-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.bench-table thead th{
+  position:sticky;top:0;background:var(--bg);z-index:10;
+  padding:9px 12px;text-align:center;font-size:8px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap
+}
+.bench-table thead th.th-model{text-align:left;min-width:185px}
+.bench-table thead th.th-overall{min-width:78px;border-right:2px solid var(--border)}
+.bench-table tbody tr{border-bottom:1px solid var(--border);cursor:default}
+.bench-table tbody tr:hover{background:var(--surf2)}
+.bench-table tbody tr.is-active{background:var(--accentA)}
+.bench-table tbody td{border-right:1px solid var(--border);vertical-align:middle}
+.td-model{padding:13px 15px}
+.model-row{display:flex;align-items:center;gap:8px}
+.model-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.model-name{font-size:11px;color:var(--text);white-space:nowrap}
+.td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
+.overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:var(--text)}
+.td-score{text-align:center;padding:14px 8px;min-width:76px;transition:opacity .15s}
+.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:var(--text)}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sb-block{padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-label{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:13px}
+#radar{display:block;margin:0 auto}
+.radar-legend{display:flex;flex-direction:column;gap:5px;margin-top:13px}
+.legend-item{display:flex;align-items:center;gap:7px;cursor:pointer;padding:2px 3px;transition:opacity .12s}
+.legend-item.is-dim{opacity:.22}
+.legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.legend-name{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* SPEED BARS */
+.speed-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;transition:opacity .15s}
+.speed-model{font-size:9px;color:var(--dim);flex:0 0 115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.speed-track{flex:1;height:2px;background:var(--border)}
+.speed-fill{height:100%;transition:width .5s cubic-bezier(.16,1,.3,1)}
+.speed-val{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 40px;text-align:right}
+
+/* DROPZONE */
+.dropzone{border:1px dashed var(--border);padding:16px 10px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.dropzone:hover,.dropzone.drag-over{border-color:var(--accent);background:var(--accentA)}
+.drop-text{font-size:10px;letter-spacing:.08em;color:var(--dim);margin-bottom:3px}
+.drop-sub{font-size:9px;color:var(--muted)}
+
+/* TOOLTIP */
+#tip{
+  position:fixed;z-index:8500;max-width:288px;
+  background:#161514;border:1px solid #2c2a28;
+  padding:11px 13px;pointer-events:none;
+  opacity:0;transition:opacity .1s;
+  font-family:var(--mono);font-size:10px;line-height:1.58;color:var(--dim)
+}
+#tip.visible{opacity:1}
+#tip .tip-title{
+  display:block;font-size:8px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:7px
+}
+#tip .tip-body{display:block}
+.bench-table thead th.has-tip{cursor:help}
+.bench-table thead th.has-tip:hover{color:var(--dim);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+</style>
+
+<div class="topbar">
+  <div class="topbar-cells">
+    <div class="meta-cell"><span class="meta-label">RUN</span><span class="meta-value" id="run-id">—</span></div>
+    <div class="meta-cell"><span class="meta-label">DATE</span><span class="meta-value" id="run-date">—</span></div>
+    <div class="meta-cell"><span class="pulse"></span><span class="meta-label">MODELS</span><span class="meta-value" id="run-models">—</span></div>
+    <div class="meta-cell"><span class="meta-label">BENCHMARKS</span><span class="meta-value" id="run-benchmarks">—</span></div>
+    <div class="meta-cell"><span class="meta-label">SAMPLES</span><span class="meta-value" id="run-samples">—</span></div>
+  </div>
+  <div class="topbar-brand">SOVREN&thinsp;/&thinsp;BENCHMARK</div>
+</div>
+
+<div class="layout">
+  <div class="layout-main">
+    <div class="sample-banner" id="sample-banner">
+      <span class="sample-badge">SAMPLE DATA</span>
+      <span class="sample-text">Embedded results — drop a real <code>results/*.json</code> in the sidebar to load your run.</span>
+    </div>
+    <div class="rank-strip" id="rank-strip"></div>
+    <div class="table-wrap">
+      <table class="bench-table">
+        <thead id="bench-thead"></thead>
+        <tbody id="bench-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sb-block">
+      <div class="sb-label">CAPABILITY PROFILE</div>
+      <canvas id="radar" width="270" height="270"></canvas>
+      <div class="radar-legend" id="radar-legend"></div>
+    </div>
+    <div class="sb-block">
+      <div class="sb-label">THROUGHPUT&ensp;TOK/S</div>
+      <div id="speed-bars"></div>
+    </div>
+    <div class="sb-block">
+      <div class="sb-label">LOAD RESULTS</div>
+      <div class="dropzone" id="dropzone">
+        <div class="drop-text">results/*.json</div>
+        <div class="drop-sub">drag &amp; drop or click to browse</div>
+      </div>
+      <input type="file" id="file-input" accept=".json" style="display:none">
+    </div>
+  </aside>
+</div>
+
+<div id="tip" role="tooltip"><span class="tip-title"></span><span class="tip-body"></span></div>
+
+<script>
+// __INJECT_DATA__
+
+const SAMPLE_DATA = {
+  run_id: 'SAMPLE-20260702', timestamp: '2026-07-02 14:30',
+  total_samples: 1024, is_sample: true,
+  models: ['qwen3:32b','gemma4:31b-mlx','gemma4-12b-agentic-mtp','qwen3-coder','devstral-small-2'],
+  benchmarks: ['mmlu','arc','gsm8k','humaneval','mbpp','spider','philosophical'],
+  scores: {
+    'qwen3:32b':              {mmlu:.82,arc:.78,gsm8k:.84,humaneval:.67,mbpp:.71,spider:.62,philosophical:.76},
+    'gemma4:31b-mlx':         {mmlu:.79,arc:.74,gsm8k:.81,humaneval:.72,mbpp:.68,spider:.64,philosophical:.71},
+    'gemma4-12b-agentic-mtp': {mmlu:.71,arc:.68,gsm8k:.73,humaneval:.69,mbpp:.72,spider:.58,philosophical:.64},
+    'qwen3-coder':             {mmlu:.58,arc:.55,gsm8k:.71,humaneval:.84,mbpp:.87,spider:.76,philosophical:.41},
+    'devstral-small-2':        {mmlu:.61,arc:.58,gsm8k:.66,humaneval:.81,mbpp:.84,spider:.72,philosophical:.48}
+  },
+  speeds: {'qwen3:32b':18.4,'gemma4:31b-mlx':32.1,'gemma4-12b-agentic-mtp':52.8,'qwen3-coder':38.7,'devstral-small-2':45.2}
+};
+
+let D = (typeof BENCHMARK_DATA !== 'undefined') ? BENCHMARK_DATA : SAMPLE_DATA;
+
+const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.'};
+const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a'];
+
+const BENCH_TIPS = {
+  overall: {
+    title: 'Overall Score',
+    body: 'Mean accuracy across all benchmarks included in this run. A single-number summary — useful for ranking, but look at the per-category breakdown to understand where a model actually excels or struggles.'
+  },
+  mmlu: {
+    title: 'Massive Multitask Language Understanding',
+    body: '57 academic subjects: logic, algebra, philosophy, mathematics, fallacies, medicine, law, and more. Every question is multiple choice A/B/C/D, scored by exact letter match. No partial credit. Measures how broadly the model has absorbed factual knowledge across domains — without any tools or search.'
+  },
+  arc: {
+    title: 'AI2 Reasoning Challenge',
+    body: 'Science multiple choice, ARC-Challenge split. This split is specifically filtered to exclude any question that simple retrieval or word-matching can answer — every item here requires genuine multi-step reasoning over facts. Consistently harder and more discriminating than standard MCQ benchmarks.'
+  },
+  gsm8k: {
+    title: 'Grade School Math 8K',
+    body: '1,319 arithmetic word problems at elementary-school level. The model must reason step-by-step and end its response with #### <number>. A regex extracts that final number and compares it to ground truth. Tests chained arithmetic reasoning — not recall, not formula lookup, but holding intermediate results across multiple steps.'
+  },
+  humaneval: {
+    title: 'HumanEval — Python Coding',
+    body: '164 hand-written Python function stubs from OpenAI. The model writes the body; the harness writes it to a temp file and executes it in a subprocess against bundled unit tests. pass@1 only — one attempt, pass or fail, no partial credit. Never uses exec(). Problems are well-specified and curated; this is the cleaner end of the coding evaluation spectrum.'
+  },
+  mbpp: {
+    title: 'Mostly Basic Python Problems',
+    body: '~400 crowd-sourced Python problems, sanitized split. Same subprocess execution-based pass/fail scoring as HumanEval. Problems are broader, more varied in spec quality, and drawn from a wider range of contributors — which makes them harder to overfit to. Complements HumanEval by probing the noisier, real-world end of the coding distribution.'
+  },
+  spider: {
+    title: 'Spider — Text-to-SQL',
+    body: 'Natural language questions paired with real multi-table relational schemas. Scoring: if Spider SQLite database files are present locally, both the predicted and ground-truth queries are executed and their result sets compared (execution accuracy). Otherwise falls back to normalised string match. Tests whether the model can translate intent into correct, runnable SQL — not just plausible-looking syntax.'
+  },
+  philosophical: {
+    title: 'Philosophical Reasoning — LLM-as-Judge',
+    body: '10 curated open-ended questions: free will, justice, moral realism, suffering, technology & freedom, lying, obligations to future generations, machine understanding, meaning through suffering, knowledge & power. A second local model acts as judge and scores each response 1–5 on five axes: depth of reasoning · coherence · acknowledgment of multiple perspectives · originality of insight · clarity of expression. Final score = mean judge score / 5.0. No ground truth exists; the rubric is the signal.'
+  }
+};
+
+function overallOf(m) {
+  const v = D.benchmarks.map(b => D.scores[m][b] ?? 0);
+  return v.reduce((a,b)=>a+b,0) / v.length;
+}
+function sorted() { return [...D.models].sort((a,b)=>overallOf(b)-overallOf(a)); }
+
+function scoreBg(s) {
+  const op = (0.06 + s * 0.50).toFixed(2);
+  const rgb = s >= .75 ? '45,138,90' : s >= .50 ? '165,140,28' : '138,46,46';
+  return `rgba(${rgb},${op})`;
+}
+
+function hexRgb(hex) {
+  return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
+}
+
+let activeModel = null;
+
+/* TOOLTIP */
+const tipEl = document.getElementById('tip');
+const tipTitle = tipEl.querySelector('.tip-title');
+const tipBody = tipEl.querySelector('.tip-body');
+
+function showTip(e) {
+  const key = e.currentTarget.dataset.bench;
+  const tip = BENCH_TIPS[key];
+  if (!tip) return;
+  tipTitle.textContent = tip.title;
+  tipBody.textContent = tip.body;
+  const rect = e.currentTarget.getBoundingClientRect();
+  tipEl.style.left = rect.left + 'px';
+  tipEl.style.top = (rect.bottom + 5) + 'px';
+  tipEl.classList.add('visible');
+  requestAnimationFrame(() => {
+    const tr = tipEl.getBoundingClientRect();
+    if (tr.right > window.innerWidth - 8)
+      tipEl.style.left = Math.max(8, window.innerWidth - tr.width - 8) + 'px';
+  });
+}
+function hideTip() { tipEl.classList.remove('visible'); }
+
+function makeTipTh(key, label, cls) {
+  const th = document.createElement('th');
+  if (cls) th.className = cls;
+  th.textContent = label;
+  if (BENCH_TIPS[key]) {
+    th.dataset.bench = key;
+    th.classList.add('has-tip');
+    th.addEventListener('mouseenter', showTip);
+    th.addEventListener('mouseleave', hideTip);
+  }
+  return th;
+}
+
+/* META */
+function renderMeta() {
+  document.getElementById('run-id').textContent = D.run_id;
+  document.getElementById('run-date').textContent = D.timestamp;
+  document.getElementById('run-models').textContent = D.models.length;
+  document.getElementById('run-benchmarks').textContent = D.benchmarks.length;
+  document.getElementById('run-samples').textContent = (D.total_samples||0).toLocaleString();
+  document.getElementById('sample-banner').style.display = D.is_sample ? 'flex' : 'none';
+}
+
+/* RANK STRIP */
+function renderStrip() {
+  const el = document.getElementById('rank-strip');
+  el.innerHTML = '';
+  sorted().forEach((m, i) => {
+    const ov = overallOf(m);
+    const card = document.createElement('div');
+    card.className = 'rank-card'; card.dataset.model = m;
+    card.innerHTML =
+      `<div class="rank-score">${(ov*100).toFixed(1)}</div>` +
+      `<div class="rank-model">${m}</div>` +
+      (D.speeds[m] ? `<div class="rank-speed">${D.speeds[m].toFixed(1)} tok/s</div>` : '');
+    card.addEventListener('click', () => setActive(activeModel===m ? null : m));
+    el.appendChild(card);
+  });
+}
+
+/* TABLE */
+function renderTable() {
+  const thead = document.getElementById('bench-thead');
+  const tbody = document.getElementById('bench-tbody');
+  thead.innerHTML = ''; tbody.innerHTML = '';
+  const models = sorted();
+
+  const hr = document.createElement('tr');
+  const thModel = document.createElement('th');
+  thModel.className = 'th-model'; thModel.textContent = 'MODEL';
+  hr.appendChild(thModel);
+  hr.appendChild(makeTipTh('overall', 'OVERALL', 'th-overall'));
+  D.benchmarks.forEach(b => hr.appendChild(makeTipTh(b, BENCH_LABELS[b]||b.toUpperCase())));
+  thead.appendChild(hr);
+
+  models.forEach((m, i) => {
+    const color = COLORS[i % COLORS.length];
+    const ov = overallOf(m);
+    const tr = document.createElement('tr');
+    tr.dataset.model = m;
+    tr.innerHTML =
+      `<td class="td-model"><div class="model-row">` +
+        `<span class="model-dot" style="background:${color}"></span>` +
+        `<span class="model-name">${m}</span></div></td>` +
+      `<td class="td-overall" style="background:${scoreBg(ov)}">` +
+        `<span class="overall-num">${(ov*100).toFixed(1)}</span></td>`;
+    D.benchmarks.forEach(b => {
+      const s = D.scores[m][b] ?? 0;
+      const td = document.createElement('td');
+      td.className = 'td-score';
+      td.style.background = scoreBg(s);
+      td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>`;
+      tr.appendChild(td);
+    });
+    tr.addEventListener('mouseenter', () => setActive(m));
+    tr.addEventListener('mouseleave', () => setActive(null));
+    tbody.appendChild(tr);
+  });
+}
+
+/* SPEED */
+function renderSpeed() {
+  const wrap = document.getElementById('speed-bars');
+  wrap.innerHTML = '';
+  const models = sorted();
+  const max = Math.max(...models.map(m => D.speeds[m]||0));
+  models.forEach((m, i) => {
+    const spd = D.speeds[m] || 0;
+    const pct = max > 0 ? (spd/max*100).toFixed(1) : 0;
+    const row = document.createElement('div');
+    row.className = 'speed-row'; row.dataset.model = m;
+    row.innerHTML =
+      `<span class="speed-model">${m}</span>` +
+      `<div class="speed-track"><div class="speed-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div>` +
+      `<span class="speed-val">${spd.toFixed(1)}</span>`;
+    wrap.appendChild(row);
+  });
+}
+
+/* RADAR */
+function drawRadar(hl) {
+  const canvas = document.getElementById('radar');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, R = W*.36;
+  const B = D.benchmarks, N = B.length;
+  const models = sorted();
+
+  function pt(i, r) {
+    const a = (i/N)*Math.PI*2 - Math.PI/2;
+    return [cx + Math.cos(a)*r, cy + Math.sin(a)*r];
+  }
+
+  ctx.clearRect(0, 0, W, H);
+
+  [.25,.5,.75,1].forEach(t => {
+    ctx.beginPath();
+    B.forEach((_, i) => { const [x,y]=pt(i,R*t); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  B.forEach((b, i) => {
+    const [x1,y1]=pt(i,R*.06), [x2,y2]=pt(i,R);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.stroke();
+    const [lx,ly]=pt(i,R*1.22);
+    ctx.fillStyle='rgba(220,217,212,.42)'; ctx.font='8px Menlo,Monaco,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText((BENCH_LABELS[b]||b).toUpperCase(), lx, ly);
+  });
+
+  models.forEach((m, i) => {
+    const dim = hl && hl !== m;
+    const [r,g,b] = hexRgb(COLORS[i%COLORS.length]);
+    ctx.beginPath();
+    B.forEach((bk, j) => {
+      const s = D.scores[m][bk] ?? 0;
+      const [x,y] = pt(j, R*s);
+      j===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${r},${g},${b},${dim?.02:.09})`; ctx.fill();
+    ctx.strokeStyle = `rgba(${r},${g},${b},${dim?.1:.75})`; ctx.lineWidth = dim?1:1.5; ctx.stroke();
+  });
+}
+
+/* LEGEND */
+function renderLegend() {
+  const el = document.getElementById('radar-legend');
+  el.innerHTML = '';
+  sorted().forEach((m, i) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item'; item.dataset.model = m;
+    item.innerHTML =
+      `<span class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></span>` +
+      `<span class="legend-name">${m}</span>`;
+    item.addEventListener('click', () => setActive(activeModel===m ? null : m));
+    el.appendChild(item);
+  });
+}
+
+/* ACTIVE MODEL */
+function setActive(model) {
+  activeModel = model;
+  document.querySelectorAll('.rank-card').forEach(el =>
+    el.classList.toggle('is-active', el.dataset.model === model));
+  document.querySelectorAll('#bench-tbody tr').forEach(el =>
+    el.classList.toggle('is-active', el.dataset.model === model));
+  document.querySelectorAll('#speed-bars .speed-row').forEach(el =>
+    el.style.opacity = (!model || el.dataset.model===model) ? '1' : '.25');
+  document.querySelectorAll('#radar-legend .legend-item').forEach(el =>
+    el.classList.toggle('is-dim', !!model && el.dataset.model!==model));
+  drawRadar(model);
+}
+
+/* FILE LOADER */
+function processRaw(raw) {
+  const models = [...new Set(raw.map(r=>r.model))];
+  const benchmarks = [...new Set(raw.map(r=>r.benchmark))];
+  const scores = {}, speeds = {};
+  models.forEach(m => {
+    scores[m] = {};
+    const mrows = raw.filter(r=>r.model===m);
+    const toks = mrows.filter(r=>r.tok_per_sec>0).map(r=>r.tok_per_sec);
+    speeds[m] = toks.length ? toks.reduce((a,b)=>a+b,0)/toks.length : 0;
+    benchmarks.forEach(b => {
+      const brows = mrows.filter(r=>r.benchmark===b);
+      if (brows.length) scores[m][b] = brows.reduce((a,r)=>a+r.score,0)/brows.length;
+    });
+  });
+  return {
+    run_id: raw[0]?.run_id || 'LOADED',
+    timestamp: new Date().toISOString().slice(0,16).replace('T',' '),
+    total_samples: raw.length, models, benchmarks, scores, speeds
+  };
+}
+
+function rerender(data) {
+  D = data; activeModel = null;
+  renderMeta(); renderStrip(); renderTable(); renderSpeed(); drawRadar(null); renderLegend();
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try { rerender(processRaw(JSON.parse(e.target.result))); }
+    catch(err) { console.error('Parse error:', err); }
+  };
+  reader.readAsText(file);
+}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+/* INIT */
+renderMeta(); renderStrip(); renderTable(); renderSpeed(); drawRadar(null); renderLegend();
+</script>
