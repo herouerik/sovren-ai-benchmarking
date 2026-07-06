@@ -24,13 +24,13 @@ class BaseBenchmark(ABC):
     def system_prompt(self) -> str | None:
         return None
 
-    def run(self, model: str, n_samples: int = None) -> list[dict]:
+    def run(self, model: str, n_samples: int = None, on_sample=None) -> list[dict]:
         samples = self.load_samples()
         if n_samples:
             samples = samples[:n_samples]
 
         results = []
-        for sample in samples:
+        for i, sample in enumerate(samples):
             prompt = self.format_prompt(sample)
             response = self.client.complete(
                 model=model,
@@ -39,7 +39,7 @@ class BaseBenchmark(ABC):
                 max_tokens=self.config.get("max_tokens", 2048),
             )
             scoring = self.score(sample, response["content"]) if not response["error"] else {"passed": False, "score": 0.0}
-            results.append({
+            result = {
                 "id": sample.get("id", ""),
                 "model": model,
                 "benchmark": self.name,
@@ -49,5 +49,8 @@ class BaseBenchmark(ABC):
                 "tok_per_sec": response["tok_per_sec"],
                 "error": response["error"],
                 **scoring,
-            })
+            }
+            results.append(result)
+            if on_sample:
+                on_sample(i + 1, len(samples), result)
         return results
