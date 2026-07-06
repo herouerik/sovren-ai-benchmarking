@@ -10,12 +10,17 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
 import yaml
 from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
 from rich.console import Console
+
+# Use local HF cache only — no network requests during runs.
+# Run `python prefetch_datasets.py` once to populate the cache.
+os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
 
 from harness.client import OllamaClient
 from benchmarks.reasoning import MMLUBenchmark, ARCBenchmark
