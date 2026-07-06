@@ -23,6 +23,7 @@ from benchmarks.math import GSM8KBenchmark
 from benchmarks.coding import HumanEvalBenchmark, MBPPBenchmark
 from benchmarks.sql import SpiderBenchmark
 from benchmarks.philosophical import PhilosophicalBenchmark
+from benchmarks.speed import SpeedBenchmark
 from scoring.report import save_results, print_summary
 
 console = Console()
@@ -35,6 +36,7 @@ BENCHMARK_REGISTRY = {
     "mbpp":        MBPPBenchmark,
     "spider":      SpiderBenchmark,
     "philosophical": PhilosophicalBenchmark,
+    "speed":         SpeedBenchmark,
 }
 
 
