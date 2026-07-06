@@ -177,7 +177,8 @@ def main():
             def _on_sample(i, total, r):
                 mark = "[green]✓[/green]" if r.get("passed") else "[red]✗[/red]"
                 tps = f"  {r['tok_per_sec']:.1f} t/s" if r.get("tok_per_sec") else ""
-                console.print(f"    {mark} {i}/{total}{tps}", highlight=False)
+                err = f"  {r['exec_error'][:80]}" if r.get("exec_error") else ""
+                console.print(f"    {mark} {i}/{total}{tps}{err}", highlight=False)
 
             try:
                 results = bench.run(model=model, n_samples=n_samples, on_sample=_on_sample)
