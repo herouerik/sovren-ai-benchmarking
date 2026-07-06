@@ -4,6 +4,7 @@
 Usage:
     python scoring/generate_report.py results/20260702_143022.json
     python scoring/generate_report.py results/20260702_143022.json --output results/report.html
+    python scoring/generate_report.py results/20260702_143022.json --live   # adds 60s auto-refresh
 """
 
 import argparse
@@ -89,6 +90,7 @@ def main() -> None:
     parser.add_argument("--output", default=None, help="Output HTML path (default: same dir as input, report.html)")
     parser.add_argument("--template", default=None, help="Path to dashboard HTML template")
     parser.add_argument("--config", default=None, help="Path to config.yaml (injects all_models for status markers)")
+    parser.add_argument("--live", action="store_true", help="Inject 60s meta-refresh (use during an ongoing run)")
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -110,6 +112,9 @@ def main() -> None:
 
     injection = f"const BENCHMARK_DATA = {json.dumps(data, indent=2, ensure_ascii=False)};"
     html = html.replace("// __INJECT_DATA__", injection)
+
+    meta_refresh = '<meta http-equiv="refresh" content="60">' if args.live else ''
+    html = html.replace("<!-- __META_REFRESH__ -->", meta_refresh)
 
     output_path = Path(args.output) if args.output else input_path.parent / "report.html"
     output_path.parent.mkdir(parents=True, exist_ok=True)
