@@ -125,10 +125,18 @@ def main():
         except Exception as e:
             console.print(f"[dim]report update skipped: {e}[/dim]")
 
+    total_steps = len(models) * len(selected)
+    step = 0
+
     for model in models:
         console.print(f"\n[bold cyan]═══ Model: {model} ═══[/bold cyan]")
+        is_last_model = (model == models[-1])
 
         for bench_name in selected:
+            step += 1
+            is_last_bench = (bench_name == selected[-1])
+            is_last_step  = is_last_model and is_last_bench
+
             # resolve group name for config lookup (e.g. mmlu → reasoning)
             cfg_key = next((g for g, members in BENCH_GROUPS.items() if bench_name in members), bench_name)
             bcfg = {**cfg["ollama"], **bench_cfg.get(cfg_key, {})}
@@ -149,10 +157,8 @@ def main():
             except Exception as e:
                 console.print(f"  [red]✗ {bench_name} failed: {e}[/red]")
 
-        remaining = len(models) - models.index(model) - 1
-        _refresh_report(is_live=remaining > 0)
-        if remaining > 0:
-            console.print(f"  [dim]report.html updated ({len(models) - remaining}/{len(models)} models done)[/dim]")
+            _refresh_report(is_live=not is_last_step)
+            console.print(f"  [dim]report.html → step {step}/{total_steps}[/dim]")
 
     if not all_results:
         console.print("[red]No results collected.[/red]")
