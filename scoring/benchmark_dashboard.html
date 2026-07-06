@@ -42,15 +42,19 @@ body::after{
 .sample-text{font-size:9px;color:var(--muted)}
 
 /* RANK STRIP */
-.rank-strip{display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);scrollbar-width:none}
+.rank-strip-wrap{position:relative;flex-shrink:0;border-bottom:1px solid var(--border)}
+.rank-strip-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:40px;background:linear-gradient(to right,transparent,var(--bg));pointer-events:none;z-index:2}
+.rank-strip{display:flex;overflow-x:auto;scrollbar-width:none}
 .rank-strip::-webkit-scrollbar{display:none}
-.rank-card{flex:0 0 auto;min-width:175px;padding:15px 20px;border-right:1px solid var(--border);cursor:pointer;transition:background .12s;user-select:none}
+.rank-card{flex:0 0 auto;width:118px;padding:9px 12px;border-right:1px solid var(--border);cursor:pointer;transition:background .12s;user-select:none}
 .rank-card:hover{background:var(--surf2)}
 .rank-card.is-active{background:var(--accentA)}
-.rank-score{font-family:var(--serif);font-size:36px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--muted);margin-bottom:4px}
-.rank-card:first-child .rank-score{color:var(--accent)}
-.rank-model{font-size:10px;letter-spacing:.06em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
-.rank-speed{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.05em}
+.rank-top{display:flex;align-items:baseline;gap:5px;margin-bottom:3px}
+.rank-num{font-size:8px;color:var(--muted);letter-spacing:.06em;flex-shrink:0;padding-top:1px}
+.rank-score{font-family:var(--serif);font-size:20px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--muted)}
+.rank-card.s-current:first-of-type .rank-score,.rank-card.s-current.rank-first .rank-score{color:var(--accent)}
+.rank-model{font-size:9px;letter-spacing:.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+.rank-speed{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.04em}
 
 /* TABLE */
 .table-wrap{flex:1;overflow:auto}
@@ -178,7 +182,7 @@ body::after{
       <span class="sample-badge">SAMPLE DATA</span>
       <span class="sample-text">This is the template. For your real results open <code>results/report.html</code> — or drop a <code>results/*.json</code> file into the sidebar.</span>
     </div>
-    <div class="rank-strip" id="rank-strip"></div>
+    <div class="rank-strip-wrap"><div class="rank-strip" id="rank-strip"></div></div>
     <div class="table-wrap">
       <table class="bench-table">
         <thead id="bench-thead"></thead>
@@ -406,12 +410,19 @@ function renderMeta() {
 function renderStrip() {
   const el = document.getElementById('rank-strip');
   el.innerHTML = '';
-  allModels().forEach(m => {
+  const models = allModels();
+  // rank number only counts models that have scores
+  let rankIdx = 0;
+  models.forEach((m, i) => {
     const status = modelStatus(m);
     const ov     = overallOf(m);
     const spd    = getSpeed(m);
-    const card   = document.createElement('div');
-    card.className   = `rank-card s-${status}`;
+    const hasScore = ov >= 0;
+    if (hasScore) rankIdx++;
+    const rank = hasScore ? rankIdx : null;
+
+    const card = document.createElement('div');
+    card.className    = `rank-card s-${status}${rank === 1 ? ' rank-first' : ''}`;
     card.dataset.model = m;
 
     const bar = document.createElement('div');
@@ -419,10 +430,13 @@ function renderStrip() {
     card.appendChild(bar);
 
     card.innerHTML +=
-      `<div class="rank-score${ov < 0 ? ' rank-score-pending' : ''}">${ov >= 0 ? (ov*100).toFixed(1) : '—'}</div>` +
+      `<div class="rank-top">` +
+        (rank ? `<span class="rank-num">#${rank}</span>` : '') +
+        `<span class="rank-score">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
+      `</div>` +
       `<div class="rank-model">${m}</div>` +
-      (spd  ? `<div class="rank-speed">${spd.toFixed(1)} tok/s</div>`
-             : status === 'pending' ? `<div class="rank-speed pending-label">not run</div>` : '');
+      (spd ? `<div class="rank-speed">${spd.toFixed(1)} t/s</div>`
+           : status === 'pending' ? `<div class="rank-speed" style="color:var(--border)">pending</div>` : '');
 
     if (status !== 'pending')
       card.addEventListener('click', () => setActive(activeModel===m ? null : m));
