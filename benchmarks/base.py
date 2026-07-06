@@ -30,12 +30,14 @@ class BaseBenchmark(ABC):
     def system_prompt(self) -> str | None:
         return None
 
-    def _effective_system(self) -> str | None:
+    def _effective_system(self, model: str = "") -> str | None:
         base = self.system_prompt()
-        if self.allow_thinking:
+        # /no_think is a qwen3-specific tag to suppress extended thinking chains.
+        # Don't add it for other models — it confuses them and produces worse output.
+        is_qwen3 = "qwen3" in model.lower()
+        if self.allow_thinking or not is_qwen3:
             return base
-        tag = "/no_think"
-        return f"{base}\n{tag}" if base else tag
+        return f"{base}\n/no_think" if base else "/no_think"
 
     def run(self, model: str, n_samples: int = None, on_sample=None) -> list[dict]:
         samples = self.load_samples()
@@ -48,7 +50,7 @@ class BaseBenchmark(ABC):
             response = self.client.complete(
                 model=model,
                 prompt=prompt,
-                system=self._effective_system(),
+                system=self._effective_system(model),
                 max_tokens=self.config.get("max_tokens", 2048),
             )
             scoring = self.score(sample, response["content"]) if not response["error"] else {"passed": False, "score": 0.0}
