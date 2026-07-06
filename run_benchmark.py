@@ -87,8 +87,18 @@ def main():
         sys.exit(1)
 
     # Determine which benchmarks to run
+    # config.yaml uses group names; expand them to individual registry keys
+    BENCH_GROUPS = {
+        "reasoning": ["mmlu", "arc"],
+        "math":      ["gsm8k"],
+        "coding":    ["humaneval", "mbpp"],
+        "sql":       ["spider"],
+    }
     bench_cfg = cfg.get("benchmarks", {})
-    selected = args.benchmarks or [k for k, v in bench_cfg.items() if v.get("enabled", True)]
+    raw_selected = args.benchmarks or [k for k, v in bench_cfg.items() if v.get("enabled", True)]
+    selected = []
+    for name in raw_selected:
+        selected.extend(BENCH_GROUPS.get(name, [name]))
     selected = [b for b in selected if b in BENCHMARK_REGISTRY]
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -119,7 +129,9 @@ def main():
         console.print(f"\n[bold cyan]═══ Model: {model} ═══[/bold cyan]")
 
         for bench_name in selected:
-            bcfg = {**cfg["ollama"], **bench_cfg.get(bench_name, {})}
+            # resolve group name for config lookup (e.g. mmlu → reasoning)
+            cfg_key = next((g for g, members in BENCH_GROUPS.items() if bench_name in members), bench_name)
+            bcfg = {**cfg["ollama"], **bench_cfg.get(cfg_key, {})}
             bcfg["judge_model"] = cfg.get("judge_model", "qwen3:32b")
 
             bench_class = BENCHMARK_REGISTRY[bench_name]
