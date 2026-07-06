@@ -25,6 +25,7 @@ from benchmarks.sql import SpiderBenchmark
 from benchmarks.philosophical import PhilosophicalBenchmark
 from benchmarks.speed import SpeedBenchmark
 from scoring.report import save_results, print_summary
+from scoring.generate_report import aggregate, load_config_models, find_template
 
 console = Console()
 
@@ -93,6 +94,27 @@ def main():
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     all_results = []
 
+    config_models = cfg.get("models", [])
+    report_path = Path(cfg["output"]["dir"]) / "report.html"
+    try:
+        template_html = find_template().read_text()
+    except FileNotFoundError:
+        template_html = None
+
+    def _refresh_report(is_live: bool) -> None:
+        if not template_html or not all_results:
+            return
+        try:
+            data = aggregate(all_results, all_models=config_models or None)
+            html = template_html
+            html = html.replace("// __INJECT_DATA__",
+                                f"const BENCHMARK_DATA = {__import__('json').dumps(data, ensure_ascii=False)};")
+            html = html.replace("<!-- __META_REFRESH__ -->",
+                                '<meta http-equiv="refresh" content="60">' if is_live else '')
+            report_path.write_text(html)
+        except Exception as e:
+            console.print(f"[dim]report update skipped: {e}[/dim]")
+
     for model in models:
         console.print(f"\n[bold cyan]═══ Model: {model} ═══[/bold cyan]")
 
@@ -115,6 +137,11 @@ def main():
             except Exception as e:
                 console.print(f"  [red]✗ {bench_name} failed: {e}[/red]")
 
+        remaining = len(models) - models.index(model) - 1
+        _refresh_report(is_live=remaining > 0)
+        if remaining > 0:
+            console.print(f"  [dim]report.html updated ({len(models) - remaining}/{len(models)} models done)[/dim]")
+
     if not all_results:
         console.print("[red]No results collected.[/red]")
         sys.exit(1)
@@ -122,6 +149,9 @@ def main():
     output_path = args.output or str(Path(cfg["output"]["dir"]) / f"{run_id}.json")
     saved = save_results(all_results, cfg["output"]["dir"], run_id)
     console.print(f"\n[dim]Results saved to {saved}[/dim]")
+
+    _refresh_report(is_live=False)
+    console.print(f"[dim]Dashboard → file://{report_path.resolve()}[/dim]")
 
     print_summary(all_results)
 
