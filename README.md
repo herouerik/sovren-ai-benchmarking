@@ -110,6 +110,9 @@ cd local-llm-benchmark
 source .venv/bin/activate
 pip install -r requirements.txt
 
+# Download benchmark datasets once (cached locally, no HF requests after this)
+python prefetch_datasets.py
+
 # See available local models
 python run_benchmark.py --list-models
 
