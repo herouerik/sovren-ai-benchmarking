@@ -18,9 +18,12 @@ from pathlib import Path
 from tqdm import tqdm
 from rich.console import Console
 
-# Use local HF cache only — no network requests during runs.
-# Run `python prefetch_datasets.py` once to populate the cache.
-os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
+# Go fully offline if datasets have been pre-fetched; otherwise allow downloads.
+if Path(".datasets_ready").exists():
+    os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
+else:
+    print("Tip: run `python prefetch_datasets.py` once to cache all datasets locally "
+          "and silence HuggingFace network requests.")
 
 from harness.client import OllamaClient
 from benchmarks.reasoning import MMLUBenchmark, ARCBenchmark

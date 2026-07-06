@@ -1,8 +1,9 @@
 .venv/
 results/*.json
 !results/sample.json
+results/report.html
 __pycache__/
 *.pyc
 *.pyo
 .DS_Store
-results/report.html
+.datasets_ready
