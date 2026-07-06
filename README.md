@@ -132,6 +132,25 @@ Edit `config.yaml` to change which models are included, how many samples per ben
 
 ## Reading the results
 
+### Dashboard (recommended)
+
+Open the dashboard directly in your browser — no server needed:
+
+```bash
+open scoring/benchmark_dashboard.html
+```
+
+Drag and drop a results file onto the **CURRENT** drop zone, or use the file picker. To compare against a previous run, drop that into **BASELINE**. To show pending-state markers for models in your config that haven't run yet, drop `config.yaml` onto **CONFIG**.
+
+To generate a self-contained report with data baked in (useful for sharing or archiving):
+
+```bash
+python scoring/generate_report.py results/<timestamp>.json
+open results/report.html
+```
+
+`generate_report.py` auto-detects `config.yaml` in the repo root and injects it so the report shows which models are still pending. Pass `--config path/to/config.yaml` to override.
+
 ### Terminal output
 
 Two Rich tables print at the end of each run:
