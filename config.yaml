@@ -68,6 +68,10 @@ benchmarks:
       - "Originality of insight (1-5)"
       - "Clarity of expression (1-5)"
 
+  speed:
+    enabled: false   # run separately: python run_benchmark.py --benchmarks speed
+    n_runs: 3        # median over this many runs per probe to reduce noise
+
 output:
   dir: "results"
   save_raw: true
