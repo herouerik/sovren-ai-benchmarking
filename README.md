@@ -1,0 +1,216 @@
+# local-llm-benchmark
+
+A self-contained benchmarking harness for local LLMs served via [Ollama](https://ollama.com). Runs a suite of standard and custom benchmarks against any model available at your local Ollama endpoint, scores them, and produces a comparative summary across models.
+
+Built to work fully offline once datasets are cached.
+
+---
+
+## Structure
+
+```
+local-llm-benchmark/
+├── run_benchmark.py        ← single entry point for everything
+├── config.yaml             ← what to run and against which models
+├── benchmarks/             ← one file per category
+├── harness/                ← shared infrastructure
+├── scoring/                ← result display and analysis
+└── results/                ← JSON output from each run
+```
+
+---
+
+## Benchmark categories
+
+### 1. MMLU — Massive Multitask Language Understanding (reasoning)
+Multiple choice questions across 57 academic subjects. Config selects a subset of subjects; defaults cover logic, algebra, philosophy, mathematics, and fallacies. The model picks A/B/C/D and is scored by exact match.
+
+**Tells you:** how broadly knowledgeable is this model across academic domains?
+
+**Source:** [cais/mmlu](https://huggingface.co/datasets/cais/mmlu) on HuggingFace — Hendrycks et al., 2020. [Paper](https://arxiv.org/abs/2009.03300).
+
+---
+
+### 2. ARC — AI2 Reasoning Challenge (reasoning)
+Harder science multiple choice. Same format as MMLU. Uses the `ARC-Challenge` split which filters for questions that simple retrieval methods fail on.
+
+**Tells you:** can the model reason through multi-step factual problems?
+
+**Source:** [allenai/ai2_arc](https://huggingface.co/datasets/allenai/ai2_arc) on HuggingFace — Clark et al., 2018. [Paper](https://arxiv.org/abs/1803.05457).
+
+---
+
+### 3. GSM8K — Grade School Math (problem solving)
+1319 grade-school arithmetic word problems. The model must show its work and end its response with `#### <number>`. A regex extractor pulls the final number and compares it to the ground truth.
+
+**Tells you:** can the model follow a chain of arithmetic reasoning to a correct conclusion?
+
+**Source:** [openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k) on HuggingFace — Cobbe et al., 2021. [Paper](https://arxiv.org/abs/2110.14168).
+
+---
+
+### 4. HumanEval + MBPP — Python coding
+Two standard coding benchmarks. The model generates a Python function; the harness writes it to a temp file and executes it in a subprocess against bundled unit tests. Pass or fail — no partial credit. Never uses `exec()`.
+
+- **HumanEval** — 164 hand-written Python problems with test assertions. [openai/openai_humaneval](https://huggingface.co/datasets/openai/openai_humaneval) — Chen et al., 2021. [Paper](https://arxiv.org/abs/2107.03374).
+- **MBPP** — ~400 crowd-sourced Python problems, `sanitized` split. [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) — Austin et al., 2021. [Paper](https://arxiv.org/abs/2108.07732).
+
+**Tells you:** does the code actually run and pass tests?
+
+---
+
+### 5. Spider — SQL generation
+Natural language questions mapped to SQL queries over real multi-table relational schemas. If the Spider SQLite database files are present locally, the harness executes both the predicted and ground-truth SQL and compares result sets (execution accuracy). Otherwise it falls back to normalised string match.
+
+**Tells you:** can the model translate natural language intent into correct, executable SQL?
+
+**Source:** [xlangai/spider](https://huggingface.co/datasets/xlangai/spider) on HuggingFace — Yu et al., 2018. [Paper](https://arxiv.org/abs/1809.08887).
+
+---
+
+### 6. Philosophical discussion (LLM-as-judge)
+Ten curated open-ended philosophical questions — free will, justice, moral realism, suffering, epistemic power, and more. No ground truth exists. A second local model (default: `qwen3:32b`) acts as judge and scores each response 1–5 on five rubric axes: depth of reasoning, coherence, acknowledgment of multiple perspectives, originality of insight, and clarity of expression. The mean judge score becomes the benchmark score.
+
+**Tells you:** how well does the model reason through open-ended, ambiguous problems with no single correct answer?
+
+**Method:** LLM-as-judge is a widely used evaluation pattern for open-ended generation. See [Zheng et al., 2023 — MT-Bench](https://arxiv.org/abs/2306.05685) for the canonical reference. The prompts and rubric in this repo are original.
+
+---
+
+## How a run works
+
+```
+run_benchmark.py
+  └─ loads config.yaml
+  └─ for each model:
+       └─ for each benchmark:
+            └─ load_samples() — pulls dataset from HuggingFace (cached after first pull)
+            └─ for each sample:
+                 └─ client.complete() — POST to Ollama at localhost:11434/v1
+                 └─ score() — exact match / code execution / LLM judge
+            └─ print live pass rate
+  └─ save results/<timestamp>.json
+  └─ print Rich summary tables
+```
+
+Temperature is `0.0` for all deterministic benchmarks (MCQ, math, coding, SQL) so runs are reproducible. The philosophical judge also runs at `0.0` — subjectivity is in the rubric, not the sampling.
+
+The harness calls Ollama via the [OpenAI Python SDK](https://github.com/openai/openai-python) pointed at Ollama's OpenAI-compatible `/v1` endpoint. No framework lock-in — it's plain HTTP under the hood.
+
+---
+
+## Usage
+
+```bash
+# Set up (first time only)
+cd local-llm-benchmark
+/opt/homebrew/bin/python3.13 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# See available local models
+python run_benchmark.py --list-models
+
+# Quick sanity check (3 samples, fast)
+python run_benchmark.py --models llama3.2:3b --n-samples 3
+
+# Compare two coding models head to head
+python run_benchmark.py --models devstral-small-2 qwen3-coder --benchmarks humaneval mbpp --n-samples 50
+
+# Philosophical evaluation
+python run_benchmark.py --models gemma4:31b-mlx qwen3:32b --benchmarks philosophical
+
+# Full run — all models and benchmarks from config.yaml
+python run_benchmark.py
+```
+
+Edit `config.yaml` to change which models are included, how many samples per benchmark, and which judge model to use.
+
+---
+
+## Reading the results
+
+### Terminal output
+
+Two Rich tables print at the end of each run:
+
+**Accuracy table** — each cell is the mean score (0–100%) for that model on that benchmark. The OVERALL column is the mean across all benchmarks run.
+
+**Speed table** — tokens/second and average latency per inference call. Relevant for deciding whether a model is fast enough for interactive or agentic use.
+
+### JSON output
+
+Every run saves a file to `results/<timestamp>.json`. Each record contains the prompt sent, the model's full response, pass/fail, extracted answer vs expected, latency, tokens/second, and — for philosophical runs — the judge's per-criterion scores and reasoning.
+
+Load in pandas for deeper analysis:
+
+```python
+import pandas as pd, json
+
+df = pd.DataFrame(json.load(open("results/20260706_194954.json")))
+
+# Accuracy per model per benchmark
+df.groupby(["model", "benchmark"])["score"].mean().unstack()
+
+# Where did a coding model fail?
+df[(df.benchmark == "humaneval") & (df.passed == False)][["model", "prompt", "exec_error"]]
+
+# Speed vs accuracy tradeoff
+df.groupby("model")[["score", "tok_per_sec"]].mean()
+```
+
+---
+
+## Interpreting results
+
+| Score pattern | What it means |
+|---|---|
+| High MMLU + low GSM8K | Broad knowledge but weak at chained reasoning |
+| High HumanEval + low MBPP | Strong at well-specified problems, weaker with ambiguous specs |
+| High SQL string match + low execution accuracy | Generates plausible-looking SQL that doesn't actually run |
+| Low philosophical mean score | Shallow or one-sided responses; judge penalises lack of nuance |
+| High tok/s + low accuracy | Fast but sloppy — problematic for agentic loops |
+| Low tok/s + high accuracy | Slow but reliable — fine for batch tasks |
+
+The practical output is a routing map: which models to assign to which task types. High-accuracy coding models for agent loops, strong reasoning models for complex analysis, fast small models for cheap classification or summarisation.
+
+---
+
+## Dependencies and credits
+
+| Package | Purpose | Source |
+|---|---|---|
+| `openai` | HTTP client to Ollama's `/v1` endpoint | [github.com/openai/openai-python](https://github.com/openai/openai-python) |
+| `datasets` | Loads all HuggingFace benchmark datasets | [github.com/huggingface/datasets](https://github.com/huggingface/datasets) |
+| `huggingface_hub` | Dataset download and caching | [github.com/huggingface/huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| `rich` | Terminal tables and formatting | [github.com/Textualize/rich](https://github.com/Textualize/rich) |
+| `pandas` | Result aggregation and analysis | [github.com/pandas-dev/pandas](https://github.com/pandas-dev/pandas) |
+| `pyyaml` | Config parsing | [github.com/yaml/pyyaml](https://github.com/yaml/pyyaml) |
+| `httpx` | Ollama model list endpoint | [github.com/encode/httpx](https://github.com/encode/httpx) |
+| [Ollama](https://ollama.com) | Local model serving | [github.com/ollama/ollama](https://github.com/ollama/ollama) |
+
+### Datasets
+
+| Dataset | License | Citation |
+|---|---|---|
+| MMLU | MIT | Hendrycks et al., 2020 |
+| ARC | CC BY 4.0 | Clark et al., 2018 |
+| GSM8K | MIT | Cobbe et al., 2021 |
+| HumanEval | MIT | Chen et al., 2021 |
+| MBPP | CC BY 4.0 | Austin et al., 2021 |
+| Spider | CC BY 4.0 | Yu et al., 2018 |
+
+The philosophical prompts and LLM-as-judge rubric are original to this repository. The LLM-as-judge evaluation methodology follows [Zheng et al., 2023](https://arxiv.org/abs/2306.05685).
+
+---
+
+## Extending
+
+Add a new benchmark category by:
+
+1. Creating `benchmarks/yourname.py` with a class that extends `BaseBenchmark`
+2. Implementing `load_samples()` and `score()`
+3. Registering it in `BENCHMARK_REGISTRY` in `run_benchmark.py`
+4. Adding a config block in `config.yaml`
+
+The base class handles the run loop, result collection, latency tracking, and error handling.
