@@ -1,3 +1,5 @@
+<img width="1512" height="689" alt="image" src="https://github.com/user-attachments/assets/7278d200-21c1-4ffb-b374-204dc06e0dbc" />
+
 # local-llm-benchmark
 
 A self-contained benchmarking harness for local LLMs served via [Ollama](https://ollama.com). Runs a suite of standard and custom benchmarks against any model available at your local Ollama endpoint, scores them, and produces a comparative summary across models.
