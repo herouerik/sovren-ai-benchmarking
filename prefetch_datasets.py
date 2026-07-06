@@ -7,8 +7,10 @@ use the local cache with no network requests (HF_DATASETS_OFFLINE=1).
 Usage:
     python prefetch_datasets.py
 """
+import os
 import sys
 from datasets import load_dataset
+from pathlib import Path
 
 DOWNLOADS = [
     ("cais/mmlu",                        dict(name="abstract_algebra",  split="test")),
@@ -24,6 +26,10 @@ DOWNLOADS = [
 ]
 
 def main():
+    if not os.environ.get("HF_TOKEN"):
+        print("Note: no HF_TOKEN set. Downloads will work fine — unauthenticated")
+        print("      HF requests are not throttled for dataset downloads of this size.")
+        print("      Set HF_TOKEN env var only if you hit rate limits.\n")
     print("Prefetching benchmark datasets into local HuggingFace cache...\n")
     failed = []
     for i, (path, kwargs) in enumerate(DOWNLOADS, 1):
