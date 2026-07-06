@@ -1,4 +1,8 @@
 .venv/
 results/*.json
+!results/sample.json
 __pycache__/
 *.pyc
+*.pyo
+.DS_Store
+results/report.html
