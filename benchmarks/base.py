@@ -9,6 +9,7 @@ class BaseBenchmark(ABC):
     def __init__(self, client: OllamaClient, config: dict):
         self.client = client
         self.config = config
+        self.judge_client = config.get("judge_client", client)  # separate client for LLM-as-judge
 
     @abstractmethod
     def load_samples(self) -> list[dict]:

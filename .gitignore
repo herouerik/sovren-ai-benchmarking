@@ -8,3 +8,7 @@ __pycache__/
 *.pyo
 .DS_Store
 .datasets_ready
+config.yaml
+
+lib/
+lib64/

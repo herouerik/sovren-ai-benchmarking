@@ -131,6 +131,14 @@ python run_benchmark.py
 
 Edit `config.yaml` to change which models are included, how many samples per benchmark, and which judge model to use.
 
+> **Cloud judge:** For the philosophical benchmark, you can use a cloud model as
+> the judge instead of a local Ollama model. Three providers available:
+> - `"opencode"` — free, auth-free, key-free via OpenCode Zen API (`https://opencode.ai/zen/v1`)
+> - `"openai"` — any OpenAI-compatible API (DeepSeek, OpenAI, etc.) with an API key
+> - `"ollama"` — a local Ollama model (default)
+> See `config.example.yaml` for all options. `config.yaml` is gitignored so you
+> can keep local settings private.
+
 ---
 
 ## Reading the results
