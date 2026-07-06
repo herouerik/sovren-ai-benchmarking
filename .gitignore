@@ -1,6 +1,7 @@
 .venv/
 results/*.json
 !results/sample.json
+results/*.log
 results/report.html
 __pycache__/
 *.pyc
