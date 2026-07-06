@@ -5,26 +5,34 @@ ollama:
   max_tokens: 2048
 
 models:
-  # Small / fast baselines — run first for early results
-  - llama3.2:3b          #  2.0 GB
-  - qwen2.5-coder:7b     #  4.7 GB
-  - llama3.1:8b          #  4.9 GB
-  # Mid-size
-  - codestral:22b        # 12.6 GB
-  - gemma4-12b-agentic:latest      # 12.7 GB
-  - gemma4-12b-agentic-mtp:latest  # 13.1 GB
-  - devstral-small-2:latest        # 15.2 GB
-  - gemma4:26b-mlx       # 16.7 GB
-  - qwen3-coder:latest   # 18.6 GB
-  # Large — overnight
-  - qwen2.5-coder:32b    # 19.9 GB
-  - qwen3:32b            # 20.2 GB
-  - qwen3-32b-nothink:latest  # 20.2 GB
-  - gemma4:31b-mlx       # 20.2 GB
-  - nemotron-3-nano:30b  # 24.3 GB
-  - nemotron-cascade-2:latest  # 24.3 GB
+  # Locally available on this machine (CPU only, 8 cores, 30GB RAM)
+  - llama3.1:8b
+  - qwen2.5:7b
+  - qwen2.5-coder:7b
+  - gemma4:e4b
 
-judge_model: "qwen3:32b"
+# Judge configuration for philosophical benchmark
+# Provider: "ollama" (local) or "openai" (cloud, OpenAI-compatible API)
+# When using "openai", the server may be slower on the first call (cold start) but subsequent calls are fast.
+# The model must support JSON-formatted responses.
+judge:
+  # Cloud judge options:
+  #
+  #   A) OpenCode Zen (free, no auth needed):
+  #        provider: "opencode"
+  #        model: "opencode/deepseek-v4-flash-free"
+  #
+  #   B) Generic OpenAI-compatible API (e.g. DeepSeek):
+  #        provider: "openai"
+  #        model: "deepseek-chat"
+  #        base_url: "https://api.deepseek.com/v1"
+  #        api_key: "${DEEPSEEK_API_KEY}"
+  #
+  provider: "opencode"
+  model: "opencode/deepseek-v4-flash-free"
+
+# Fallback judge model used only when judge.provider == "ollama":
+judge_model: "llama3.1:8b"
 
 benchmarks:
   reasoning:
@@ -36,30 +44,30 @@ benchmarks:
       - "formal_logic"
       - "high_school_mathematics"
       - "philosophy"
-    n_samples: 20
+    n_samples: 5
 
   math:
     enabled: true
     dataset: "openai/gsm8k"
     split: "test"
-    n_samples: 50
+    n_samples: 10
 
   coding:
     enabled: true
     datasets:
       - "openai/openai_humaneval"
       - "google-research-datasets/mbpp"
-    n_samples: 30
+    n_samples: 5
     execution_timeout: 10
 
   sql:
     enabled: true
     dataset: "xlangai/spider"
-    n_samples: 30
+    n_samples: 5
 
   philosophical:
     enabled: true
-    n_samples: 10
+    n_samples: 5
     judge_rubric:
       - "Depth of reasoning (1-5)"
       - "Coherence and logical consistency (1-5)"

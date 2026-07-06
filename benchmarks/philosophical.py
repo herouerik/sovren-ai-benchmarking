@@ -34,10 +34,10 @@ class PhilosophicalBenchmark(BaseBenchmark):
             "Originality of insight (1-5)",
             "Clarity of expression (1-5)",
         ])
-        judge_model = self.config.get("judge_model", "qwen3:32b")
+        judge_model = self.config.get("judge_model", "llama3.1:8b")
 
         result = llm_judge(
-            client=self.client,
+            client=self.judge_client,
             judge_model=judge_model,
             question=sample["prompt"],
             response=response,
@@ -55,5 +55,5 @@ class PhilosophicalBenchmark(BaseBenchmark):
 
     def run(self, model: str, n_samples: int = None) -> list[dict]:
         # Override to pass judge config through
-        self.config["judge_model"] = self.config.get("judge_model", "qwen3:32b")
+        self.config["judge_model"] = self.config.get("judge_model", "llama3.1:8b")
         return super().run(model, n_samples)

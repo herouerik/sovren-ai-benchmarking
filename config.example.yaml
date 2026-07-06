@@ -1,0 +1,85 @@
+ollama:
+  base_url: "http://localhost:11434/v1"
+  api_key: "ollama"
+  timeout: 120
+  max_tokens: 2048
+
+models:
+  - llama3.1:8b
+  - qwen2.5:7b
+  - qwen2.5-coder:7b
+
+# Judge configuration for philosophical benchmark.
+# Three options:
+#
+#   A) Local Ollama model (default):
+#        judge:
+#          provider: "ollama"
+#        judge_model: "llama3.1:8b"
+#
+#   B) OpenCode Zen — free, auth-free, key-free (uses https://opencode.ai/zen/v1):
+#        judge:
+#          provider: "opencode"
+#          model: "opencode/deepseek-v4-flash-free"
+#
+#   C) Generic OpenAI-compatible API (e.g. DeepSeek):
+#        judge:
+#          provider: "openai"
+#          model: "deepseek-chat"
+#          base_url: "https://api.deepseek.com/v1"
+#          api_key: "${DEEPSEEK_API_KEY}"   # set env var to avoid committing secrets
+#          timeout: 30
+#
+judge:
+  provider: "ollama"
+
+judge_model: "llama3.1:8b"
+
+benchmarks:
+  reasoning:
+    enabled: true
+    dataset: "cais/mmlu"
+    subjects:
+      - "abstract_algebra"
+      - "logical_fallacies"
+      - "formal_logic"
+      - "high_school_mathematics"
+      - "philosophy"
+    n_samples: 20
+
+  math:
+    enabled: true
+    dataset: "openai/gsm8k"
+    split: "test"
+    n_samples: 50
+
+  coding:
+    enabled: true
+    datasets:
+      - "openai/openai_humaneval"
+      - "google-research-datasets/mbpp"
+    n_samples: 30
+    execution_timeout: 10
+
+  sql:
+    enabled: true
+    dataset: "xlangai/spider"
+    n_samples: 30
+
+  philosophical:
+    enabled: true
+    n_samples: 10
+    judge_rubric:
+      - "Depth of reasoning (1-5)"
+      - "Coherence and logical consistency (1-5)"
+      - "Acknowledgment of multiple perspectives (1-5)"
+      - "Originality of insight (1-5)"
+      - "Clarity of expression (1-5)"
+
+  speed:
+    enabled: false
+    n_runs: 3
+
+output:
+  dir: "results"
+  save_raw: true

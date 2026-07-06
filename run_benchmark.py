@@ -25,7 +25,7 @@ else:
     print("Tip: run `python prefetch_datasets.py` once to cache all datasets locally "
           "and silence HuggingFace network requests.")
 
-from harness.client import OllamaClient
+from harness.client import OllamaClient, OpenCodeClient, build_client, resolve_env_vars
 from benchmarks.reasoning import MMLUBenchmark, ARCBenchmark
 from benchmarks.math import GSM8KBenchmark
 from benchmarks.coding import HumanEvalBenchmark, MBPPBenchmark
@@ -81,6 +81,23 @@ def main():
         api_key=cfg["ollama"].get("api_key", "ollama"),
         timeout=cfg["ollama"].get("timeout", 120),
     )
+
+    # Build separate judge client if a cloud provider is configured
+    judge_cfg = cfg.get("judge", {})
+    judge_provider = judge_cfg.get("provider", "ollama")
+    if judge_provider == "openai":
+        judge_client = build_client(judge_cfg)
+        judge_model = resolve_env_vars(judge_cfg.get("model", "deepseek-chat"))
+    elif judge_provider == "opencode":
+        # OpenCode CLI — free, auth-free, key-free (wraps opencode binary)
+        judge_client = OpenCodeClient(
+            model=judge_cfg.get("model", "opencode/deepseek-v4-flash-free"),
+            timeout=judge_cfg.get("timeout", 120),
+        )
+        judge_model = judge_cfg.get("model", "opencode/deepseek-v4-flash-free")
+    else:
+        judge_client = client
+        judge_model = cfg.get("judge_model", "llama3.1:8b")
 
     if args.list_models:
         models = list_ollama_models(cfg["ollama"]["base_url"])
@@ -148,7 +165,8 @@ def main():
             # resolve group name for config lookup (e.g. mmlu → reasoning)
             cfg_key = next((g for g, members in BENCH_GROUPS.items() if bench_name in members), bench_name)
             bcfg = {**cfg["ollama"], **bench_cfg.get(cfg_key, {})}
-            bcfg["judge_model"] = cfg.get("judge_model", "qwen3:32b")
+            bcfg["judge_model"] = judge_model
+            bcfg["judge_client"] = judge_client
 
             bench_class = BENCHMARK_REGISTRY[bench_name]
             bench = bench_class(client=client, config=bcfg)
