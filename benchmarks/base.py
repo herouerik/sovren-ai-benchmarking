@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Any
 from harness.client import OllamaClient
 
@@ -58,6 +59,7 @@ class BaseBenchmark(ABC):
                 "id": sample.get("id", ""),
                 "model": model,
                 "benchmark": self.name,
+                "ts": datetime.now().isoformat(timespec="seconds"),
                 "prompt": prompt[:500],
                 "response": response["content"][:1000],
                 "elapsed": response["elapsed"],

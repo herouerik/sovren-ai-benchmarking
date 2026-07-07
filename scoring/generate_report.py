@@ -44,6 +44,7 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None) -> dict:
     scores: dict[str, dict[str, float]] = {}
     speeds: dict[str, float] = {}
 
+    model_timestamps: dict[str, str] = {}
     for model in models:
         mrows = [r for r in raw if r["model"] == model]
         scores[model] = {}
@@ -53,6 +54,10 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None) -> dict:
                 scores[model][bench] = sum(r["score"] for r in brows) / len(brows)
         toks = [r["tok_per_sec"] for r in mrows if r.get("tok_per_sec", 0) > 0]
         speeds[model] = sum(toks) / len(toks) if toks else 0.0
+        # Latest sample timestamp = when this model's evaluation completed
+        ts_vals = [r["ts"] for r in mrows if r.get("ts")]
+        if ts_vals:
+            model_timestamps[model] = max(ts_vals)
 
     run_id = raw[0].get("run_id", "UNKNOWN") if raw else "UNKNOWN"
 
@@ -64,6 +69,7 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None) -> dict:
         "benchmarks": benchmarks,
         "scores": scores,
         "speeds": speeds,
+        "model_timestamps": model_timestamps,
     }
     if all_models:
         payload["all_models"] = all_models
