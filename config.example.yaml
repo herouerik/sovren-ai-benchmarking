@@ -3,11 +3,18 @@ ollama:
   api_key: "ollama"
   timeout: 120
   max_tokens: 2048
+  default_ctx: 32768  # Default num_ctx for all models (per-model ctx: overrides)
 
+# Model list: use strings for simple names, or dicts to set per-model ctx.
+# ctx=N sets num_ctx in the Ollama API call — limits KV cache so VRAM
+# estimates are realistic. The VRAM estimate on the dashboard uses this ctx.
+# Without it, the global default_ctx applies.
 models:
   - llama3.1:8b
   - qwen2.5:7b
   - qwen2.5-coder:7b
+  - model: qwen3:32b
+    ctx: 16384  # Per-model override: use 16K instead of the 32K default
 
 # Judge configuration for philosophical benchmark.
 # Set provider to choose the judge backend — all config keys live at the
