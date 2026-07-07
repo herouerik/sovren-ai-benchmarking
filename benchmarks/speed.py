@@ -123,7 +123,7 @@ class SpeedBenchmark(BaseBenchmark):
         # No accuracy signal — just check the model responded at all
         return {"passed": bool(response.strip()), "score": 1.0 if response.strip() else 0.0}
 
-    def run(self, model: str, n_samples: int = None) -> list[dict]:
+    def run(self, model: str, n_samples: int = None, on_sample=None, ctx: int | None = None) -> list[dict]:
         probes = self.load_samples()
         n_runs = self.config.get("n_runs", 3)
         results = []
@@ -137,6 +137,7 @@ class SpeedBenchmark(BaseBenchmark):
                     system=None,
                     max_tokens=probe.get("max_tokens", 200),
                     temperature=0.0,
+                    ctx=ctx,
                 )
                 if not resp["error"] and resp["ttft"] is not None:
                     runs.append(resp)

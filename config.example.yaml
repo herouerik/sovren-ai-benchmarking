@@ -85,3 +85,12 @@ benchmarks:
 output:
   dir: "results"
   save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 2
+  memory_guard:
+    enabled: true
+    calibration_samples: 3
+    spike_threshold: 5.0
+    max_baseline_seconds: 30

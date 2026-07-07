@@ -10,6 +10,8 @@ __pycache__/
 .datasets_ready
 config.yaml
 
+docs_steering/
+
 lib/
 lib64/
 data/spider/

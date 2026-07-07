@@ -199,6 +199,57 @@ Edit `config.yaml` to change which models are included, how many samples per ben
 
 ---
 
+## Incremental runs — patching into an existing baseline
+
+A full run across 15 models × 6 benchmarks can take many hours. If a model, benchmark, or an entire batch fails partway through, you don't need to repeat everything. The `--baseline` flag loads a prior results JSON and merges new results into it:
+
+```bash
+# You already have results/my_baseline.json with 14 models.
+# You just pulled a new model. Add it without re-running everything:
+python run_benchmark.py --baseline results/my_baseline.json --models nemotron-3-nano:30b
+
+# A specific benchmark crashed for all models (e.g. Spider needed the
+# SQLite databases). Fix the issue, then re-run only that benchmark:
+python run_benchmark.py --baseline results/my_baseline.json --benchmarks sql
+
+# One model failed halfway through (OOM, timeout). Redo that model:
+python run_benchmark.py --baseline results/my_baseline.json --models gemma4:31b-mlx
+
+# Cherry-pick a single cell: one model × one benchmark group
+python run_benchmark.py --baseline results/my_baseline.json --models qwen3:32b --benchmarks coding
+
+# Your run was killed before it could save (e.g. laptop closed, process
+# SIGKILL'd). Recover by reconstructing a lightweight baseline from the
+# log, then patch the missing pieces:
+#
+#   1. Parse the log to recreate per-sample records — you'll lose
+#      per-sample timing but preserve accuracy scores.
+#   2. Launch an incremental run for the models/benchmarks that never
+#      completed.
+```
+
+### How it works
+
+New results **replace** matching `(model, benchmark)` pairs in the baseline. Everything else is kept. The merged set is saved to a **new timestamped file** — the original baseline is never modified. The HTML dashboard is regenerated after every model (with auto-refresh) so you can watch progress.
+
+A common workflow:
+
+```bash
+# 1. Initial full run — let it bake overnight
+python run_benchmark.py
+
+# 2. Next morning: review results, notice Spider all failed
+#    Fix the issue (e.g. download SQLite databases), then patch:
+python run_benchmark.py --baseline results/20260707_235042.json --benchmarks sql
+
+# 3. Later: a new model lands. Patch again:
+python run_benchmark.py --baseline results/20260708_091200.json --models llama4:latest
+```
+
+Each step produces a standalone `results/<timestamp>.json` that represents the complete picture up to that point.
+
+---
+
 ## Reading the results
 
 ### Dashboard

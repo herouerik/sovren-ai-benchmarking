@@ -108,7 +108,7 @@ class MBPPBenchmark(BaseBenchmark):
             test_code = "\n".join(row["test_list"])
             samples.append({
                 "id": f"mbpp_{row['task_id']}",
-                "prompt": row["text"],
+                "prompt": row["prompt"],
                 "test_code": test_code,
             })
         return samples

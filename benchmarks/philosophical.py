@@ -64,6 +64,6 @@ class PhilosophicalBenchmark(BaseBenchmark):
             "judge_error": result.get("error"),
         }
 
-    def run(self, model: str, n_samples: int = None, on_sample=None) -> list[dict]:
+    def run(self, model: str, n_samples: int = None, on_sample=None, ctx: int | None = None) -> list[dict]:
         self.config["judge_model"] = self.config.get("judge_model", "llama3.1:8b")
-        return super().run(model, n_samples, on_sample=on_sample)
+        return super().run(model, n_samples, on_sample=on_sample, ctx=ctx)
