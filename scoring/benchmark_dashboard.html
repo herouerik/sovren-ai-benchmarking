@@ -296,7 +296,7 @@ const BENCH_TIPS = {
   },
   philosophical: {
     title: 'Philosophical Reasoning — LLM-as-Judge',
-    body: '10 curated open-ended questions: free will, justice, moral realism, suffering, technology & freedom, lying, obligations to future generations, machine understanding, meaning through suffering, knowledge & power. A second local model acts as judge and scores each response 1–5 on five axes: depth of reasoning · coherence · acknowledgment of multiple perspectives · originality of insight · clarity of expression. Final score = mean judge score / 5.0. No ground truth exists; the rubric is the signal.'
+    body: '10 curated open-ended questions: free will, justice, moral realism, suffering, technology & freedom, lying, obligations to future generations, machine understanding, meaning through suffering, knowledge & power. A judge model (configurable via config.yaml: opencode cloud, single local Ollama, or multi-model ensemble) scores each response 1–5 on five axes: depth of reasoning · coherence · acknowledgment of multiple perspectives · originality of insight · clarity of expression. Final score = mean judge score / 5.0. No ground truth exists; the rubric is the signal.'
   }
 };
 

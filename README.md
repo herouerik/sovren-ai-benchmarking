@@ -83,11 +83,13 @@ This extracts the 20 validation databases to `data/spider/database/` and all sub
 ---
 
 ### 6. Philosophical discussion (LLM-as-judge)
-Ten curated open-ended philosophical questions — free will, justice, moral realism, suffering, epistemic power, and more. No ground truth exists. A second local model (default: `qwen3:32b`) acts as judge and scores each response 1–5 on five rubric axes: depth of reasoning, coherence, acknowledgment of multiple perspectives, originality of insight, and clarity of expression. The mean judge score becomes the benchmark score.
+Ten curated open-ended philosophical questions — free will, justice, moral realism, suffering, epistemic power, and more. No ground truth exists. A judge model scores each response 1–5 on five rubric axes: depth of reasoning, coherence, acknowledgment of multiple perspectives, originality of insight, and clarity of expression. The mean judge score becomes the benchmark score.
 
 **Tells you:** how well does the model reason through open-ended, ambiguous problems with no single correct answer?
 
 **Method:** LLM-as-judge is a widely used evaluation pattern for open-ended generation. See [Zheng et al., 2023 — MT-Bench](https://arxiv.org/abs/2306.05685) for the canonical reference. The prompts and rubric in this repo are original.
+
+The judge is configured via `judge.provider` in `config.yaml` — see the [Judge configuration](#judge-configuration) section for available backends.
 
 ---
 
@@ -147,13 +149,53 @@ python run_benchmark.py
 
 Edit `config.yaml` to change which models are included, how many samples per benchmark, and which judge model to use.
 
-> **Cloud judge:** For the philosophical benchmark, you can use a cloud model as
-> the judge instead of a local Ollama model. Three providers available:
-> - `"opencode"` — free, auth-free, key-free via OpenCode Zen API (`https://opencode.ai/zen/v1`)
-> - `"openai"` — any OpenAI-compatible API (DeepSeek, OpenAI, etc.) with an API key
-> - `"ollama"` — a local Ollama model (default)
-> See `config.example.yaml` for all options. `config.yaml` is gitignored so you
-> can keep local settings private.
+> **Judge configuration:** The philosophical benchmark uses an LLM-as-judge to
+> score open-ended responses. You can choose between four judge backends by
+> setting `judge.provider` in `config.yaml`. All config keys live at the same
+> level under `judge`; only the ones relevant to the selected provider are read.
+>
+> | `provider` | Config key | Behaviour | Party |
+> |---|---|---|---|
+> | `opencode` | `cloud_model` | Cloud judge via the opencode CLI — free, auth-free, no API key | Cloud-friendly |
+> | `openai` | `cloud_model` | Any OpenAI-compatible API (DeepSeek, OpenAI, etc.) using `base_url` and `api_key` | Cloud-friendly |
+> | `ollama` | `ollama_single_model` | Single local Ollama model | Offline |
+> | `ensemble` | `ensemble_models` | Multiple local models; each judges independently and scores are averaged | Offline |
+>
+> **Important:** The judge provider is explicit — there is no automatic fallback.
+> If the cloud is unreachable the run fails; if you want offline operation,
+> flip `provider` to `"ollama"` or `"ensemble"`. This avoids silent score drift
+> between runs using different judges.
+>
+> Example configs (see `config.example.yaml` for all options):
+>
+> ```yaml
+> # Cloud (default for this machine):
+> judge:
+>   provider: "opencode"
+>   cloud_model: "opencode/deepseek-v4-flash-free"
+>
+> # Local single model:
+> judge:
+>   provider: "ollama"
+>   ollama_single_model: "llama3.1:8b"
+>
+> # Local ensemble (averages 3 judges):
+> judge:
+>   provider: "ensemble"
+>   ensemble_models:
+>     - qwen3:8b
+>     - deepseek-r1:7b
+>     - llama3.1:8b
+>
+> # Generic OpenAI-compatible API:
+> judge:
+>   provider: "openai"
+>   cloud_model: "deepseek-chat"
+>   base_url: "https://api.deepseek.com/v1"
+>   api_key: "${DEEPSEEK_API_KEY}"
+> ```
+>
+> `config.yaml` is gitignored so you can keep local settings private.
 
 ---
 

@@ -1,5 +1,5 @@
 from benchmarks.base import BaseBenchmark
-from harness.judge import llm_judge
+from harness.judge import llm_judge, llm_judge_ensemble
 
 
 PROMPTS = [
@@ -35,14 +35,25 @@ class PhilosophicalBenchmark(BaseBenchmark):
             "Clarity of expression (1-5)",
         ])
         judge_model = self.config.get("judge_model", "llama3.1:8b")
+        use_ensemble = self.config.get("use_ensemble", False)
 
-        result = llm_judge(
-            client=self.judge_client,
-            judge_model=judge_model,
-            question=sample["prompt"],
-            response=response,
-            criteria=criteria,
-        )
+        if use_ensemble:
+            models = self.config.get("ensemble_models", [])
+            result = llm_judge_ensemble(
+                client=self.judge_client,
+                models=models,
+                question=sample["prompt"],
+                response=response,
+                criteria=criteria,
+            )
+        else:
+            result = llm_judge(
+                client=self.judge_client,
+                judge_model=judge_model,
+                question=sample["prompt"],
+                response=response,
+                criteria=criteria,
+            )
         mean = result.get("mean_score", 0.0)
         return {
             "passed": mean >= 3.5,

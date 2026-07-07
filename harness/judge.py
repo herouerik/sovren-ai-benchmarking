@@ -42,3 +42,41 @@ Return only the JSON object."""
         pass
 
     return {"scores": {}, "reasoning": content, "mean_score": 0.0, "error": "parse_failed"}
+
+
+def llm_judge_ensemble(client: OllamaClient, models: list[str],
+                        question: str, response: str, criteria: list[str]) -> dict:
+    """Call each model as judge and average their scores."""
+    scores_list: list[dict[str, float]] = []
+    all_reasoning: list[str] = []
+    errors: list[str] = []
+
+    for model in models:
+        result = llm_judge(client, model, question, response, criteria)
+        if result.get("error"):
+            errors.append(f"{model}: {result['error']}")
+            continue
+        scores_list.append(result.get("scores", {}))
+        all_reasoning.append(result.get("reasoning", ""))
+
+    if not scores_list:
+        msg = "; ".join(errors) or "all ensemble judges returned empty scores"
+        return {"scores": {}, "reasoning": msg, "mean_score": 0.0, "error": msg}
+
+    all_criteria = list(scores_list[0].keys())
+    avg_scores = {
+        c: sum(s.get(c, 0) for s in scores_list) / len(scores_list)
+        for c in all_criteria
+    }
+
+    avg_mean = sum(avg_scores.values()) / max(len(avg_scores), 1)
+    combined = " | ".join(all_reasoning)
+    if errors:
+        combined += f" (errors: {'; '.join(errors)})"
+
+    return {
+        "scores": avg_scores,
+        "reasoning": combined,
+        "mean_score": avg_mean,
+        "error": None,
+    }

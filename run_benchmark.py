@@ -88,22 +88,26 @@ def main():
         timeout=cfg["ollama"].get("timeout", 120),
     )
 
-    # Build separate judge client if a cloud provider is configured
+    # Build judge client and determine judge model(s)
     judge_cfg = cfg.get("judge", {})
     judge_provider = judge_cfg.get("provider", "ollama")
+
+    use_ensemble = (judge_provider == "ensemble")
+    ensemble_models = judge_cfg.get("ensemble_models", []) if use_ensemble else []
+
     if judge_provider == "openai":
         judge_client = build_client(judge_cfg)
-        judge_model = resolve_env_vars(judge_cfg.get("model", "deepseek-chat"))
+        judge_model = resolve_env_vars(judge_cfg.get("cloud_model", "deepseek-chat"))
     elif judge_provider == "opencode":
-        # OpenCode CLI — free, auth-free, key-free (wraps opencode binary)
         judge_client = OpenCodeClient(
-            model=judge_cfg.get("model", "opencode/deepseek-v4-flash-free"),
+            model=judge_cfg.get("cloud_model", "opencode/deepseek-v4-flash-free"),
             timeout=judge_cfg.get("timeout", 120),
         )
-        judge_model = judge_cfg.get("model", "opencode/deepseek-v4-flash-free")
+        judge_model = judge_cfg.get("cloud_model", "opencode/deepseek-v4-flash-free")
     else:
+        # "ollama" or "ensemble" — both use local Ollama client
         judge_client = client
-        judge_model = cfg.get("judge_model", "llama3.1:8b")
+        judge_model = judge_cfg.get("ollama_single_model", "llama3.1:8b")
 
     if args.list_models:
         models = list_ollama_models(cfg["ollama"]["base_url"])
@@ -194,6 +198,8 @@ def main():
             bcfg = {**cfg["ollama"], **bench_cfg.get(cfg_key, {})}
             bcfg["judge_model"] = judge_model
             bcfg["judge_client"] = judge_client
+            bcfg["use_ensemble"] = use_ensemble
+            bcfg["ensemble_models"] = ensemble_models
 
             bench_class = BENCHMARK_REGISTRY[bench_name]
             bench = bench_class(client=client, config=bcfg)
