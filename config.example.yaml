@@ -10,30 +10,32 @@ models:
   - qwen2.5-coder:7b
 
 # Judge configuration for philosophical benchmark.
-# Three options:
+# Set provider to choose the judge backend — all config keys live at the
+# same level; only the ones relevant to the selected provider are used.
 #
-#   A) Local Ollama model (default):
-#        judge:
-#          provider: "ollama"
-#        judge_model: "llama3.1:8b"
-#
-#   B) OpenCode Zen — free, auth-free, key-free (uses https://opencode.ai/zen/v1):
-#        judge:
-#          provider: "opencode"
-#          model: "opencode/deepseek-v4-flash-free"
-#
-#   C) Generic OpenAI-compatible API (e.g. DeepSeek):
-#        judge:
-#          provider: "openai"
-#          model: "deepseek-chat"
-#          base_url: "https://api.deepseek.com/v1"
-#          api_key: "${DEEPSEEK_API_KEY}"   # set env var to avoid committing secrets
-#          timeout: 30
+#   provider: "opencode"   — cloud via opencode CLI (free, no API key)
+#   provider: "openai"     — generic OpenAI-compatible API
+#   provider: "ollama"     — single local Ollama model
+#   provider: "ensemble"   — multiple local models, scores averaged
 #
 judge:
   provider: "ollama"
 
-judge_model: "llama3.1:8b"
+  # Used when provider is "opencode" or "openai":
+  # cloud_model: "opencode/deepseek-v4-flash-free"
+
+  # Used when provider is "ollama":
+  ollama_single_model: "llama3.1:8b"
+
+  # Used when provider is "ensemble":
+  # ensemble_models:
+  #   - qwen3:8b
+  #   - deepseek-r1:7b
+  #   - llama3.1:8b
+
+  # Used when provider is "openai":
+  # base_url: "https://api.deepseek.com/v1"
+  # api_key: "${DEEPSEEK_API_KEY}"
 
 benchmarks:
   reasoning:

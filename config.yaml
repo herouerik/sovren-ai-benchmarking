@@ -10,29 +10,27 @@ models:
   - qwen2.5:7b
   - qwen2.5-coder:7b
   - gemma4:e4b
+  - qwen3:8b
+  - deepseek-r1:7b
+  - llama3.2:3b
+  - qwen2.5:1.5b
 
-# Judge configuration for philosophical benchmark
-# Provider: "ollama" (local) or "openai" (cloud, OpenAI-compatible API)
-# When using "openai", the server may be slower on the first call (cold start) but subsequent calls are fast.
-# The model must support JSON-formatted responses.
+# Judge configuration for philosophical benchmark.
+# Model must support JSON-formatted responses.
+#
+#   provider: "opencode"   — cloud via opencode CLI (free, no API key)
+#   provider: "openai"     — generic OpenAI-compatible API
+#   provider: "ollama"     — single local Ollama model
+#   provider: "ensemble"   — multiple local Ollama models, scores averaged
+#
 judge:
-  # Cloud judge options:
-  #
-  #   A) OpenCode Zen (free, no auth needed):
-  #        provider: "opencode"
-  #        model: "opencode/deepseek-v4-flash-free"
-  #
-  #   B) Generic OpenAI-compatible API (e.g. DeepSeek):
-  #        provider: "openai"
-  #        model: "deepseek-chat"
-  #        base_url: "https://api.deepseek.com/v1"
-  #        api_key: "${DEEPSEEK_API_KEY}"
-  #
   provider: "opencode"
-  model: "opencode/deepseek-v4-flash-free"
-
-# Fallback judge model used only when judge.provider == "ollama":
-judge_model: "llama3.1:8b"
+  cloud_model: "opencode/deepseek-v4-flash-free"
+  ollama_single_model: "llama3.1:8b"
+  ensemble_models:
+    - qwen3:8b
+    - deepseek-r1:7b
+    - llama3.1:8b
 
 benchmarks:
   reasoning:
