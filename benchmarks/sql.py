@@ -61,9 +61,19 @@ class SpiderBenchmark(BaseBenchmark):
             except Exception as e:
                 pass
 
-        # Fallback: normalised string match
+        # Fallback: normalised string match.
+        # Spider's reference queries use quirky spacing (e.g. "name ,  country");
+        # models generate standard spacing. Normalise both to a canonical form
+        # before comparing so cosmetic differences don't cause false failures.
         def normalise(sql):
-            return re.sub(r'\s+', ' ', sql.lower().strip().rstrip(';'))
+            sql = sql.lower().strip().rstrip(';')
+            sql = re.sub(r'\s+', ' ', sql)
+            sql = re.sub(r'\s*,\s*', ', ', sql)
+            sql = re.sub(r'\s*=\s*', ' = ', sql)
+            sql = re.sub(r'\s*<\s*', ' < ', sql)
+            sql = re.sub(r'\s*>\s*', ' > ', sql)
+            sql = re.sub(r'\binner\s+join\b', 'join', sql)
+            return sql
 
         passed = normalise(predicted_sql) == normalise(sample["expected_sql"])
         return {
