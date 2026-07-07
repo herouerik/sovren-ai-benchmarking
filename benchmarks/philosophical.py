@@ -53,7 +53,6 @@ class PhilosophicalBenchmark(BaseBenchmark):
             "judge_error": result.get("error"),
         }
 
-    def run(self, model: str, n_samples: int = None) -> list[dict]:
-        # Override to pass judge config through
+    def run(self, model: str, n_samples: int = None, on_sample=None) -> list[dict]:
         self.config["judge_model"] = self.config.get("judge_model", "llama3.1:8b")
-        return super().run(model, n_samples)
+        return super().run(model, n_samples, on_sample=on_sample)

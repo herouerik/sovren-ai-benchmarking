@@ -13,13 +13,22 @@ SYSTEM = "You are a SQL expert. Given a database schema and a natural language q
 
 
 def extract_sql(response: str) -> str:
+    # 1. Fenced code block (most reliable)
     match = re.search(r'```(?:sql)?\n(.*?)```', response, re.DOTALL)
     if match:
         return match.group(1).strip()
-    # Take first SELECT statement
-    match = re.search(r'(SELECT\s+.+)', response, re.DOTALL | re.IGNORECASE)
+    # 2. Explicit semicolon terminator — handles multi-line SQL with JOINs/subqueries
+    match = re.search(r'(SELECT\b.*?);', response, re.IGNORECASE | re.DOTALL)
     if match:
         return match.group(1).strip()
+    # 3. First SELECT line — stops at newline so trailing explanation is excluded.
+    #    Then strip trailing prose sentence ("SELECT ... FROM t. This returns ...").
+    #    The sub-pattern `. ` + word matches sentence endings but NOT schema.table dots.
+    match = re.search(r'(SELECT\b[^\n]+)', response, re.IGNORECASE)
+    if match:
+        sql = match.group(1).strip()
+        sql = re.sub(r'\.\s+\w.*$', '', sql).strip()
+        return sql
     return response.strip()
 
 
