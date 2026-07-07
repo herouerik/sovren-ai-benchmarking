@@ -23,7 +23,15 @@ class OllamaClient:
     def __init__(self, base_url: str, api_key: str = "ollama", timeout: int = 120):
         self.client = OpenAI(base_url=base_url, api_key=api_key, timeout=timeout)
 
-    def complete_streaming(self, model: str, prompt: str, system: str = None, max_tokens: int = 2048, temperature: float = 0.0) -> dict:
+    def _build_ctx_kwargs(self, ctx: int | None, kwargs: dict) -> dict:
+        if ctx is None:
+            return kwargs
+        extra = kwargs.get("extra_body", {})
+        extra["options"] = {**(extra.get("options", {})), "num_ctx": ctx}
+        kwargs["extra_body"] = extra
+        return kwargs
+
+    def complete_streaming(self, model: str, prompt: str, system: str = None, max_tokens: int = 2048, temperature: float = 0.0, ctx: int | None = None) -> dict:
         """Streaming completion. Records TTFT and decode TPS separately from prefill."""
         messages = []
         if system:
@@ -37,14 +45,15 @@ class OllamaClient:
         completion_tokens = 0
 
         try:
-            stream = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                stream=True,
-                stream_options={"include_usage": True},
-            )
+            kwargs = self._build_ctx_kwargs(ctx, {
+                "model": model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "stream": True,
+                "stream_options": {"include_usage": True},
+            })
+            stream = self.client.chat.completions.create(**kwargs)
             for chunk in stream:
                 if chunk.usage:
                     prompt_tokens = chunk.usage.prompt_tokens or 0
@@ -83,7 +92,7 @@ class OllamaClient:
                 "tok_per_sec": 0, "decode_tps": 0, "error": str(e),
             }
 
-    def complete(self, model: str, prompt: str, system: str = None, max_tokens: int = 2048, temperature: float = 0.0) -> dict:
+    def complete(self, model: str, prompt: str, system: str = None, max_tokens: int = 2048, temperature: float = 0.0, ctx: int | None = None) -> dict:
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -91,12 +100,13 @@ class OllamaClient:
 
         start = time.time()
         try:
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-            )
+            kwargs = self._build_ctx_kwargs(ctx, {
+                "model": model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            })
+            response = self.client.chat.completions.create(**kwargs)
             elapsed = time.time() - start
             content = response.choices[0].message.content or ""
             tokens = response.usage.completion_tokens if response.usage else 0

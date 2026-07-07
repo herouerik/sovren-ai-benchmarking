@@ -53,6 +53,8 @@ body::after{
 .rank-num{font-size:8px;color:var(--muted);letter-spacing:.06em;flex-shrink:0;padding-top:1px}
 .rank-score{font-family:var(--serif);font-size:20px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--muted)}
 .rank-card.s-current:first-of-type .rank-score,.rank-card.s-current.rank-first .rank-score{color:var(--accent)}
+.rank-score-swapped{color:#9e8818 !important}
+.rank-swap{font-size:14px;margin-left:2px;line-height:1;vertical-align:middle}
 .rank-model{font-size:9px;letter-spacing:.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
 .rank-speed{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.04em}
 
@@ -76,10 +78,16 @@ body::after{
 .model-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .model-name{font-size:11px;color:var(--text);white-space:nowrap}
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
+.model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:var(--text)}
+.overall-num.is-swapped{color:#d4a84a}
 .td-score{text-align:center;padding:14px 8px;min-width:76px;transition:opacity .15s}
-.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:var(--text)}
+.td-score.is-swapped{background:rgba(165,140,28,0.08) !important}
+.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:var(--text);display:block}
+.score-num.is-swapped{color:#9e8818;font-size:11px}
+.score-n{font-size:8px;color:var(--dim);display:block;margin-top:1px}
+.score-swap{font-size:11px;color:#9e8818;display:block;margin-top:1px;letter-spacing:.02em}
 
 /* SIDEBAR */
 .sidebar{display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
@@ -242,10 +250,21 @@ const SAMPLE_DATA = {
     'devstral-small-2':        {mmlu:.61,arc:.58,gsm8k:.66,humaneval:.81,mbpp:.84,spider:.72,philosophical:.48}
   },
   speeds: {'qwen3:32b':18.4,'gemma4:31b-mlx':32.1,'gemma4-12b-agentic-mtp':52.8,'qwen3-coder':38.7,'devstral-small-2':45.2},
+  sample_sizes: {
+    'qwen3:32b':              {mmlu:50,arc:50,gsm8k:50,humaneval:30,mbpp:30,spider:30,philosophical:10},
+    'gemma4:31b-mlx':         {mmlu:50,arc:50,gsm8k:50,humaneval:30,mbpp:30,spider:30,philosophical:10},
+    'gemma4-12b-agentic-mtp': {mmlu:50,arc:50,gsm8k:50,humaneval:30,mbpp:30,spider:30,philosophical:10},
+    'qwen3-coder':             {mmlu:50,arc:50,gsm8k:50,humaneval:30,mbpp:30,spider:30,philosophical:10},
+    'devstral-small-2':        {mmlu:50,arc:50,gsm8k:50,humaneval:30,mbpp:30,spider:30,philosophical:10}
+  },
   all_models: [
     'qwen3:32b','gemma4:31b-mlx','gemma4-12b-agentic-mtp','qwen3-coder','devstral-small-2',
     'nemotron-3-nano:30b','qwen3-32b-nothink:latest','llama3.2:3b','llama3.1:8b'
-  ]
+  ],
+  swap_benches: {
+    'gemma4:31b-mlx': ['humaneval','mbpp'],
+    'gemma4-12b-agentic-mtp': ['humaneval','mbpp']
+  }
 };
 // Sample previous-run data (two models only in older run → yellow state in demo)
 const SAMPLE_PREV = {
@@ -298,6 +317,10 @@ const BENCH_TIPS = {
   philosophical: {
     title: 'Philosophical Reasoning — LLM-as-Judge',
     body: '10 curated open-ended questions: free will, justice, moral realism, suffering, technology & freedom, lying, obligations to future generations, machine understanding, meaning through suffering, knowledge & power. A judge model (configurable via config.yaml: opencode cloud, single local Ollama, or multi-model ensemble) scores each response 1–5 on five axes: depth of reasoning · coherence · acknowledgment of multiple perspectives · originality of insight · clarity of expression. Final score = mean judge score / 5.0. No ground truth exists; the rubric is the signal.'
+  },
+  swap: {
+    title: '💀 Memory Swap — Benchmarks Aborted',
+    body: 'This model is too large for the available unified memory on this machine. macOS started swapping model weights to disk, causing per-sample inference time to spike 5×+ above normal. The benchmark was aborted to avoid a multi-hour hang. The reported score for this cell is not comparable to other models — it is a mix of partial results and zeroed-out swap failures.'
   }
 };
 
@@ -308,6 +331,9 @@ function getPrevScores(m){ return PREV?.scores?.[m] || null; }
 function getScores(m)    { return getPrimScores(m) || getPrevScores(m); }
 function getScore(m, b)  { return D.scores?.[m]?.[b] ?? PREV?.scores?.[m]?.[b] ?? null; }
 function getSpeed(m)     { return D.speeds?.[m] || PREV?.speeds?.[m] || null; }
+function getSampleSize(m, b) { return D.sample_sizes?.[m]?.[b] ?? null; }
+function getSwapBenches(m)   { return D.swap_benches?.[m] || (PREV?.swap_benches?.[m] || []); }
+function hasSwap(m)          { return getSwapBenches(m).length > 0; }
 
 function overallOf(m) {
   const sc = getScores(m);
@@ -445,7 +471,8 @@ function renderStrip() {
     card.innerHTML +=
       `<div class="rank-top">` +
         (rank ? `<span class="rank-num">#${rank}</span>` : '') +
-        `<span class="rank-score">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
+        `<span class="rank-score${hasSwap(m)?' rank-score-swapped':''}">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
+        (hasSwap(m) ? '<span class="rank-swap">💀</span>' : '') +
       `</div>` +
       `<div class="rank-model">${m}</div>` +
       (spd ? `<div class="rank-speed">${spd.toFixed(1)} t/s</div>`
@@ -485,9 +512,26 @@ function renderTable() {
     const tdM = document.createElement('td');
     tdM.className = 'td-model';
     const ts = getTs(m);
+    const mi = D.model_info?.[m];
+    const tags = [];
+    if (mi?.params) tags.push(mi.params);
+    if (mi?.size_gb) tags.push(`${mi.size_gb}GB`);
+    if (mi?.vram_estimate) tags.push(`~${mi.vram_estimate}GBvRAM`);
+    if (mi?.effective_ctx || mi?.context_length) {
+      const eff = mi.effective_ctx ? Math.round(mi.effective_ctx/1024) : 0;
+      const max = mi.context_length ? Math.round(mi.context_length/1024) : 0;
+      if (eff > 0 && max > 0 && eff < max) {
+        tags.push(`${eff}kctx/${max}k`);
+      } else if (eff > 0) {
+        tags.push(`${eff}kctx`);
+      } else if (max > 0) {
+        tags.push(`${max}kctx`);
+      }
+    }
+    if (mi?.quantization) tags.push(mi.quantization);
     tdM.innerHTML = `<div class="model-row">
       <span class="model-dot" style="background:${color}"></span>
-      <div><span class="model-name">${m}</span>${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
+      <div><span class="model-name">${m}</span>${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
     tr.appendChild(tdM);
 
     // Overall cell
@@ -495,7 +539,9 @@ function renderTable() {
     tdOv.className = 'td-overall';
     if (ov >= 0) {
       tdOv.style.background = scoreBg(ov);
-      tdOv.innerHTML = `<span class="overall-num">${(ov*100).toFixed(1)}</span>`;
+      const swap = hasSwap(m);
+      tdOv.innerHTML = `<span class="overall-num${swap?' is-swapped':''}">${(ov*100).toFixed(1)}${swap?'💀':''}</span>` +
+        (swap ? `<span class="score-swap">partial data</span>` : '');
     } else {
       tdOv.innerHTML = `<span class="overall-num" style="color:var(--border);font-size:13px">—</span>`;
     }
@@ -504,11 +550,17 @@ function renderTable() {
     // Benchmark cells
     benches.forEach(b => {
       const s  = getScore(m, b);
+      const n  = getSampleSize(m, b);
       const td = document.createElement('td');
       td.className = 'td-score';
-      if (s !== null) {
+      const isSwapped = hasSwap(m) && getSwapBenches(m).includes(b);
+      if (isSwapped) td.classList.add('is-swapped');
+      if (s !== null && !isSwapped) {
         td.style.background = scoreBg(s);
-        td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>`;
+        td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>` + (n ? `<span class="score-n">n=${n}</span>` : '');
+      } else if (s !== null && isSwapped) {
+        td.innerHTML = `<span class="score-num is-swapped">💀 ${(s*100).toFixed(0)}</span>` +
+          `<span class="score-swap" title="Model ran out of memory — benchmark aborted">swap</span>`;
       } else {
         td.innerHTML = `<span class="score-num" style="color:var(--border)">—</span>`;
       }
@@ -621,22 +673,29 @@ function setActive(model) {
 function processRaw(raw) {
   const models     = [...new Set(raw.map(r=>r.model))];
   const benchmarks = [...new Set(raw.map(r=>r.benchmark).filter(b => b !== 'speed'))];
-  const scores = {}, speeds = {};
+  const scores = {}, speeds = {}, sample_sizes = {}, swap_benches = {};
   models.forEach(m => {
     scores[m] = {};
+    sample_sizes[m] = {};
+    swap_benches[m] = [];
     const mrows = raw.filter(r=>r.model===m);
     const toks  = mrows.filter(r=>r.tok_per_sec>0).map(r=>r.tok_per_sec);
     speeds[m]   = toks.length ? toks.reduce((a,b)=>a+b,0)/toks.length : 0;
     benchmarks.forEach(b => {
       const brows = mrows.filter(r=>r.benchmark===b);
-      if (brows.length) scores[m][b] = brows.reduce((a,r)=>a+r.score,0)/brows.length;
+      if (brows.length) {
+        scores[m][b] = brows.reduce((a,r)=>a+r.score,0)/brows.length;
+        sample_sizes[m][b] = brows[0].n_samples || brows.length;
+        if (brows.some(r => (r.error||'').includes('swap_abort')))
+          swap_benches[m].push(b);
+      }
     });
   });
   return {
     run_id: raw[0]?.run_id || 'LOADED',
     timestamp: new Date().toISOString().slice(0,16).replace('T',' '),
     total_samples: raw.filter(r=>r.benchmark!=='speed').length,
-    models, benchmarks, scores, speeds
+    models, benchmarks, scores, speeds, sample_sizes, swap_benches
   };
 }
 
@@ -669,7 +728,12 @@ function loadPrimary(file) {
   reader.onload = e => {
     try {
       const raw = JSON.parse(e.target.result);
-      D = Array.isArray(raw) ? processRaw(raw) : raw;
+      const records = Array.isArray(raw) ? raw : (raw.results || []);
+      D = processRaw(records);
+      if (raw.metadata) {
+        D.run_id = raw.metadata.run_id || D.run_id;
+        D.timestamp = raw.metadata.run_start ? raw.metadata.run_start.slice(0,16).replace('T',' ') : D.timestamp;
+      }
       if (!CONFIG_MODELS.length && D.all_models) CONFIG_MODELS = [...D.all_models];
       document.getElementById('dz-current').querySelector('.drop-text').textContent = file.name;
       rerender();
