@@ -75,6 +75,7 @@ body::after{
 .model-row{display:flex;align-items:center;gap:8px}
 .model-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .model-name{font-size:11px;color:var(--text);white-space:nowrap}
+.model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:var(--text)}
 .td-score{text-align:center;padding:14px 8px;min-width:76px;transition:opacity .15s}
@@ -316,6 +317,18 @@ function overallOf(m) {
   return vals.reduce((a,b)=>a+b,0) / vals.length;
 }
 
+function getTs(m) {
+  const iso = D.model_timestamps?.[m] || PREV?.model_timestamps?.[m];
+  if (!iso) return '';
+  const d = new Date(iso);
+  const yy = String(d.getFullYear()).slice(2);
+  const mo = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return `${yy}${mo}${dd} ${hh}:${mi}`;
+}
+
 function modelStatus(m) {
   if (getPrimScores(m))  return 'current';
   if (getPrevScores(m))  return 'previous';
@@ -471,9 +484,10 @@ function renderTable() {
     // Model cell
     const tdM = document.createElement('td');
     tdM.className = 'td-model';
+    const ts = getTs(m);
     tdM.innerHTML = `<div class="model-row">
       <span class="model-dot" style="background:${color}"></span>
-      <span class="model-name">${m}</span></div>`;
+      <div><span class="model-name">${m}</span>${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
     tr.appendChild(tdM);
 
     // Overall cell
