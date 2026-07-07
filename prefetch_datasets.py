@@ -32,7 +32,7 @@ SPIDER_GDRIVE_ID = "1iRDVHLr4mX2wQKSgA9J8Pire73Jahh0m"
 SPIDER_DB_DIR = Path("data/spider/database")
 
 
-def download_spider_databases() -> bool:
+def download_spider_databases(local_zip: str | None = None) -> bool:
     """Download Spider SQLite databases for execution-based SQL scoring.
 
     Returns True if databases are available (downloaded or already present).
@@ -42,7 +42,16 @@ def download_spider_databases() -> bool:
         print(f"  Spider databases already present ({n} .sqlite files). Skipping download.")
         return True
 
-    print("  Downloading Spider database files (~100 MB) via Google Drive...")
+    # If caller supplied a pre-downloaded zip, use it directly.
+    if local_zip:
+        zip_path = Path(local_zip)
+        if not zip_path.exists():
+            print(f"  [!] --spider-zip file not found: {zip_path}")
+            return False
+        print(f"  Using local zip: {zip_path}")
+        return _extract_spider_zip(zip_path, remove_after=False)
+
+    print("  Attempting to download Spider database files (~100 MB) via Google Drive...")
     print("  These are needed for execution-based SQL scoring (string match is a fallback).")
 
     try:
@@ -56,33 +65,32 @@ def download_spider_databases() -> bool:
     zip_path.parent.mkdir(parents=True, exist_ok=True)
 
     try:
-        url = f"https://drive.google.com/uc?id={SPIDER_GDRIVE_ID}"
-        result = gdown.download(url, str(zip_path), quiet=False, fuzzy=True)
+        result = gdown.download(id=SPIDER_GDRIVE_ID, output=str(zip_path), quiet=False)
         if not result or not zip_path.exists():
             raise RuntimeError("gdown returned no file")
     except Exception as e:
-        print(f"  [!] Download failed: {e}")
+        print(f"  [!] Automatic download failed: {e}")
         if zip_path.exists():
             zip_path.unlink()
         _print_manual_spider_instructions()
         return False
 
+    return _extract_spider_zip(zip_path, remove_after=True)
+
+
+def _extract_spider_zip(zip_path: Path, remove_after: bool = True) -> bool:
     print("  Extracting database/ directory...")
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
-            db_entries = [f for f in zf.namelist() if "/database/" in f and f.endswith(".sqlite")]
+            db_entries = [f for f in zf.namelist() if f.endswith(".sqlite") and "database" in f]
             if not db_entries:
-                # Some zips have a top-level spider/ directory
-                db_entries = [f for f in zf.namelist() if "database" in f and f.endswith(".sqlite")]
-            if not db_entries:
-                raise RuntimeError("No .sqlite files found in downloaded zip")
+                raise RuntimeError("No .sqlite files found in zip")
 
             SPIDER_DB_DIR.mkdir(parents=True, exist_ok=True)
             for entry in db_entries:
-                # Normalize path: extract just database/<db_name>/<db_name>.sqlite
                 parts = entry.split("/")
                 db_idx = next((i for i, p in enumerate(parts) if p == "database"), None)
-                if db_idx is None or db_idx + 2 >= len(parts):
+                if db_idx is None or db_idx + 1 >= len(parts):
                     continue
                 db_name = parts[db_idx + 1]
                 fname = parts[-1]
@@ -92,12 +100,12 @@ def download_spider_databases() -> bool:
 
         n = len(list(SPIDER_DB_DIR.rglob("*.sqlite")))
         print(f"  Extracted {n} database files to {SPIDER_DB_DIR}/")
-        zip_path.unlink()
+        if remove_after:
+            zip_path.unlink()
         return True
-
     except Exception as e:
         print(f"  [!] Extraction failed: {e}")
-        if zip_path.exists():
+        if remove_after and zip_path.exists():
             zip_path.unlink()
         _print_manual_spider_instructions()
         return False
@@ -115,6 +123,15 @@ def _print_manual_spider_instructions():
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Prefetch benchmark datasets")
+    parser.add_argument(
+        "--spider-zip",
+        metavar="PATH",
+        help="Path to a pre-downloaded Spider zip (skips Google Drive download)",
+    )
+    cli = parser.parse_args()
+
     if not os.environ.get("HF_TOKEN"):
         print("Note: no HF_TOKEN set. Downloads will work fine — unauthenticated")
         print("      HF requests are not throttled for dataset downloads of this size.")
@@ -133,7 +150,7 @@ def main():
             failed.append(name)
 
     print(f"\n[{len(DOWNLOADS) + 1}/{len(DOWNLOADS) + 1}] Spider SQLite databases ...")
-    spider_ok = download_spider_databases()
+    spider_ok = download_spider_databases(local_zip=cli.spider_zip)
 
     print()
     if failed:
