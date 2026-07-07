@@ -68,6 +68,18 @@ Natural language questions mapped to SQL queries over real multi-table relationa
 
 **Source:** [xlangai/spider](https://huggingface.co/datasets/xlangai/spider) on HuggingFace — Yu et al., 2018. [Paper](https://arxiv.org/abs/1809.08887).
 
+**Getting the SQLite databases (recommended):** The HuggingFace dataset only ships the questions and reference SQL — not the actual database files. Without them, scoring falls back to normalised string match, which is too strict and causes most correct-but-differently-phrased queries to score zero. For proper execution scoring, download the Spider v1.0 zip manually and pass it to `prefetch_datasets.py`:
+
+```bash
+# 1. Download Spider v1.0 from https://yale-lily.github.io/spider
+#    ("Download Spider v1.0" button → Google Drive zip, ~100 MB)
+
+# 2. Point prefetch_datasets.py at the downloaded zip
+python prefetch_datasets.py --spider-zip ~/Downloads/spider.zip
+```
+
+This extracts the 20 validation databases to `data/spider/database/` and all subsequent runs use execution-based scoring automatically. The database files are gitignored.
+
 ---
 
 ### 6. Philosophical discussion (LLM-as-judge)
@@ -112,6 +124,10 @@ pip install -r requirements.txt
 
 # Download benchmark datasets once (cached locally, no HF requests after this)
 python prefetch_datasets.py
+
+# Optional: add Spider SQLite databases for execution-based SQL scoring
+# Download Spider v1.0 from https://yale-lily.github.io/spider then:
+python prefetch_datasets.py --spider-zip ~/Downloads/spider.zip
 
 # See available local models
 python run_benchmark.py --list-models
@@ -218,6 +234,7 @@ The practical output is a routing map: which models to assign to which task type
 | `pandas` | Result aggregation and analysis | [github.com/pandas-dev/pandas](https://github.com/pandas-dev/pandas) |
 | `pyyaml` | Config parsing | [github.com/yaml/pyyaml](https://github.com/yaml/pyyaml) |
 | `httpx` | Ollama model list endpoint | [github.com/encode/httpx](https://github.com/encode/httpx) |
+| `gdown` | Optional Spider database download from Google Drive | [github.com/wkentaro/gdown](https://github.com/wkentaro/gdown) |
 | [Ollama](https://ollama.com) | Local model serving | [github.com/ollama/ollama](https://github.com/ollama/ollama) |
 
 ### Datasets
