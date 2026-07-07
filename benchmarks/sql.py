@@ -1,8 +1,12 @@
 import re
 import os
+from pathlib import Path
 from datasets import load_dataset
 from benchmarks.base import BaseBenchmark
 from harness.sandbox import execute_sql
+
+# Location where prefetch_datasets.py extracts the Spider SQLite files.
+_SPIDER_DB_DIR = Path(__file__).parent.parent / "data" / "spider" / "database"
 
 
 SYSTEM = "You are a SQL expert. Given a database schema and a natural language question, write a single valid SQLite SQL query. Return ONLY the SQL query with no explanation."
@@ -26,13 +30,15 @@ class SpiderBenchmark(BaseBenchmark):
         ds = load_dataset("xlangai/spider", split="validation")
         samples = []
         for i, row in enumerate(ds):
+            db_id = row.get("db_id", "")
+            db_path = _SPIDER_DB_DIR / db_id / f"{db_id}.sqlite"
             samples.append({
                 "id": f"spider_{i}",
                 "question": row["question"],
-                "schema": row.get("db_id", ""),
-                "prompt": f"Database: {row.get('db_id', '')}\n\nQuestion: {row['question']}",
+                "schema": db_id,
+                "prompt": f"Database: {db_id}\n\nQuestion: {row['question']}",
                 "expected_sql": row["query"],
-                "db_path": None,  # populated if Spider DBs are available locally
+                "db_path": str(db_path) if db_path.exists() else None,
             })
         return samples
 

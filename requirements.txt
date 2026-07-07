@@ -5,3 +5,4 @@ tqdm>=4.66.0
 rich>=13.7.0
 pandas>=2.2.0
 pyyaml>=6.0.1
+gdown>=5.0.0
