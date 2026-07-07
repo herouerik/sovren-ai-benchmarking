@@ -73,6 +73,12 @@ def main():
     parser.add_argument("--n-samples", type=int, help="Override sample count for all benchmarks")
     parser.add_argument("--list-models", action="store_true")
     parser.add_argument("--output", default=None, help="Output file path (default: results/<timestamp>.json)")
+    parser.add_argument(
+        "--baseline", metavar="PATH",
+        help="Existing results JSON to patch. New results replace matching "
+             "model+benchmark entries; everything else is kept. Saves a new "
+             "timestamped file so the original is never modified.",
+    )
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -127,7 +133,19 @@ def main():
     selected = [b for b in selected if b in BENCHMARK_REGISTRY]
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    all_results = []
+
+    # Load baseline if given — new results will patch matching model+benchmark entries.
+    baseline_results = []
+    if args.baseline:
+        baseline_path = Path(args.baseline)
+        if not baseline_path.exists():
+            console.print(f"[red]--baseline file not found: {baseline_path}[/red]")
+            sys.exit(1)
+        baseline_results = json.load(baseline_path.open())
+        console.print(f"[dim]Baseline: {len(baseline_results)} results loaded from {baseline_path.name}[/dim]")
+
+    # Accumulates only the results from THIS run; merged with baseline at the end.
+    new_results = []
 
     config_models = cfg.get("models", [])
     report_path = Path(cfg["output"]["dir"]) / "report.html"
@@ -136,11 +154,20 @@ def main():
     except FileNotFoundError:
         template_html = None
 
+    def _merged() -> list:
+        """Baseline minus any (model, benchmark) pairs being re-run, plus new results."""
+        if not baseline_results:
+            return new_results
+        patching = {(r["model"], r["benchmark"]) for r in new_results}
+        kept = [r for r in baseline_results if (r["model"], r["benchmark"]) not in patching]
+        return kept + new_results
+
     def _refresh_report(is_live: bool) -> None:
-        if not template_html or not all_results:
+        combined = _merged()
+        if not template_html or not combined:
             return
         try:
-            data = aggregate(all_results, all_models=config_models or None)
+            data = aggregate(combined, all_models=config_models or None)
             html = template_html
             html = html.replace("// __INJECT_DATA__",
                                 f"const BENCHMARK_DATA = {__import__('json').dumps(data, ensure_ascii=False)};")
@@ -185,18 +212,22 @@ def main():
                 passed = sum(1 for r in results if r.get("passed"))
                 score = sum(r.get("score", 0) for r in results) / max(len(results), 1)
                 console.print(f"  [green]✓[/green] {bench_name}: {passed}/{len(results)} passed ({score:.1%})")
-                all_results.extend(results)
+                new_results.extend(results)
             except Exception as e:
                 console.print(f"  [red]✗ {bench_name} failed: {e}[/red]")
 
             _refresh_report(is_live=not is_last_step)
             console.print(f"  [dim]report.html → step {step}/{total_steps}[/dim]")
 
-    if not all_results:
+    if not new_results:
         console.print("[red]No results collected.[/red]")
         sys.exit(1)
 
-    output_path = args.output or str(Path(cfg["output"]["dir"]) / f"{run_id}.json")
+    all_results = _merged()
+    if args.baseline:
+        console.print(f"[dim]Patched {len(new_results)} results into baseline "
+                      f"({len(all_results)} total after merge)[/dim]")
+
     saved = save_results(all_results, cfg["output"]["dir"], run_id)
     console.print(f"\n[dim]Results saved to {saved}[/dim]")
 
