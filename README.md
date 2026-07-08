@@ -115,6 +115,56 @@ The harness calls Ollama via the [OpenAI Python SDK](https://github.com/openai/o
 
 ---
 
+## Memory swap detection
+
+When a model is too large for the available RAM (or KV cache fills available memory during a long run), inference slows dramatically as the OS pages memory to disk — **swap thrashing**. To prevent a single swapping model from wasting hours, the harness detects swap and aborts the remaining benchmarks for that model.
+
+### Detection signals
+
+| # | Condition | Logic | Meaning |
+|---|---|---|---|
+| 1 | **Early threshold** | For non-thinking benchmarks only: if sample is not the first (`i>0`) and `elapsed > max_baseline_seconds` | The model is unusably slow on this hardware — likely swapping immediately |
+| 2 | **Calibration baseline** | After `calibration_samples`, if the median of those samples exceeds `max_baseline_seconds` | Even the model's best-case speed is too slow; it barely fits in memory |
+| 3 | **Latency spike** | After calibration, if `elapsed > spike_threshold × baseline_median` | Normal samples were fast, then one sample went 5-10x slower — classic swap pattern |
+
+### Configuration
+
+Set under `execution.memory_guard` in `config.yaml`:
+
+```yaml
+execution:
+  memory_guard:
+    enabled: true                   # Set false to disable swap detection entirely
+    calibration_samples: 3          # First N samples establish the speed baseline
+    spike_threshold: 10.0           # Kill if a sample takes this × baseline (catches swap spikes)
+    max_baseline_seconds: 300       # Kill any sample exceeding this absolute threshold
+```
+
+### Gray zone
+
+The same config works very differently on GPU vs CPU:
+
+- **GPU** (fast tokens/s): 30–60s `max_baseline_seconds` is reasonable — normal inference takes 2–10s. A 30s sample means the GPU is swapping.
+- **CPU** (slow tokens/s): The same threshold would kill every sample for a 7B model. For CPU, set `max_baseline_seconds` to 300s and rely on `spike_threshold` to catch real swap patterns. CPU per-sample latency varies 2–5× from OS scheduling alone; set `spike_threshold` to 20.0 to avoid false positives from CPU contention while still catching true swap (>100× slowdown).
+
+The `spike_threshold` is the more robust signal because it's relative to each model's own baseline. A 7B model consistently taking 50s/sample on CPU won't trigger it, but a swap-induced jump to 1000s will.
+
+### Per-model context limits
+
+Reducing `num_ctx` (the KV cache length) reduces peak memory usage and speeds up prompt processing — especially valuable for CPU inference where memory bandwidth is the bottleneck. Set per-model in the `models` list:
+
+```yaml
+models:
+  - model: qwen2.5:7b
+    ctx: 16384          # Half the default 32K — saves ~2 GB KV cache
+  - model: deepseek-r1:7b
+    ctx: 8192           # Thinking models benefit most (less prompt to reprocess)
+```
+
+Models listed as plain strings (without a `model:` key) use `ollama.default_ctx`. The global default is set via `ollama.default_ctx` in `config.yaml`.
+
+---
+
 ## Usage
 
 ```bash
