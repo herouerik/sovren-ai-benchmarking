@@ -316,7 +316,7 @@ def main():
     # Accumulates only the results from THIS run; merged with baseline at the end.
     new_results = []
 
-    config_models = cfg.get("models", [])
+    config_models = [m if isinstance(m, str) else m["model"] for m in cfg.get("models", [])]
     report_path = Path(cfg["output"]["dir"]) / "report.html"
     try:
         template_html = find_template().read_text()
@@ -334,6 +334,12 @@ def main():
 
     # Collect model info (params, context, size) once before the run starts
     model_info = collect_model_info(model_entries, default_ctx)
+
+    # Merge baseline model_info for models not in current run (--models limits scope)
+    if isinstance(baseline_results, dict) and "metadata" in baseline_results:
+        for k, v in baseline_results["metadata"].get("model_info", {}).items():
+            if k not in model_info:
+                model_info[k] = v
 
     def _refresh_report(is_live: bool) -> None:
         combined = _merged()

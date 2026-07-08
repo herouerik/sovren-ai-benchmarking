@@ -105,10 +105,19 @@ class MBPPBenchmark(BaseBenchmark):
         ds = load_dataset("google-research-datasets/mbpp", "sanitized", split="test")
         samples = []
         for row in ds:
+            # Extract function signature from the reference solution so the
+            # model knows what function name and arguments the tests expect.
+            # Without this the model guesses wrong names and scores 0%.
+            code = row["code"]
+            sig = code.split(":")[0] + ":"  # e.g. "def remove_Occ(s,ch):"
+            prompt = f"{row['prompt']}\n\n# Define function\n{sig}"
             test_code = "\n".join(row["test_list"])
+            test_setup = "\n".join(row["test_imports"]) if row["test_imports"] else ""
+            if test_setup:
+                test_code = f"{test_setup}\n{test_code}"
             samples.append({
                 "id": f"mbpp_{row['task_id']}",
-                "prompt": row["prompt"],
+                "prompt": prompt,
                 "test_code": test_code,
             })
         return samples
