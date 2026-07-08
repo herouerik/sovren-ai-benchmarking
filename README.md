@@ -1,4 +1,5 @@
-<img width="1512" height="689" alt="image" src="https://github.com/user-attachments/assets/7278d200-21c1-4ffb-b374-204dc06e0dbc" />
+<img width="1509" height="771" alt="image" src="https://github.com/user-attachments/assets/011f3b95-7d8c-4b19-8e30-8103d96257ca" />
+
 
 # sovren-ai-benchmark
 
