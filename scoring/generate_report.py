@@ -94,7 +94,8 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None,
         "swap_benches": swap_benches,
     }
     if all_models:
-        payload["all_models"] = all_models
+        # Ensure all entries are strings (not raw config dicts)
+        payload["all_models"] = [m if isinstance(m, str) else m["model"] for m in all_models]
     if model_info:
         payload["model_info"] = model_info
     return payload
