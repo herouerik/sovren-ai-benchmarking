@@ -1,8 +1,10 @@
 .venv/
 results/*.json
+results/**/*.json
 !results/sample.json
 results/*.log
 results/report.html
+results/**/report.html
 __pycache__/
 *.pyc
 *.pyo
