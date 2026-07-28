@@ -10,9 +10,15 @@ from rich import box
 console = Console()
 
 
-def save_results(results, output_dir: str, run_id: str):
-    """Save results to a JSON file. Accepts a list of records or a wrapped {metadata, results} dict."""
-    path = Path(output_dir) / f"{run_id}.json"
+def save_results(results, output_dir: str, run_id: str, output_path: str | None = None):
+    """Save results to a JSON file. Accepts a list of records or a wrapped {metadata, results} dict.
+
+    output_path, when given, is used as-is (e.g. from --output) instead of the
+    default output_dir/run_id.json — this also sidesteps run_id's second-resolution
+    collision risk when multiple runs are launched close together against the
+    same output_dir (concurrent runs must each pass a distinct output_path).
+    """
+    path = Path(output_path) if output_path else Path(output_dir) / f"{run_id}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         json.dump(results, f, indent=2, default=str)

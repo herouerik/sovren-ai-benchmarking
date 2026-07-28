@@ -472,7 +472,7 @@ def main():
         "results": all_results,
     }
 
-    saved = save_results(wrapped, cfg["output"]["dir"], run_id)
+    saved = save_results(wrapped, cfg["output"]["dir"], run_id, output_path=args.output)
     console.print(f"\n[dim]Results saved to {saved}[/dim]")
 
     _refresh_report(is_live=False)
