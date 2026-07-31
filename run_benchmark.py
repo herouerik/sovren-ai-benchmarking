@@ -178,8 +178,25 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
     """
     import httpx
     base_url = "http://localhost:11434"
-    MANIFEST_DIR = Path.home() / ".ollama" / "models" / "manifests" / "registry.ollama.ai" / "library"
-    BLOBS_DIR = Path.home() / ".ollama" / "models" / "blobs"
+
+    # Disk size straight from the Ollama API rather than reconstructing its
+    # on-disk manifest/blob path ourselves — that path assumed Ollama's models
+    # live under this process's $HOME (~/.ollama/models/manifests/...), which
+    # is only true for a per-user Ollama install. This box (and any systemd-
+    # managed install) runs Ollama as a system service storing everything
+    # under a different user's directory (e.g. /usr/share/ollama/.ollama),
+    # so that lookup always missed, size_gb silently stayed 0, and the
+    # resulting "vram_estimate" was just the KV-cache term with no weights
+    # component at all (observed: ~1.5GB reported for an 80B model whose
+    # real footprint is ~46GB). /api/tags reports the real size regardless
+    # of where or as which user Ollama's model store actually lives.
+    tags_by_name: dict[str, int] = {}
+    try:
+        tags_resp = httpx.get(f"{base_url}/api/tags", timeout=10)
+        for m in tags_resp.json().get("models", []):
+            tags_by_name[m["name"]] = m.get("size", 0)
+    except Exception:
+        pass
 
     configs = _multi_model_models(model_entries, default_ctx)
     info = {}
@@ -198,20 +215,7 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
             ctx_key = next((k for k in mi if "context_length" in k), None)
             entry["context_length"] = mi.get(ctx_key) if ctx_key else None
 
-            # Disk size from blob files
-            name_part, tag_part = (model_name.rsplit(":", 1) + ["latest"])[:2]
-            manifest_path = MANIFEST_DIR / name_part / tag_part
-            total = 0
-            if manifest_path.exists():
-                manifest = json.loads(manifest_path.read_text())
-                for layer in manifest.get("layers", []):
-                    digest = layer["digest"]
-                    blob_name = digest.replace(":", "-")
-                    blob_path = BLOBS_DIR / blob_name
-                    if blob_path.exists():
-                        total += blob_path.stat().st_size
-                    else:
-                        total += layer.get("size", 0)
+            total = tags_by_name.get(model_name, 0)
             entry["size_gb"] = round(total / (1024**3), 1)
             entry["effective_ctx"] = effective_ctx
             entry["vram_estimate"] = _estimate_vram(mi, entry["size_gb"], effective_ctx)
