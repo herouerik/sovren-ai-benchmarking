@@ -514,7 +514,19 @@ function renderTable() {
     const ts = getTs(m);
     const mi = D.model_info?.[m];
     const tags = [];
+    // Dense vs sparse drives both speed and quality, so it leads the tag list.
+    // A sparse model reports only its *active* parameters, which is why a
+    // "larger" model can be much faster and weaker than a smaller dense one.
     if (mi?.params) tags.push(mi.params);
+    if (mi?.params_active) tags.push(`${mi.params_active} active`);
+    if (mi?.experts) {
+      tags.push(`MoE ${mi.experts}×${mi.experts_used || '?'}`);
+    } else if (mi?.sparse) {
+      tags.push('MoE');
+    } else if (mi?.params) {
+      tags.push('dense');
+    }
+    if (mi?.architecture) tags.push(mi.architecture);
     if (mi?.size_gb) tags.push(`${mi.size_gb}GB`);
     if (mi?.vram_estimate) tags.push(`~${mi.vram_estimate}GBvRAM`);
     if (mi?.effective_ctx || mi?.context_length) {

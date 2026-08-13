@@ -21,7 +21,16 @@ def load_config_models(config_path: Path) -> list[str]:
         import yaml
         cfg = yaml.safe_load(config_path.read_text())
         raw = cfg.get("models", [])
-        return [m if isinstance(m, str) else m["model"] for m in raw]
+        # Must match the label used in results records, or a think-on variant
+        # shows as a separate pending model forever.
+        out = []
+        for m in raw:
+            if isinstance(m, str):
+                out.append(m)
+            else:
+                out.append(m.get("label") or
+                           (f"{m['model']} +think" if m.get("think") else m["model"]))
+        return out
     except Exception:
         pass
     # Fallback manual parser for string-only entries
@@ -43,6 +52,38 @@ def load_config_models(config_path: Path) -> list[str]:
     except Exception:
         pass
     return models
+
+
+def _is_recovered_timing(r: dict) -> bool:
+    """True for rows whose timing was backfilled by log recovery, not measured.
+
+    The log-recovery path preserves accuracy but has no per-sample timing, so it
+    wrote constants (elapsed=5.0, tok_per_sec=10.0). Averaging those into the
+    speed column understated the fast models by 4-6x, so they are excluded.
+    """
+    return (r.get("elapsed") == 5.0 and r.get("tok_per_sec") == 10.0)
+
+
+# Below this many generated tokens a row says nothing about sustained throughput:
+# MMLU/ARC answer with a single letter, so decode_elapsed collapses toward zero
+# and decode_tps explodes. Such rows are excluded from the speed average.
+MIN_TOKENS_FOR_SPEED = 8
+
+
+def _speed_of(r: dict) -> float:
+    """Generation rate for a row, or 0.0 if the row can't support one.
+
+    Prefers the true decode rate recorded by streaming; falls back to the
+    end-to-end rate (prefill included, so it understates decode) for older
+    results captured before streaming was enabled.
+    """
+    if _is_recovered_timing(r):
+        return 0.0
+    n_tok = r.get("completion_tokens")
+    decode = r.get("decode_tps")
+    if decode and n_tok is not None:
+        return decode if n_tok >= MIN_TOKENS_FOR_SPEED else 0.0
+    return r.get("tok_per_sec") or 0.0
 
 
 def aggregate(raw: list[dict], all_models: list[str] | None = None,
@@ -72,7 +113,7 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None,
                     swap_benches[model].append(bench)
                 n = sample_counts.get((model, bench), len(brows)) if sample_counts else len(brows)
                 sample_sizes[model][bench] = n
-        toks = [r["tok_per_sec"] for r in mrows if r.get("tok_per_sec", 0) > 0]
+        toks = [s for s in (_speed_of(r) for r in mrows) if s > 0]
         speeds[model] = sum(toks) / len(toks) if toks else 0.0
         # Latest sample timestamp = when this model's evaluation completed
         ts_vals = [r["ts"] for r in mrows if r.get("ts")]
