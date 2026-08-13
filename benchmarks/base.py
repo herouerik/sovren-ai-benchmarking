@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
@@ -39,6 +40,48 @@ class BaseBenchmark(ABC):
     def format_prompt(self, sample: dict) -> str:
         return sample["prompt"]
 
+    # Set in subclasses whose samples span groups that must all be represented
+    # (MMLU spans academic subjects). Without stratification, taking the first N
+    # of a concatenated list draws every sample from whichever group happens to
+    # come first — MMLU at n=20 was 20/20 abstract algebra, despite five
+    # subjects being configured.
+    stratify_key: str | None = None
+
+    def select_samples(self, samples: list[dict], n: int | None) -> list[dict]:
+        """Pick n samples deterministically but representatively.
+
+        Seeded, so runs stay reproducible and every model sees an identical set;
+        shuffled, so the sample is not a fixed slice of whatever order the
+        dataset shipped in; stratified when the benchmark spans groups, so n=20
+        means 4 from each of 5 subjects rather than 20 from one.
+        """
+        if not n or n >= len(samples):
+            return samples
+        rng = random.Random(self.config.get("sample_seed", 42))
+
+        if not self.stratify_key:
+            pool = list(samples)
+            rng.shuffle(pool)
+            return pool[:n]
+
+        groups: dict[Any, list[dict]] = {}
+        for s in samples:
+            groups.setdefault(s.get(self.stratify_key), []).append(s)
+        for g in groups.values():
+            rng.shuffle(g)
+
+        # Round-robin so the groups stay balanced at any n, and any remainder
+        # is spread across the earliest groups rather than dumped on one.
+        keys = sorted(groups, key=lambda k: (k is None, k))
+        picked: list[dict] = []
+        i = 0
+        while len(picked) < n and any(groups[k] for k in keys):
+            bucket = groups[keys[i % len(keys)]]
+            if bucket:
+                picked.append(bucket.pop())
+            i += 1
+        return picked[:n]
+
     # Set to True in subclasses where extended reasoning is the point (e.g. philosophical).
     # For all others, /no_think suppresses qwen3's internal thinking chain which can
     # burn thousands of tokens per sample and make runs impractically slow.
@@ -56,77 +99,50 @@ class BaseBenchmark(ABC):
             return base
         return f"{base}\n/no_think" if base else "/no_think"
 
-    def _check_memory_swap(self, i: int, elapsed: float, calibration_times: list[float],
-                           guard_cfg: dict, n_remaining: int, model: str, bench_name: str) -> str | None:
-        """Return an error message if the system is swapping, else None."""
-        if not guard_cfg.get("enabled", True):
-            return None
-        max_baseline = guard_cfg.get("max_baseline_seconds", 30)
-        cal_samples = guard_cfg.get("calibration_samples", 3)
-        threshold = guard_cfg.get("spike_threshold", 5.0)
-
-        # Only skip early detection for thinking-heavy benchmarks (e.g. philosophical
-        # where extended reasoning can legitimately take >30s per sample).
-        if not self.allow_thinking:
-            # Early detection: if a non-first sample exceeds max_baseline the model is
-            # likely swapping. (Sample 0 includes model loading time so it gets a pass.)
-            if i > 0 and elapsed > max_baseline:
-                remaining = n_remaining - i - 1
-                return (f"swap_abort: sample {i+1}/{n_remaining} took {elapsed:.1f}s "
-                        f"(exceeds max_baseline_seconds={max_baseline}), "
-                        f"{remaining} samples skipped")
-
-        if i < cal_samples:
-            return None  # still calibrating
-
-        baseline = _median(calibration_times[:cal_samples])
-        if baseline <= 0:
-            return None
-
-        # Check if calibration baseline is already abnormal — model barely fits
-        if i == cal_samples and baseline > max_baseline:
-            remaining = n_remaining - i - 1
-            return (f"swap_abort: calibration baseline {baseline:.1f}s exceeds "
-                    f"max_baseline_seconds={max_baseline}, "
-                    f"model too large for available memory, {remaining} samples skipped")
-
-        # Check for latency spike — system is swapping
-        if elapsed > threshold * baseline:
-            remaining = n_remaining - i - 1
-            return (f"swap_abort: sample {i+1}/{n_remaining} took {elapsed:.1f}s "
-                    f"({(elapsed/baseline):.1f}× baseline {baseline:.2f}s), "
-                    f"{remaining} samples skipped")
-
-        return None
-
     def run(self, model: str, n_samples: int = None, on_sample=None, ctx: int | None = None) -> list[dict]:
-        samples = self.load_samples()
-        if n_samples:
-            samples = samples[:n_samples]
+        samples = self.select_samples(self.load_samples(), n_samples)
         actual_n = len(samples)
 
         guard_cfg = self.config.get("memory_guard", {})
-        calibration_times: list[float] = []
+        # Thinking is an explicit, recorded dimension: it changes results
+        # substantially, so it must never vary implicitly with the Ollama
+        # version. Config wins; otherwise the benchmark's own default (only
+        # philosophical wants extended reasoning).
+        think = self.config.get("think")
+        if think is None:
+            think = self.allow_thinking
+
+        # Thinking spends its budget before the answer starts, so it needs a
+        # bigger cap or the run measures exhaustion instead of capability.
+        max_tokens = self.config.get("max_tokens", 4096)
+        if think:
+            max_tokens = self.config.get("think_max_tokens", max(max_tokens, 16384))
 
         results = []
         for i, sample in enumerate(samples):
             prompt = self.format_prompt(sample)
-            response = self.client.complete(
+            # Streaming so TTFT/prefill is separable from decode, and so the
+            # watchdog can abort a thrashing call mid-flight instead of after it
+            # completes. tok_per_sec stays end-to-end (prefill included) for
+            # continuity with older results; decode_tps is the generation rate
+            # comparable to published tok/s figures.
+            response = self.client.complete_native(
                 model=model,
                 prompt=prompt,
                 system=self._effective_system(model),
-                max_tokens=self.config.get("max_tokens", 2048),
+                max_tokens=max_tokens,
                 ctx=ctx,
+                guard_cfg=guard_cfg,
+                think=think,
             )
 
             elapsed = response["elapsed"]
-            calibration_times.append(elapsed)
 
-            swap_err = self._check_memory_swap(i, elapsed, calibration_times, guard_cfg,
-                                                actual_n, model, self.name)
-
-            if swap_err:
-                # Fill remaining samples with swap-abort records
+            # A hard abort means the OS corroborated real memory pressure: the
+            # model does not fit, so the caller skips its remaining benchmarks.
+            # A soft abort costs only this sample and the run continues.
+            if response.get("aborted") and response.get("abort_hard"):
+                swap_err = response["aborted"]
                 for j in range(i, actual_n):
                     result = {
                         "id": sample.get("id", ""),
@@ -157,6 +173,12 @@ class BaseBenchmark(ABC):
                 "response": response["content"][:1000],
                 "elapsed": elapsed,
                 "tok_per_sec": response["tok_per_sec"],
+                "ttft": response.get("ttft"),
+                "decode_tps": response.get("decode_tps"),
+                "prompt_tokens": response.get("prompt_tokens"),
+                "completion_tokens": response.get("completion_tokens"),
+                "think": response.get("think"),
+                "reasoning_chars": len(response.get("reasoning") or ""),
                 "error": response["error"],
                 "n_samples": actual_n,
                 **scoring,

@@ -1,4 +1,4 @@
-<!-- __META_REFRESH__ -->
+
 <title>Sovren — LLM Benchmark Results</title>
 <style>
 :root {
@@ -234,7 +234,689 @@ body::after{
 <div id="tip" role="tooltip"><span class="tip-title"></span><span class="tip-body"></span></div>
 
 <script>
-// __INJECT_DATA__
+const BENCHMARK_DATA = {
+  "run_id": "20260812_143651",
+  "timestamp": "2026-08-13 10:44",
+  "total_samples": 2700,
+  "models": [
+    "llama3.2:3b",
+    "llama3.1:8b",
+    "qwen2.5-coder:7b",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "codestral:22b",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "nemotron-3-nano:30b",
+    "gemma4:31b-mlx",
+    "qwen3:32b",
+    "qwen3-32b-nothink:latest",
+    "qwen2.5-coder:32b",
+    "qwen3-coder:latest",
+    "nemotron-cascade-2:latest",
+    "qwen3.6:27b",
+    "muse-glimmer:30b-mlx",
+    "muse-glimmer:30b-mlx +think",
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think"
+  ],
+  "benchmarks": [
+    "mmlu",
+    "arc",
+    "gsm8k",
+    "humaneval",
+    "mbpp",
+    "spider",
+    "philosophical"
+  ],
+  "scores": {
+    "llama3.2:3b": {
+      "mmlu": 0.5,
+      "arc": 0.75,
+      "gsm8k": 0.68,
+      "humaneval": 0.45,
+      "mbpp": 0.6,
+      "spider": 0.5,
+      "philosophical": 0.8600000000000001
+    },
+    "llama3.1:8b": {
+      "mmlu": 0.65,
+      "arc": 0.75,
+      "gsm8k": 0.76,
+      "humaneval": 0.7,
+      "mbpp": 0.6,
+      "spider": 0.55,
+      "philosophical": 0.8920000000000001
+    },
+    "qwen2.5-coder:7b": {
+      "mmlu": 0.6,
+      "arc": 0.8,
+      "gsm8k": 0.84,
+      "humaneval": 0.65,
+      "mbpp": 0.75,
+      "spider": 0.65,
+      "philosophical": 0.8520000000000001
+    },
+    "gemma4-12b-agentic:latest": {
+      "mmlu": 0.75,
+      "arc": 0.95,
+      "gsm8k": 0.92,
+      "humaneval": 0.75,
+      "mbpp": 0.6,
+      "spider": 0.65,
+      "philosophical": 0.916
+    },
+    "gemma4-12b-agentic-mtp:latest": {
+      "mmlu": 0.75,
+      "arc": 0.95,
+      "gsm8k": 0.92,
+      "humaneval": 0.75,
+      "mbpp": 0.6,
+      "spider": 0.65,
+      "philosophical": 0.916
+    },
+    "codestral:22b": {
+      "mmlu": 0.5,
+      "arc": 0.75,
+      "gsm8k": 0.8,
+      "humaneval": 0.7,
+      "mbpp": 0.6,
+      "spider": 0.65,
+      "philosophical": 0.8560000000000001
+    },
+    "devstral-small-2:latest": {
+      "mmlu": 0.7,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.85,
+      "mbpp": 0.7,
+      "spider": 0.7,
+      "philosophical": 0.9
+    },
+    "gemma4:26b-mlx": {
+      "mmlu": 0.75,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.95,
+      "mbpp": 0.5,
+      "spider": 0.75,
+      "philosophical": 0.924
+    },
+    "nemotron-3-nano:30b": {
+      "mmlu": 0.65,
+      "arc": 1.0,
+      "gsm8k": 0.96,
+      "humaneval": 0.75,
+      "mbpp": 0.65,
+      "spider": 0.65,
+      "philosophical": 0.952
+    },
+    "gemma4:31b-mlx": {
+      "mmlu": 1.0,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.95,
+      "mbpp": 0.65,
+      "spider": 0.7,
+      "philosophical": 0.916
+    },
+    "qwen3:32b": {
+      "mmlu": 0.85,
+      "arc": 0.95,
+      "gsm8k": 1.0,
+      "humaneval": 0.85,
+      "mbpp": 0.6,
+      "spider": 0.6,
+      "philosophical": 0.8800000000000001
+    },
+    "qwen3-32b-nothink:latest": {
+      "mmlu": 0.85,
+      "arc": 0.95,
+      "gsm8k": 1.0,
+      "humaneval": 0.85,
+      "mbpp": 0.6,
+      "spider": 0.6,
+      "philosophical": 0.8800000000000001
+    },
+    "qwen2.5-coder:32b": {
+      "mmlu": 0.8,
+      "arc": 0.95,
+      "gsm8k": 1.0,
+      "humaneval": 0.8,
+      "mbpp": 0.7,
+      "spider": 0.75,
+      "philosophical": 0.8680000000000001
+    },
+    "qwen3-coder:latest": {
+      "mmlu": 1.0,
+      "arc": 0.8,
+      "gsm8k": 1.0,
+      "humaneval": 0.75,
+      "mbpp": 0.65,
+      "spider": 0.35,
+      "philosophical": 0.924
+    },
+    "nemotron-cascade-2:latest": {
+      "mmlu": 0.65,
+      "arc": 0.95,
+      "gsm8k": 0.96,
+      "humaneval": 0.75,
+      "mbpp": 0.6,
+      "spider": 0.6,
+      "philosophical": 0.9480000000000001
+    },
+    "qwen3.6:27b": {
+      "mmlu": 0.9,
+      "arc": 1.0,
+      "gsm8k": 0.96,
+      "humaneval": 0.8,
+      "mbpp": 0.75,
+      "spider": 0.8,
+      "philosophical": 0.96
+    },
+    "muse-glimmer:30b-mlx": {
+      "mmlu": 0.75,
+      "arc": 1.0,
+      "gsm8k": 0.92,
+      "humaneval": 0.9,
+      "mbpp": 0.45,
+      "spider": 0.6,
+      "philosophical": 0.9359999999999999
+    },
+    "muse-glimmer:30b-mlx +think": {
+      "mmlu": 0.9,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.95,
+      "mbpp": 0.65,
+      "spider": 0.6,
+      "philosophical": 0.944
+    },
+    "qwen3.6:35b-mlx": {
+      "mmlu": 0.8,
+      "arc": 1.0,
+      "gsm8k": 0.96,
+      "humaneval": 0.95,
+      "mbpp": 0.6,
+      "spider": 0.65,
+      "philosophical": 0.884
+    },
+    "qwen3.6:35b-mlx +think": {
+      "mmlu": 1.0,
+      "arc": 1.0,
+      "gsm8k": 0.96,
+      "humaneval": 0.85,
+      "mbpp": 0.55,
+      "spider": 0.6,
+      "philosophical": 0.8640000000000001
+    }
+  },
+  "speeds": {
+    "llama3.2:3b": 97.05641434366295,
+    "llama3.1:8b": 47.278406198125275,
+    "qwen2.5-coder:7b": 48.68026678443606,
+    "gemma4-12b-agentic:latest": 18.87770364787093,
+    "gemma4-12b-agentic-mtp:latest": 18.66545316474359,
+    "codestral:22b": 19.192154966274213,
+    "devstral-small-2:latest": 15.93978532669894,
+    "gemma4:26b-mlx": 64.8910909133121,
+    "nemotron-3-nano:30b": 51.61482693866909,
+    "gemma4:31b-mlx": 11.403695541229895,
+    "qwen3:32b": 11.91315387557137,
+    "qwen3-32b-nothink:latest": 11.909757748949048,
+    "qwen2.5-coder:32b": 11.783428812466182,
+    "qwen3-coder:latest": 75.17651896825573,
+    "nemotron-cascade-2:latest": 52.34626155727412,
+    "qwen3.6:27b": 12.66570079574509,
+    "muse-glimmer:30b-mlx": 23.09006153003315,
+    "muse-glimmer:30b-mlx +think": 20.91220954294857,
+    "qwen3.6:35b-mlx": 70.77670470364203,
+    "qwen3.6:35b-mlx +think": 68.87434806399718
+  },
+  "sample_sizes": {
+    "llama3.2:3b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "llama3.1:8b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen2.5-coder:7b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "gemma4-12b-agentic:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "gemma4-12b-agentic-mtp:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "codestral:22b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "devstral-small-2:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "gemma4:26b-mlx": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "nemotron-3-nano:30b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "gemma4:31b-mlx": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen3:32b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen3-32b-nothink:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen2.5-coder:32b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen3-coder:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "nemotron-cascade-2:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen3.6:27b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "muse-glimmer:30b-mlx": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "muse-glimmer:30b-mlx +think": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen3.6:35b-mlx": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    },
+    "qwen3.6:35b-mlx +think": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10
+    }
+  },
+  "model_timestamps": {
+    "llama3.2:3b": "2026-08-13T01:10:08",
+    "llama3.1:8b": "2026-08-13T01:14:03",
+    "qwen2.5-coder:7b": "2026-08-13T01:17:08",
+    "gemma4-12b-agentic:latest": "2026-08-13T01:28:15",
+    "gemma4-12b-agentic-mtp:latest": "2026-08-13T01:44:50",
+    "codestral:22b": "2026-08-13T01:51:35",
+    "devstral-small-2:latest": "2026-08-13T02:05:36",
+    "gemma4:26b-mlx": "2026-08-13T02:11:41",
+    "nemotron-3-nano:30b": "2026-08-13T02:21:49",
+    "gemma4:31b-mlx": "2026-08-13T02:48:27",
+    "qwen3:32b": "2026-08-13T03:18:54",
+    "qwen3-32b-nothink:latest": "2026-08-13T03:49:18",
+    "qwen2.5-coder:32b": "2026-08-12T23:25:45",
+    "qwen3-coder:latest": "2026-08-12T23:33:05",
+    "nemotron-cascade-2:latest": "2026-08-12T23:49:49",
+    "qwen3.6:27b": "2026-08-13T00:58:38",
+    "muse-glimmer:30b-mlx": "2026-08-13T05:25:39",
+    "muse-glimmer:30b-mlx +think": "2026-08-13T07:14:35",
+    "qwen3.6:35b-mlx": "2026-08-13T07:26:30",
+    "qwen3.6:35b-mlx +think": "2026-08-13T10:44:13"
+  },
+  "swap_benches": {
+    "llama3.2:3b": [],
+    "llama3.1:8b": [],
+    "qwen2.5-coder:7b": [],
+    "gemma4-12b-agentic:latest": [],
+    "gemma4-12b-agentic-mtp:latest": [],
+    "codestral:22b": [],
+    "devstral-small-2:latest": [],
+    "gemma4:26b-mlx": [],
+    "nemotron-3-nano:30b": [],
+    "gemma4:31b-mlx": [],
+    "qwen3:32b": [],
+    "qwen3-32b-nothink:latest": [],
+    "qwen2.5-coder:32b": [],
+    "qwen3-coder:latest": [],
+    "nemotron-cascade-2:latest": [],
+    "qwen3.6:27b": [],
+    "muse-glimmer:30b-mlx": [],
+    "muse-glimmer:30b-mlx +think": [],
+    "qwen3.6:35b-mlx": [],
+    "qwen3.6:35b-mlx +think": [
+      "gsm8k",
+      "humaneval"
+    ]
+  },
+  "all_models": [
+    "llama3.2:3b",
+    "llama3.1:8b",
+    "qwen2.5-coder:7b",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "codestral:22b",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "nemotron-3-nano:30b",
+    "gemma4:31b-mlx",
+    "qwen3:32b",
+    "qwen3-32b-nothink:latest",
+    "qwen2.5-coder:32b",
+    "qwen3-coder:latest",
+    "nemotron-cascade-2:latest",
+    "qwen3.6:27b",
+    "muse-glimmer:30b-mlx",
+    "muse-glimmer:30b-mlx +think",
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think"
+  ],
+  "model_info": {
+    "muse-glimmer:30b-mlx": {
+      "quantization": "nvfp4",
+      "context_length": 131072,
+      "size_gb": 19.8,
+      "effective_ctx": 32768,
+      "params": "32.3B",
+      "architecture": "muse_glimmer",
+      "vram_estimate": 23.4,
+      "think": false
+    },
+    "muse-glimmer:30b-mlx +think": {
+      "quantization": "nvfp4",
+      "context_length": 131072,
+      "size_gb": 19.8,
+      "effective_ctx": 32768,
+      "params": "32.3B",
+      "architecture": "muse_glimmer",
+      "vram_estimate": 23.4,
+      "think": true
+    },
+    "qwen3.6:35b-mlx": {
+      "quantization": "nvfp4",
+      "context_length": 262144,
+      "size_gb": 20.4,
+      "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "think": false
+    },
+    "qwen3.6:35b-mlx +think": {
+      "quantization": "nvfp4",
+      "context_length": 262144,
+      "size_gb": 20.4,
+      "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "think": true
+    },
+    "llama3.2:3b": {
+      "quantization": "Q4_K_M",
+      "context_length": 131072,
+      "size_gb": 1.9,
+      "effective_ctx": 32768,
+      "params": "3.2B",
+      "architecture": "llama",
+      "vram_estimate": 5.5
+    },
+    "llama3.1:8b": {
+      "quantization": "Q4_K_M",
+      "context_length": 131072,
+      "size_gb": 4.6,
+      "effective_ctx": 32768,
+      "params": "8.0B",
+      "architecture": "llama",
+      "vram_estimate": 8.8
+    },
+    "qwen2.5-coder:7b": {
+      "quantization": "Q4_K_M",
+      "context_length": 32768,
+      "size_gb": 4.4,
+      "effective_ctx": 32768,
+      "params": "7.6B",
+      "architecture": "qwen2",
+      "vram_estimate": 6.4
+    },
+    "gemma4-12b-agentic:latest": {
+      "quantization": "Q8_0",
+      "context_length": 262144,
+      "size_gb": 11.8,
+      "effective_ctx": 16384,
+      "params": "11.9B",
+      "architecture": "gemma4",
+      "vram_estimate": 23.6
+    },
+    "gemma4-12b-agentic-mtp:latest": {
+      "quantization": "Q8_0",
+      "context_length": 262144,
+      "size_gb": 12.2,
+      "effective_ctx": 16384,
+      "params": "11.9B",
+      "architecture": "gemma4",
+      "vram_estimate": 24.1
+    },
+    "codestral:22b": {
+      "quantization": "Q4_0",
+      "context_length": 32768,
+      "size_gb": 11.7,
+      "effective_ctx": 16384,
+      "params": "22.2B",
+      "architecture": "llama",
+      "vram_estimate": 15.8
+    },
+    "devstral-small-2:latest": {
+      "quantization": "Q4_K_M",
+      "context_length": 393216,
+      "size_gb": 14.1,
+      "effective_ctx": 16384,
+      "params": "24.0B",
+      "architecture": "mistral3",
+      "vram_estimate": 17.9
+    },
+    "gemma4:26b-mlx": {
+      "quantization": "nvfp4",
+      "context_length": 262144,
+      "size_gb": 15.5,
+      "effective_ctx": 32768,
+      "params_active": "6.3B",
+      "sparse": true,
+      "architecture": "gemma4"
+    },
+    "nemotron-3-nano:30b": {
+      "quantization": "Q4_K_M",
+      "context_length": 1048576,
+      "size_gb": 22.6,
+      "effective_ctx": 32768,
+      "params": "31.6B",
+      "architecture": "nemotron_h_moe",
+      "experts": 128,
+      "experts_used": 6,
+      "sparse": true,
+      "vram_estimate": 40.8
+    },
+    "gemma4:31b-mlx": {
+      "quantization": "nvfp4",
+      "context_length": 262144,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "31.3B",
+      "architecture": "gemma4"
+    },
+    "qwen3:32b": {
+      "quantization": "Q4_K_M",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
+    },
+    "qwen3-32b-nothink:latest": {
+      "quantization": "Q4_K_M",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
+    },
+    "qwen2.5-coder:32b": {
+      "quantization": "Q4_K_M",
+      "context_length": 32768,
+      "size_gb": 18.5,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen2",
+      "vram_estimate": 27.4
+    },
+    "qwen3-coder:latest": {
+      "quantization": "Q4_K_M",
+      "context_length": 262144,
+      "size_gb": 17.3,
+      "effective_ctx": 32768,
+      "params": "30.5B",
+      "architecture": "qwen3moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 19.7
+    },
+    "nemotron-cascade-2:latest": {
+      "quantization": "Q4_K_M",
+      "context_length": 262144,
+      "size_gb": 22.6,
+      "effective_ctx": 32768,
+      "params": "31.6B",
+      "architecture": "nemotron_h_moe",
+      "experts": 128,
+      "experts_used": 6,
+      "sparse": true,
+      "vram_estimate": 40.8
+    },
+    "qwen3.6:27b": {
+      "quantization": "Q4_K_M",
+      "context_length": 262144,
+      "size_gb": 16.2,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen35",
+      "vram_estimate": 56.9
+    }
+  }
+};
 
 // Sample shows all three states: green (run), yellow (previous), gray (pending)
 const SAMPLE_DATA = {

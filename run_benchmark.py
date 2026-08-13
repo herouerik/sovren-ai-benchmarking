@@ -116,43 +116,91 @@ def collect_run_metadata(cfg: dict) -> dict:
     return meta
 
 
-def resolve_model_entry(entry: str | dict, default_ctx: int | None = None) -> tuple[str, int]:
-    """Given a model config entry (string or dict), return (model_name, ctx).
+def resolve_model_entry(entry: str | dict, default_ctx: int | None = None) -> dict:
+    """Resolve a model config entry (string or dict) to a run spec.
+
+    Returns {model, ctx, think, label}. `label` is the identity used everywhere
+    downstream — results records, merge keys, dashboard rows — so the same model
+    can be benchmarked under different settings (notably thinking on vs off)
+    and appear as separate, comparable rows instead of overwriting each other.
 
     The ctx is resolved: per-model > global default_ctx > 4096 hard fallback.
-    This ensures every model has a deterministic ctx used for API calls, VRAM
-    estimates, and dashboard display — no mismatch between what's shown and used.
+    `think` of None means "use the benchmark's own default".
 
     Example:
-        "llama3.2:3b" → ("llama3.2:3b", 32768)  (using global default)
-        {"model": "qwen3-coder:latest", "ctx": 16384} → ("qwen3-coder:latest", 16384)
+        "llama3.2:3b"
+            → {model: llama3.2:3b, ctx: 32768, think: None, label: llama3.2:3b}
+        {"model": "muse-glimmer:30b-mlx", "think": True}
+            → label "muse-glimmer:30b-mlx +think"
     """
-    if isinstance(entry, dict):
-        ctx = entry.get("ctx", default_ctx)
-    else:
-        ctx = default_ctx
-    return entry if isinstance(entry, str) else entry["model"], ctx or 4096
+    if isinstance(entry, str):
+        return {"model": entry, "ctx": default_ctx or 4096, "think": None, "label": entry}
+    name = entry["model"]
+    think = entry.get("think")
+    label = entry.get("label") or (f"{name} +think" if think else name)
+    return {
+        "model": name,
+        "ctx": entry.get("ctx", default_ctx) or 4096,
+        "think": think,
+        "label": label,
+    }
 
 
-def _estimate_vram(mi: dict, size_gb: float, ctx: int) -> float:
-    """Estimate VRAM in GB at the given context length."""
+def _estimate_vram(mi: dict, size_gb: float, ctx: int) -> float | None:
+    """Estimate VRAM in GB at the given context length, or None if it can't be.
+
+    Returns None when the model metadata lacks the attention shape needed for
+    the KV cache term (some MLX conversions omit head_count entirely). It used
+    to silently fall back to weights-only, which understated usage by several GB
+    at 32k ctx while looking identical to a complete estimate — the worst
+    outcome when the whole point of the number is judging whether a model fits.
+    """
     arch = mi.get("general.architecture", "")
     prefix = f"{arch}."
     def g(key):
         return mi.get(prefix + key) or mi.get(key)
 
-    weights_gb = size_gb * 1.05
     n_layers = g("block_count")
     n_heads = g("attention.head_count")
     n_kv_heads = g("attention.head_count_kv") or n_heads
     emb_dim = g("embedding_length")
     if not all([n_layers, n_heads, emb_dim]):
-        return round(weights_gb, 1)
+        return None
 
+    weights_gb = size_gb * 1.05
     per_head_dim = emb_dim // n_heads
     kv_bytes_per_token = 4 * n_kv_heads * per_head_dim * n_layers
     kv_gb = (ctx * kv_bytes_per_token) / (1024**3)
     return round(weights_gb + kv_gb, 1)
+
+
+# Plausible bits-per-weight across the quantisations in use (nvfp4/q4 ~4 bits,
+# q8 ~8, bf16 ~16). Outside this band the reported parameter count cannot be
+# reconciled with the file on disk, so one of them is wrong.
+_MIN_BITS_PER_PARAM, _MAX_BITS_PER_PARAM = 2.0, 20.0
+
+
+def _classify_params(param_count, size_gb: float, reported: str | None) -> dict:
+    """Reconcile the reported parameter count against the size on disk.
+
+    Returns {params, params_active, sparse}. When the reported count is far
+    smaller than the file can hold, it is the *active* parameter count of a
+    sparse (MoE) model, not a wrong total — gemma4:26b-mlx reports 6.3B while
+    occupying 15.5GB, and its 30 blocks / 2816 embedding confirm ~6B of dense
+    compute inside a ~26B model. Reporting that as a plain "6.3B" hides the
+    single most useful fact about the model's performance characteristics.
+    """
+    out: dict = {}
+    if not reported or not param_count or not size_gb:
+        return out
+    bits_per_param = (size_gb * (1024**3) * 8) / param_count
+    if bits_per_param <= _MAX_BITS_PER_PARAM:
+        out["params"] = reported          # consistent: a dense total
+    else:
+        # Too many bytes for this many weights -> the count is active-only.
+        out["params_active"] = reported
+        out["sparse"] = True
+    return out
 
 
 def _model_name(entry: str | dict) -> str:
@@ -160,11 +208,8 @@ def _model_name(entry: str | dict) -> str:
     return entry if isinstance(entry, str) else entry["model"]
 
 
-def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[tuple[str, int]]:
-    """Resolve models list (strings and dicts) to (name, ctx) pairs.
-
-    Every entry gets a resolved ctx: per-model > global default > 4096.
-    """
+def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[dict]:
+    """Resolve a models list (strings and dicts) to run specs."""
     return [resolve_model_entry(m, default_ctx) for m in raw]
 
 
@@ -183,7 +228,8 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
 
     configs = _multi_model_models(model_entries, default_ctx)
     info = {}
-    for model_name, effective_ctx in configs:
+    for spec in configs:
+        model_name, effective_ctx = spec["model"], spec["ctx"]
         entry = {}
         try:
             resp = httpx.post(f"{base_url}/api/show", json={"model": model_name}, timeout=10)
@@ -191,7 +237,6 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
             details = data.get("details", {})
             mi = data.get("model_info", {})
 
-            entry["params"] = details.get("parameter_size", "?")
             entry["quantization"] = details.get("quantization_level", "?")
 
             # Context length key varies by architecture
@@ -214,10 +259,32 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
                         total += layer.get("size", 0)
             entry["size_gb"] = round(total / (1024**3), 1)
             entry["effective_ctx"] = effective_ctx
-            entry["vram_estimate"] = _estimate_vram(mi, entry["size_gb"], effective_ctx)
+            # Both of these are deliberately omitted rather than guessed when
+            # the metadata does not support them — a blank tag is honest, a
+            # wrong one silently misleads capacity decisions.
+            entry.update(_classify_params(mi.get("general.parameter_count"),
+                                          entry["size_gb"],
+                                          details.get("parameter_size")))
+            # Architecture and expert topology: dense vs sparse is a first-order
+            # explanation for why a "larger" model can be faster and weaker.
+            arch = mi.get("general.architecture")
+            if arch:
+                entry["architecture"] = arch
+            experts = mi.get(f"{arch}.expert_count")
+            used = mi.get(f"{arch}.expert_used_count")
+            if experts:
+                entry["experts"] = experts
+                entry["experts_used"] = used
+                entry["sparse"] = True
+            vram = _estimate_vram(mi, entry["size_gb"], effective_ctx)
+            if vram is not None:
+                entry["vram_estimate"] = vram
+            if spec["think"] is not None:
+                entry["think"] = spec["think"]
         except Exception:
             pass
-        info[model_name] = entry
+        # Keyed by label so each variant carries its own ctx/VRAM figures.
+        info[spec["label"]] = entry
     return info
 
 
@@ -273,14 +340,25 @@ def main():
         return
 
     model_entries = args.models or cfg.get("models", [])
+    if args.models:
+        # Resolve CLI names against config entries so variants are selectable:
+        # `--models "muse-glimmer:30b-mlx +think"` picks up that entry's think
+        # setting instead of silently running it with the benchmark default.
+        default_ctx_lookup = cfg.get("ollama", {}).get("default_ctx", 4096)
+        by_key: dict[str, str | dict] = {}
+        for raw in cfg.get("models", []):
+            spec = resolve_model_entry(raw, default_ctx_lookup)
+            by_key[spec["label"]] = raw
+            by_key.setdefault(spec["model"], raw)
+        model_entries = [by_key.get(name, name) for name in args.models]
     if not model_entries:
         console.print("[red]No models specified. Use --models or set models in config.yaml[/red]")
         sys.exit(1)
     # Resolve mixed string/dict entries into (name, ctx) pairs and a name list
     default_ctx = cfg.get("ollama", {}).get("default_ctx", 4096)
     model_configs = _multi_model_models(model_entries, default_ctx)
-    models = [name for name, _ in model_configs]
-    model_ctx_map = dict(model_configs)
+    models = [s["label"] for s in model_configs]
+    spec_by_label = {s["label"]: s for s in model_configs}
 
     # Determine which benchmarks to run
     # config.yaml uses group names; expand them to individual registry keys
@@ -318,6 +396,12 @@ def main():
 
     config_models = [m if isinstance(m, str) else m["model"] for m in cfg.get("models", [])]
     report_path = Path(cfg["output"]["dir"]) / "report.html"
+    # A partial run with no baseline would otherwise overwrite an aggregated
+    # dashboard with just this run's models. Divert to a per-run file instead.
+    if not args.baseline and report_path.exists():
+        report_path = Path(cfg["output"]["dir"]) / f"report_{run_id}.html"
+        console.print(f"[dim]No --baseline: writing {report_path.name} to preserve "
+                      f"the aggregated report.html[/dim]")
     try:
         template_html = find_template().read_text()
     except FileNotFoundError:
@@ -340,6 +424,16 @@ def main():
         for k, v in baseline_results["metadata"].get("model_info", {}).items():
             if k not in model_info:
                 model_info[k] = v
+
+    def _checkpoint(combined: list) -> None:
+        """Write results so far to the run's output file (overwritten each time)."""
+        out = Path(args.output) if args.output else Path(cfg["output"]["dir"]) / f"{run_id}.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps({
+            "metadata": {"run_id": run_id, "run_start": run_start, "partial": True,
+                         "model_info": model_info, **run_meta},
+            "results": combined,
+        }, indent=2, default=str))
 
     def _refresh_report(is_live: bool) -> None:
         combined = _merged()
@@ -366,11 +460,16 @@ def main():
     sample_counts: dict[tuple[str, str], int] = {}
     _sc_lock = __import__("threading").Lock()
 
-    def _run_model(model_name: str) -> list[dict]:
-        """Run all selected benchmarks for one model. Used both sequentially and in parallel."""
-        model_ctx = model_ctx_map.get(model_name)
+    def _run_model(label: str) -> list[dict]:
+        """Run all selected benchmarks for one model variant.
+
+        `label` is the variant identity (may include a "+think" suffix);
+        `model_name` is what Ollama is actually asked for.
+        """
+        spec = spec_by_label[label]
+        model_name, model_ctx = spec["model"], spec["ctx"]
         model_results: list[dict] = []
-        console.print(f"\n[bold cyan]═══ Model: {model_name} ═══[/bold cyan]")
+        console.print(f"\n[bold cyan]═══ Model: {label} ═══[/bold cyan]")
         for bench_name in selected:
             cfg_key = next((g for g, members in BENCH_GROUPS.items() if bench_name in members), bench_name)
             bcfg = {**cfg["ollama"], **bench_cfg.get(cfg_key, {})}
@@ -379,6 +478,10 @@ def main():
             bcfg["use_ensemble"] = use_ensemble
             bcfg["ensemble_models"] = ensemble_models
             bcfg["memory_guard"] = exec_cfg.get("memory_guard", {"enabled": True})
+            # A per-model think setting wins over the benchmark's own default,
+            # which is how the same model runs as think-on and think-off rows.
+            if spec["think"] is not None:
+                bcfg["think"] = spec["think"]
 
             bench_class = BENCHMARK_REGISTRY[bench_name]
             bench = bench_class(client=client, config=bcfg)
@@ -401,6 +504,7 @@ def main():
                 console.print(f"  [green]✓[/green] {bench_name}: {passed}/{len(results)} passed ({score:.1%})")
                 # Add run metadata to every result record
                 for r in results:
+                    r["model"] = label      # variant identity, not the raw model
                     r["run_id"] = run_id
                     r["run_start"] = run_start
                     r["git_sha"] = run_meta["git_sha"]
@@ -408,13 +512,14 @@ def main():
                     r["hardware"] = run_meta["hardware"]
                     r["ollama_version"] = run_meta["ollama_version"]
                 with _sc_lock:
-                    sample_counts[(model_name, bench_name)] = len(results)
+                    sample_counts[(label, bench_name)] = len(results)
                 model_results.extend(results)
             except MemorySwapAbort as e:
                 swap_msg = str(e)
                 console.print(f"  [red]💀 {bench_name} aborted — memory swap detected: {swap_msg[:120]}[/red]")
                 swap_results = e.partial_results
                 for r in swap_results:
+                    r["model"] = label      # variant identity, not the raw model
                     r["run_id"] = run_id
                     r["run_start"] = run_start
                     r["git_sha"] = run_meta["git_sha"]
@@ -422,10 +527,10 @@ def main():
                     r["hardware"] = run_meta["hardware"]
                     r["ollama_version"] = run_meta["ollama_version"]
                 with _sc_lock:
-                    sample_counts[(model_name, bench_name)] = len(swap_results)
+                    sample_counts[(label, bench_name)] = len(swap_results)
                 model_results.extend(swap_results)
                 # Skip remaining benchmarks for this model — all will swap too
-                console.print(f"  [red]💀 Skipping remaining benchmarks for {model_name} (memory swap)[/red]")
+                console.print(f"  [red]💀 Skipping remaining benchmarks for {label} (memory swap)[/red]")
                 break
             except Exception as e:
                 console.print(f"  [red]✗ {bench_name} failed: {e}[/red]")
@@ -444,7 +549,19 @@ def main():
     else:
         for model in models:
             results = _run_model(model)
+            # Evict before the next model loads. Ollama keeps a model warm for
+            # ~5 minutes by default, so back-to-back large models would both be
+            # resident and drive the machine into swap.
+            if client.unload(model):
+                console.print(f"  [dim]unloaded {model}[/dim]")
             new_results.extend(results)
+            # Checkpoint after every model. A long run that dies partway used to
+            # lose every completed model, because results were only written at
+            # the very end.
+            try:
+                _checkpoint(_merged())
+            except Exception as e:
+                console.print(f"[dim]checkpoint skipped: {e}[/dim]")
             _refresh_report(is_live=model != models[-1])
             console.print(f"  [dim]report.html → step {models.index(model)+1}/{len(models)}[/dim]")
 
@@ -472,7 +589,13 @@ def main():
         "results": all_results,
     }
 
-    saved = save_results(wrapped, cfg["output"]["dir"], run_id)
+    if args.output:
+        out_path = Path(args.output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(wrapped, indent=2, default=str))
+        saved = out_path
+    else:
+        saved = save_results(wrapped, cfg["output"]["dir"], run_id)
     console.print(f"\n[dim]Results saved to {saved}[/dim]")
 
     _refresh_report(is_live=False)
