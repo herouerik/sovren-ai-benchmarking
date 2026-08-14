@@ -99,20 +99,35 @@ The judge is configured via `judge.provider` in `config.yaml` — see the [Judge
 ```
 run_benchmark.py
   └─ loads config.yaml
-  └─ for each model:
+  └─ for each model (variant):
        └─ for each benchmark:
-            └─ load_samples() — pulls dataset from HuggingFace (cached after first pull)
+            └─ load_samples()    — dataset from HuggingFace (cached after first pull)
+            └─ select_samples()  — seeded, shuffled, stratified across subjects
             └─ for each sample:
-                 └─ client.complete() — POST to Ollama at localhost:11434/v1
+                 └─ complete_native() — streaming POST to /api/chat, watched by
+                                        the guard, which can abort it mid-flight
                  └─ score() — exact match / code execution / LLM judge
             └─ print live pass rate
+       └─ unload the model, then checkpoint results to disk
   └─ save results/<timestamp>.json
+  └─ regenerate results/report.html
   └─ print Rich summary tables
 ```
 
-Temperature is `0.0` for all deterministic benchmarks (MCQ, math, coding, SQL) so runs are reproducible. The philosophical judge also runs at `0.0` — subjectivity is in the rubric, not the sampling.
+Temperature is `0.0` for all deterministic benchmarks (MCQ, math, coding, SQL) so runs are reproducible — verified identical across repeated runs, down to per-sample token counts. The philosophical judge also runs at `0.0` — subjectivity is in the rubric, not the sampling.
 
-The harness calls Ollama via the [OpenAI Python SDK](https://github.com/openai/openai-python) pointed at Ollama's OpenAI-compatible `/v1` endpoint. No framework lock-in — it's plain HTTP under the hood.
+Benchmark inference uses Ollama's **native `/api/chat`** over plain HTTP. The
+OpenAI-compatible `/v1` endpoint is not used for it, because `/v1` silently
+ignores the `think` parameter — and whether a model reasons before answering
+changes its scores substantially, so it has to be explicit rather than an
+implicit default that shifts with the Ollama version. Native also reports
+authoritative prefill and decode timings, and supports `keep_alive` for
+deterministic unloading between models. The OpenAI SDK is still used for cloud
+judges.
+
+Each result records what it was measured under — `think`, `ttft`, `decode_tps`,
+token counts, `ollama_version`, git SHA, and hardware — so runs from different
+setups are never silently compared.
 
 ---
 
@@ -120,35 +135,78 @@ The harness calls Ollama via the [OpenAI Python SDK](https://github.com/openai/o
 
 When a model is too large for the available RAM (or KV cache fills available memory during a long run), inference slows dramatically as the OS pages memory to disk — **swap thrashing**. To prevent a single swapping model from wasting hours, the harness detects swap and aborts the remaining benchmarks for that model.
 
+The guard aborts **mid-call**, not after. A thrashing generation runs effectively
+forever, so classifying it once it returns saves nothing — the stream is closed
+as soon as the pattern is recognised.
+
 ### Detection signals
 
-| # | Condition | Logic | Meaning |
+Detection is **timing-primary**: inter-token intervals inside a single
+generation. That is the only signal that works everywhere, because the
+underlying fault differs by platform — unified-memory swap on Apple Silicon,
+VRAM exhaustion and CPU offload on a Linux GPU box, host swap on a CPU-only
+machine. All three show up as decode falling off a cliff; only some appear in
+swap counters.
+
+| # | Phase | Condition | Meaning |
 |---|---|---|---|
-| 1 | **Early threshold** | For non-thinking benchmarks only: if sample is not the first (`i>0`) and `elapsed > max_baseline_seconds` | The model is unusably slow on this hardware — likely swapping immediately |
-| 2 | **Calibration baseline** | After `calibration_samples`, if the median of those samples exceeds `max_baseline_seconds` | Even the model's best-case speed is too slow; it barely fits in memory |
-| 3 | **Latency spike** | After calibration, if `elapsed > spike_threshold × baseline_median` | Normal samples were fast, then one sample went 5-10x slower — classic swap pattern |
+| 1 | **Prefill** | Sustained swap-out above `swap_bytes_per_sec` for `swap_sustain_seconds` | The machine is thrashing before generation even starts |
+| 2 | **Prefill** | No token at all within `ttft_ceiling_seconds` | Backstop only — a long TTFT is legitimate (cold load, extended thinking) |
+| 3 | **Decode** | No token for `token_stall_seconds` | Absolute silence no healthy generation exhibits |
+| 4 | **Decode** | Median of the last `window_tokens` gaps exceeds `decode_degradation_factor ×` the median of the first `baseline_tokens` | The rate this call itself established has collapsed — the classic swap pattern |
+| 5 | **Decode** | Sustained rate below `min_decode_tps` | *Not* thrash: the model runs fine, just too slowly to be worth benchmarking here |
+
+Signals 3–5 count **thinking tokens as liveness**. Chain-of-thought streams in a
+separate channel from the answer, so a long thinking phase would otherwise look
+like a stalled call.
+
+A trip is graded by the OS sensor. **Hard** (pressure corroborated) means the
+model does not fit — its remaining benchmarks are skipped. **Soft** (timing
+alone) costs one sample and the run continues. Signal 5 reports as `too_slow`
+rather than `swap_abort`, so "too slow to bother" is never mistaken for a
+memory fault.
 
 ### Configuration
-
-Set under `execution.memory_guard` in `config.yaml`:
 
 ```yaml
 execution:
   memory_guard:
-    enabled: true                   # Set false to disable swap detection entirely
-    calibration_samples: 3          # First N samples establish the speed baseline
-    spike_threshold: 10.0           # Kill if a sample takes this × baseline (catches swap spikes)
-    max_baseline_seconds: 300       # Kill any sample exceeding this absolute threshold
+    enabled: true                 # false disables detection entirely
+    poll_interval: 1.0
+    ttft_ceiling_seconds: 300     # backstop; cold load and thinking are legitimate
+    token_stall_seconds: 20
+    decode_degradation_factor: 10 # collapse vs this call's own established rate
+    baseline_tokens: 16
+    window_tokens: 8
+    swap_bytes_per_sec: 33554432  # 32 MB/s sustained swap-out = real thrash
+    swap_sustain_seconds: 5
+    min_decode_tps: 0.0           # 0 disables the throughput floor
+    min_decode_tps_after_tokens: 32
 ```
 
-### Gray zone
+### Portability
 
-The same config works very differently on GPU vs CPU:
+| | macOS | Linux | Other |
+|---|---|---|---|
+| Swap counters | `vm_stat` (Swapins/Swapouts) | `/proc/vmstat` (`pswpin`/`pswpout`) | degrades to timing-only |
 
-- **GPU** (fast tokens/s): 30–60s `max_baseline_seconds` is reasonable — normal inference takes 2–10s. A 30s sample means the GPU is swapping.
-- **CPU** (slow tokens/s): The same threshold would kill every sample for a 7B model. For CPU, set `max_baseline_seconds` to 300s and rely on `spike_threshold` to catch real swap patterns. CPU per-sample latency varies 2–5× from OS scheduling alone; set `spike_threshold` to 20.0 to avoid false positives from CPU contention while still catching true swap (>100× slowdown).
+Adding a platform is one `PressureSensor` subclass in `harness/pressure.py`.
+Nothing else changes, and an unknown platform still gets full timing detection.
 
-The `spike_threshold` is the more robust signal because it's relative to each model's own baseline. A 7B model consistently taking 50s/sample on CPU won't trigger it, but a swap-induced jump to 1000s will.
+### GPU vs CPU
+
+The old guard needed different absolute thresholds per machine
+(`max_baseline_seconds` of 30 on GPU, 300 on CPU) because it timed whole
+samples, so prompt length and answer length polluted the signal. Signal 4 is
+relative to the rate each call establishes for itself, so **the same config
+works on both**. A 7B model steady at 2 tok/s on a CPU laptop never trips it;
+a swap event does. Median-of-window comparison also absorbs the 2–5× per-sample
+jitter that CPU scheduling produces on its own.
+
+The one genuinely machine-specific setting is `min_decode_tps`, and that is by
+design — it encodes what *you* consider too slow to be worth measuring, not
+what is broken. Leave it at 0 on a CPU box, where slow is expected rather than
+a fault.
 
 ### Per-model context limits
 
@@ -163,6 +221,41 @@ models:
 ```
 
 Models listed as plain strings (without a `model:` key) use `ollama.default_ctx`. The global default is set via `ollama.default_ctx` in `config.yaml`.
+
+---
+
+## Thinking mode
+
+Models that declare a `thinking` capability reason before answering, and recent
+Ollama enables it by default. It changes results substantially in both
+directions — it can turn a wrong answer right, or burn the entire token budget
+before the answer starts — so it is an explicit, recorded dimension here rather
+than an implicit default.
+
+By default only the philosophical benchmark thinks (extended reasoning is the
+point there); everything else runs with it off. Override per benchmark with
+`think:` in its config block, or per model:
+
+```yaml
+models:
+  - model: muse-glimmer:30b-mlx     # thinking off
+    ctx: 32768
+    think: false
+  - model: muse-glimmer:30b-mlx     # same model, thinking on
+    ctx: 32768
+    think: true                     # → dashboard row "muse-glimmer:30b-mlx +think"
+```
+
+The two appear as **separate dashboard rows**, so the delta reads straight off
+the table. Set `label:` to name a variant yourself. Without distinct labels the
+second run would silently replace the first, since results merge on
+`(model, benchmark)`.
+
+Thinking uses `ollama.think_max_tokens` (default 16384) instead of
+`max_tokens`, because chain-of-thought is spent before the answer begins — at a
+2048 budget, thinking models fail by exhaustion rather than incapability. Each
+result stores `think` and `reasoning_chars`, so a thinking run is never
+mistaken for a non-thinking one.
 
 ---
 
@@ -367,6 +460,143 @@ The practical output is a routing map: which models to assign to which task type
 
 ---
 
+## Release notes
+
+### v0.1 — initial release
+
+The original harness: one entry point (`run_benchmark.py`), config-driven model
+and benchmark selection, six benchmark categories (MMLU, ARC, GSM8K,
+HumanEval + MBPP, Spider, philosophical LLM-as-judge), sandboxed code execution
+for the coding benchmarks, an HTML dashboard generated from a results JSON, and
+`--baseline` incremental patching so a new model could be added without
+re-running everything. Inference went through Ollama's OpenAI-compatible `/v1`
+endpoint. A wall-clock "memory guard" aborted models that looked like they were
+swapping.
+
+### v0.2 — measurement, scoring, and model-support overhaul
+
+Everything below changes what the numbers mean. **v0.1 results are not
+comparable to v0.2 results** — re-run rather than merge.
+
+The scale of the correction, measured on the same models and hardware:
+
+| what was wrong | before | after |
+|---|---|---|
+| MCQ answers extracted from the first `[ABCD]` in the text | `gemma4:26b-mlx` MMLU **0/5** | **5/5** |
+| Spider prompt omitted the database schema | `llama3.2:3b` **0%** | **50%** |
+| Spider, whole fleet (schema + representative sampling) | 0–20% | **35–80%** |
+| `think` sent to models that do not support it | 4 models scored **1.00/5** on empty answers | **4.26–4.46/5** |
+| Read timeout fired during prefill | `muse-glimmer:30b-mlx` **79.4** overall | **83.7** |
+| Speed charged prompt processing to generation | `llama3.2:3b` **19.0** tok/s | **98.0** tok/s |
+
+The v0.2 baseline is 20 model variants × 7 benchmarks × 2700 samples with
+**1 errored sample** total. Under v0.1 measurement the same fleet produced
+13 models with at least one aborted benchmark, nearly all of which turned out
+to be measurement artefacts rather than real limits.
+
+**Methodology**
+
+- **Representative sampling.** Benchmarks took the *first* N samples, so every
+  run measured a fixed head-slice of each dataset — and MMLU, configured with
+  five subjects, drew all 20 samples from `abstract_algebra` alone because
+  subjects were concatenated rather than interleaved. Sampling is now seeded
+  (`sample_seed`), shuffled, and stratified: n=20 means 4 questions from each
+  of 5 subjects, balanced at any n.
+- **Decode speed separated from latency.** `tok_per_sec` divided completion
+  tokens by *total* elapsed time, so prompt processing was charged to
+  generation. Multiple-choice benchmarks emit a single token, making the figure
+  meaningless. Results now carry `ttft`, `decode_tps`, `prompt_tokens`, and
+  `completion_tokens`; `decode_tps` comes from the server's own timings and is
+  the number comparable to published tok/s.
+- **Realistic budgets.** `max_tokens` was 2048, which truncated reasoning
+  models mid-answer — scoring zero on questions they were still working
+  through. Now 4096, with `think_max_tokens` (16384) applied when thinking is
+  on.
+- **Sample counts raised** so a single question no longer moves a score 20
+  points. Spider illustrates the risk: models scoring 100% at n=5 scored 55% at
+  n=20.
+
+**Bug fixes**
+
+- **Multiple-choice answers were extracted with the *first* `[ABCD]` match in
+  the response.** Any model that reasoned before answering had the letter taken
+  from its restatement of the options, scoring correct answers as wrong. The
+  extractor now prefers an explicit declaration (`the answer is C`, `**C**`,
+  `\boxed{D}`) and otherwise takes the *last* standalone letter. Terse answers
+  extract identically, so previously-scored terse responses are unaffected.
+- **Fabricated timings polluted the dashboard.** Rows reconstructed by log
+  recovery carried placeholder constants (`elapsed=5.0`, `tok_per_sec=10.0`)
+  and were averaged into the speed column, understating fast models by 4–6×.
+  They are now excluded, as are rows too short to measure throughput.
+- **A run without `--baseline` silently overwrote the aggregated dashboard**
+  with just that run's models. It now diverts to `report_<run_id>.html`.
+- **`--output` was parsed and ignored.** It now works.
+- **Results were only written at the very end**, so a run that died lost every
+  completed model. It now checkpoints after each one.
+
+**Model support**
+
+- **Thinking is a first-class, recorded dimension.** Newer Ollama enables
+  extended reasoning by default for models that declare the capability, which
+  changes accuracy substantially — and `/v1` silently ignores the `think`
+  parameter. Benchmark inference now uses Ollama's native `/api/chat`, where
+  `think` is honoured, defaults per benchmark, can be overridden per model, and
+  is stored on every result alongside the reasoning length.
+- **Model variants.** The same model can be benchmarked under different
+  settings and appear as separate dashboard rows (`model +think`) instead of
+  overwriting each other — previously the second run silently replaced the
+  first, since results merge on `(model, benchmark)`.
+- **Speculative decoding is measured correctly** rather than aborted (see the
+  guard notes below).
+
+**Memory guard — rewritten**
+
+- Aborts **mid-call** rather than classifying a sample after it has already
+  cost the time.
+- Detection is **timing-primary and burst-immune**: rates are averaged over
+  wall-clock windows, not per-token gaps. Per-token gaps produced nonsense
+  baselines (20000+ tok/s) whenever tokens arrived batched — which is *always*
+  under speculative decoding, so the old approach systematically killed exactly
+  the models it should have measured.
+- **A long TTFT is no longer a fault.** Cold model load and extended thinking
+  are legitimate; thinking tokens count as liveness.
+- **OS pressure sensing**, portable across macOS (`vm_stat`) and Linux
+  (`/proc/vmstat`), grades a trip as *hard* (model doesn't fit — skip it) or
+  *soft* (one bad sample — continue).
+- **"Too slow to benchmark" is now separate from "thrashing"**, reported as
+  `too_slow` via a `min_decode_tps` floor.
+- The absolute `max_baseline_seconds` / `spike_threshold` / `calibration_samples`
+  settings are gone; the same config now works on GPU and CPU.
+
+**Dashboard**
+
+- **Architecture is shown**: dense vs MoE, expert topology (`MoE 128×8`), and
+  active parameter counts. A sparse model reports only its *active* parameters,
+  which is why a "larger" model can be several times faster and score
+  differently — previously invisible.
+- **Unreliable figures are left blank rather than guessed.** Parameter counts
+  are cross-checked against file size; VRAM estimates are omitted when model
+  metadata lacks the attention shape needed for the KV-cache term, instead of
+  silently falling back to a weights-only number that understated usage by
+  several GB.
+- **The score heatmap actually separates scores.** It was three hard bands with
+  only opacity varying inside each, so a whole band read as one colour (75% and
+  100% were indistinguishable) while 74% vs 75% jumped a hue. It is now an
+  11-step ramp across the same three sovren hues, with luminance rising
+  monotonically — so the ordering survives greyscale and red-green colour
+  blindness — spanning 30–100% rather than 0–100% because scores cluster near
+  the top, and fanning out hardest over the last four steps.
+- **Contrast fixed throughout.** Every step carries the ink that clears WCAG AA
+  on it (worst pair 4.55:1), and the ramp steps across the luminance band where
+  neither light nor dark ink would pass. Swap-marker text inherits its cell's
+  ink rather than a fixed amber that measured **1.42:1** on the bright green
+  steps. Column headers and rank-strip labels moved off `--muted`, which was
+  2.6:1 on the near-black ground — below AA even for large text.
+- Models are unloaded between runs, so two large models are never resident at
+  once.
+
+---
+
 ## Dependencies and credits
 
 | Package | Purpose | Source |
@@ -393,6 +623,27 @@ The practical output is a routing map: which models to assign to which task type
 | Spider | CC BY 4.0 | Yu et al., 2018 |
 
 The philosophical prompts and LLM-as-judge rubric are original to this repository. The LLM-as-judge evaluation methodology follows [Zheng et al., 2023](https://arxiv.org/abs/2306.05685).
+
+---
+
+## License
+
+This harness is released under the [MIT License](LICENSE) — see `LICENSE` for
+the full text.
+
+That covers the code in this repository, including the philosophical prompts
+and the LLM-as-judge rubric, which are original to it.
+
+It does **not** cover the benchmark datasets. Those are third-party works under
+their own terms (MIT and CC BY 4.0, listed in the table above) and are fetched
+at runtime rather than redistributed here — `data/` is gitignored. If you
+publish results, cite the datasets you used; the CC BY 4.0 ones require
+attribution.
+
+Model weights are likewise not covered: each model carries its own licence from
+its publisher, and some place conditions on commercial use or on publishing
+benchmark comparisons. Check the licence of any model before publishing scores
+for it.
 
 ---
 

@@ -1,9 +1,20 @@
 ollama:
   base_url: "http://localhost:11434/v1"
   api_key: "ollama"
-  timeout: 120
-  max_tokens: 2048
+  timeout: 600
+  # Answer budget. A runaway cap, not a target — models stop at EOS long before
+  # it, so a generous value costs nothing except on pathological loops. Too
+  # tight is harmful: a model cut off mid-answer scores zero on a question it
+  # might have got right, measuring the budget rather than the model.
+  max_tokens: 4096
+  # Thinking needs several times the budget — chain-of-thought is spent before
+  # the answer begins.
+  think_max_tokens: 16384
   default_ctx: 32768  # Default num_ctx for all models (per-model ctx: overrides)
+  # Samples are drawn with this seed rather than taken from the head of the
+  # dataset, so every model sees an identical representative set. MMLU also
+  # stratifies across its subjects. Scores are only comparable at a fixed seed.
+  sample_seed: 42
 
 # Model list: use strings for simple names, or dicts to set per-model ctx.
 # ctx=N sets num_ctx in the Ollama API call — limits KV cache so VRAM
@@ -15,6 +26,15 @@ models:
   - qwen2.5-coder:7b
   - model: qwen3:32b
     ctx: 16384  # Per-model override: use 16K instead of the 32K default
+  # The same model can be benchmarked under different settings and appear as
+  # separate dashboard rows. `think` is only sent to models that declare the
+  # capability; `label` overrides the auto-generated "<model> +think" name.
+  - model: muse-glimmer:30b-mlx
+    ctx: 32768
+    think: false
+  - model: muse-glimmer:30b-mlx
+    ctx: 32768
+    think: true          # -> dashboard row "muse-glimmer:30b-mlx +think"
 
 # Judge configuration for philosophical benchmark.
 # Set provider to choose the judge backend — all config keys live at the
@@ -96,8 +116,23 @@ output:
 execution:
   parallel_models: false
   max_workers: 2
+  # Aborts a thrashing generation mid-call. Detection is timing-primary and
+  # burst-immune (rates averaged over wall-clock windows, never per-token gaps),
+  # corroborated by an OS pressure sensor: vm_stat on macOS, /proc/vmstat on
+  # Linux, timing-only elsewhere. The same config works on GPU and CPU because
+  # the main signal is relative to each call's own established rate.
   memory_guard:
     enabled: true
-    calibration_samples: 3
-    spike_threshold: 5.0
-    max_baseline_seconds: 30
+    poll_interval: 1.0
+    ttft_ceiling_seconds: 300     # backstop; cold load and thinking are legitimate
+    token_stall_seconds: 20
+    decode_degradation_factor: 10 # collapse vs this call's own established rate
+    baseline_window_seconds: 5
+    baseline_tokens: 16
+    window_seconds: 5
+    swap_bytes_per_sec: 33554432  # 32 MB/s sustained swap-out = real thrash
+    swap_sustain_seconds: 5
+    # "Too slow to be worth benchmarking" — a different question from thrashing.
+    # 0 disables. GPU / Apple Silicon: ~3.0. CPU-only: leave at 0.
+    min_decode_tps: 0.0
+    min_decode_tps_after_tokens: 32
