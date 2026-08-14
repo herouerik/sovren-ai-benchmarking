@@ -626,6 +626,27 @@ The philosophical prompts and LLM-as-judge rubric are original to this repositor
 
 ---
 
+## License
+
+This harness is released under the [MIT License](LICENSE) — see `LICENSE` for
+the full text.
+
+That covers the code in this repository, including the philosophical prompts
+and the LLM-as-judge rubric, which are original to it.
+
+It does **not** cover the benchmark datasets. Those are third-party works under
+their own terms (MIT and CC BY 4.0, listed in the table above) and are fetched
+at runtime rather than redistributed here — `data/` is gitignored. If you
+publish results, cite the datasets you used; the CC BY 4.0 ones require
+attribution.
+
+Model weights are likewise not covered: each model carries its own licence from
+its publisher, and some place conditions on commercial use or on publishing
+benchmark comparisons. Check the licence of any model before publishing scores
+for it.
+
+---
+
 ## Extending
 
 Add a new benchmark category by:
