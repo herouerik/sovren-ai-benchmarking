@@ -1,0 +1,32 @@
+ollama:
+  base_url: "http://192.168.68.115:11434/v1"
+  api_key: "ollama"
+  timeout: 600
+  max_tokens: 8192
+  default_ctx: 131072
+  sample_seed: 42
+
+models:
+  # Unified pool candidates (6x P100, 96GB VRAM)
+  - model: qwen3-coder-next:sovereign-128k
+    ctx: 131072
+  - model: deepseek-r1:70b
+    ctx: 131072
+  - model: GLM-4.5-Air
+    ctx: 131072
+
+  # Pool-b incumbent for comparison (run on unified pool too, or keep separate)
+  - model: qwen3-coder:30b-sovereign
+    ctx: 32768
+  - model: qwen3.6-128k:latest
+    ctx: 131072
+
+output:
+  dir: "results"
+  save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 1
+  memory_guard:
+    enabled: false
