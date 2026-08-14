@@ -119,14 +119,103 @@ After you confirm the unified pool is up and models are pulled:
 
 ---
 
-## 6. Rollback (If Needed)
+## 6. Rollback — Restore Original 4+2 Pool Split
+
+If the unified pool is unstable, or you need the original endpoints for dependent systems **tonight**, run this on the GPU server:
+
+### 6.1 Stop Unified, Restore Original Services
 
 ```bash
+# Stop unified pool
 sudo systemctl stop ollama-unified
-sudo systemctl start ollama-pool-a
-sudo systemctl start ollama-pool-b
-# Update benchmarking machine's config back to two pools
+sudo systemctl disable ollama-unified
+
+# Restore original pool-a (4x P100 on port 11434) and pool-b (2x P100 on port 11436)
+# Adjust service names to match your actual setup:
+sudo systemctl start ollama-pool-a   # 4x P100 → port 11434
+sudo systemctl start ollama-pool-b   # 2x P100 → port 11436
+
+# Verify both pools up and models pinned:
+curl http://localhost:11434/api/ps   # should show qwen3-coder-next:sovereign-128k
+curl http://localhost:11436/api/ps   # should show qwen3-coder:30b-sovereign
+nvidia-smi                           # 4 GPUs active on pool-a, 2 on pool-b
 ```
+
+### 6.2 Re-pin Original Models (If Evicted)
+
+```bash
+# Pool-a (port 11434): 79.7B sovereign with 128k context
+curl -X POST http://localhost:11434/api/generate \
+  -d '{"model": "qwen3-coder-next:sovereign-128k", "prompt": "warmup", "keep_alive": "24h"}'
+
+# Pool-b (port 11436): 30b sovereign coder
+curl -X POST http://localhost:11436/api/generate \
+  -d '{"model": "qwen3-coder:30b-sovereign", "prompt": "warmup", "keep_alive": "24h"}'
+
+# Meta pool (port 11435, RTX 2080): lightweight sidecar
+curl -X POST http://localhost:11435/api/generate \
+  -d '{"model": "qwen2.5-coder:7b", "prompt": "warmup", "keep_alive": "24h"}'
+```
+
+### 6.3 Benchmarking Machine Config Rollback
+
+On the benchmarking machine (192.168.68.106), restore the two-pool benchmark config:
+
+```bash
+cd /home/erik/git/pfc/sovren-ai-benchmarking
+# Use the original config-gpu-server.yaml (points at pool-a 11434 for 79.7B)
+# and config-gpu-server-poolb.yaml (points at pool-b 11436 for 30b/qwen3.6-128k)
+# Both already committed in this repo.
+```
+
+### 6.4 Router Config Rollback (This Machine)
+
+On the benchmarking machine, restore `config/inference.yaml` to the two-pool endpoints:
+
+```yaml
+endpoints:
+  - name: gpu-server-a
+    url: "http://192.168.68.115:11434/v1"
+    driver: ollama
+    priority: 80
+    tags: [sovereign, gpu, pool-a]
+    models:
+      qwen3-coder-next:sovereign-128k: {ctx: 131072, temperature: 0.2}
+
+  - name: gpu-server-b
+    url: "http://192.168.68.115:11436/v1"
+    driver: ollama
+    priority: 75
+    tags: [sovereign, gpu, pool-b]
+    models:
+      qwen3-coder:30b-sovereign: {ctx: 32768, temperature: 0.2}
+      qwen3.6-128k:latest: {ctx: 32768, temperature: 0.2}
+
+  - name: gpu-server-meta
+    url: "http://192.168.68.115:11435/v1"
+    driver: ollama
+    priority: 70
+    tags: [sovereign, gpu, meta]
+    models:
+      qwen2.5-coder:7b: {ctx: 8192, temperature: 0.2}
+```
+
+The original `inference.yaml` (before unified pool) is in git history — `git checkout HEAD~1 -- config/inference.yaml` restores it.
+
+---
+
+## 7. Dependent Systems Checklist
+
+Before rolling back, verify these endpoints aren't hardcoded elsewhere:
+
+| System | Expected Endpoint | Check |
+|---|---|---|
+| opencode agents | `gpu-server-a` (11434), `gpu-server-b` (11436) | `~/.config/opencode/opencode.jsonc` |
+| verifier_agent fallbacks | Both pools in sovereign chain | `scripts/verifier_agent.py` |
+| inference router | Both pools registered | `config/inference.yaml` |
+| Any external scripts | Direct HTTP to 11434/11436 | grep for `192.168.68.115:1143` |
+
+If any system calls the unified pool (11434) expecting the 79.7B but gets a different model, update its config to the restored pool-a endpoint.
 
 ---
 
