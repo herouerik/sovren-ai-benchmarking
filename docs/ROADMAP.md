@@ -141,6 +141,68 @@ BFCL is the cheapest entry point. A local agentic-loop benchmark (tool call →
 observation → recovery from a bad call) would be more representative of the
 actual use case — routing work to local models — but is a larger build.
 
+### E. BFCL build scope
+
+Written 2026-08-15, after scoping against the current benchmark harness code.
+
+BFCL V4 (current, last leaderboard update Jul 2026) splits into single-turn
+categories (Non-Live/Live × single/multiple/parallel/parallel-multiple) and an
+800-example multi-turn suite with four subcategories: Base, Missing-Functions,
+Missing-Parameters, and **Long-Context** (state-tracking over extended dialogue
+histories — directly relevant to evaluating large-context models, see the GPU
+unified-pool work).
+
+Official tooling is the `bfcl-eval` PyPI package, but its own execution
+pipeline assumes sglang/vllm-served models — not a drop-in for this harness.
+Plan: use `bfcl-eval` as a **library** (dataset + ground-truth + AST/state-diff
+checkers only), keep `OllamaClient` as the execution driver — the same pattern
+`benchmarks/sql.py` already uses (HF `datasets` for data, `harness/sandbox.py`
+for our own execution/scoring, not Spider's reference implementation).
+
+**Phase 1 — single-turn AST categories (medium, matches existing architecture)**
+
+- `harness/client.py`: extend `complete_native()` (client.py:72) to accept a
+  `tools=` param in the request body and parse `message.tool_calls` from the
+  streamed `/api/chat` response (client.py:135 currently only reads
+  `thinking`/`content`). Ollama's native API already supports this; it's just
+  unused today.
+- New `benchmarks/bfcl.py`, shaped like `SpiderBenchmark` (sql.py:65):
+  `load_samples()` pulls from `bfcl_eval`'s dataset, `score()` calls
+  `bfcl_eval`'s AST-checker against the parsed `tool_calls` rather than
+  hand-rolling parameter matching.
+- Registry entry in `run_benchmark.py`'s `BENCHMARK_REGISTRY` (line 45), plus a
+  config group entry following the existing `config.yaml` group-name pattern.
+- New dependency: `bfcl-eval` (pip) — justified; not reasonably reimplementable
+  from stdlib, same bar as the existing `datasets` dependency.
+
+**Phase 2 — multi-turn/agentic (heavy, the part that actually stresses large
+context and big models)**
+
+- `BaseBenchmark.run()` (base.py:102) is hard single-shot — one prompt in, one
+  response out. Multi-turn needs a genuinely different loop: model → tool_call
+  → execute against BFCL's stateful mock classes (in-memory Python objects
+  simulating a file system, trading account, etc., vendored from `bfcl_eval`)
+  → append tool result as a `tool`-role message → repeat until final answer or
+  turn budget. This is a new `run_multi_turn()` path, not a `BaseBenchmark`
+  subclass tweak.
+- Scoring is state-diff (does the mock object's final state match ground
+  truth) plus optional call-path checking — different shape from every
+  existing `score()` in this repo.
+- **Prioritize the Long-Context subcategory first within Phase 2** — it is the
+  closest match to what actually differentiates large-context models; the
+  other three subcategories mostly test correctness, not context capacity.
+
+**Not recommended for v1:** BFCL's "Live" / real-API-executable categories —
+flaky by design (real external services), same reasoning as why this doc
+doesn't chase live leaderboard parity elsewhere (see §B).
+
+**Sequencing note:** Phase 1 alone will not show a large-context advantage —
+it's still single-shot, same structural limitation as the current suite, just
+harder questions. Phase 2's Long-Context subcategory is the one actually worth
+building to answer "do large models / large contexts differentiate on complex
+tasks?"; Phase 1 is worth doing regardless since it is cheap and fixes the
+tool-use blind spot generally.
+
 ---
 
 ## Smaller open items
