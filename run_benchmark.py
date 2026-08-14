@@ -276,6 +276,13 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
                 entry["experts"] = experts
                 entry["experts_used"] = used
                 entry["sparse"] = True
+            elif arch and "moe" in arch.lower():
+                # The architecture name is authoritative even when the expert
+                # keys are absent: MLX conversions drop them, so qwen3_5_moe
+                # reported a consistent total parameter count with no expert
+                # metadata and was mislabelled "dense". Total params are still
+                # shown — the active count simply is not recoverable here.
+                entry["sparse"] = True
             vram = _estimate_vram(mi, entry["size_gb"], effective_ctx)
             if vram is not None:
                 entry["vram_estimate"] = vram

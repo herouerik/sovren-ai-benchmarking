@@ -238,7 +238,7 @@ body::after{
 <script>
 const BENCHMARK_DATA = {
   "run_id": "20260812_143651",
-  "timestamp": "2026-08-13 15:35",
+  "timestamp": "2026-08-14 12:06",
   "total_samples": 2700,
   "models": [
     "llama3.2:3b",
@@ -743,7 +743,8 @@ const BENCHMARK_DATA = {
       "effective_ctx": 32768,
       "params": "35.1B",
       "architecture": "qwen3_5_moe",
-      "think": true
+      "think": true,
+      "sparse": true
     },
     "muse-glimmer:30b-mlx +think": {
       "quantization": "nvfp4",
@@ -762,7 +763,8 @@ const BENCHMARK_DATA = {
       "effective_ctx": 32768,
       "params": "35.1B",
       "architecture": "qwen3_5_moe",
-      "think": false
+      "think": false,
+      "sparse": true
     },
     "llama3.2:3b": {
       "quantization": "Q4_K_M",

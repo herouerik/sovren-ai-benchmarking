@@ -163,6 +163,13 @@ def main() -> None:
     parser.add_argument("--template", default=None, help="Path to dashboard HTML template")
     parser.add_argument("--config", default=None, help="Path to config.yaml (injects all_models for status markers)")
     parser.add_argument("--live", action="store_true", help="Inject 60s meta-refresh (use during an ongoing run)")
+    parser.add_argument(
+        "--summary", metavar="PATH",
+        help="Also write the dashboard's aggregate payload as JSON. This is the "
+             "small, diffable form of a run (~20KB vs ~5MB of per-sample "
+             "records) and is enough to rebuild the dashboard, so a committed "
+             "report stays reproducible without tracking raw model output.",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -199,6 +206,13 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         f.write(html)
+
+    if args.summary:
+        summary_path = Path(args.summary)
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        print(f"Summary written → {summary_path} "
+              f"({summary_path.stat().st_size // 1024}KB)")
 
     print(f"Report written → {output_path}")
     print(f"Models: {len(data['models'])}  Benchmarks: {len(data['benchmarks'])}  Samples: {data['total_samples']}")
