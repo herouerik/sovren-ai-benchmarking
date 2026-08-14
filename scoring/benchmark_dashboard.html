@@ -26,7 +26,7 @@ body::after{
 .topbar{height:44px;border-bottom:1px solid var(--border);display:flex;align-items:center;background:var(--bg);flex-shrink:0}
 .topbar-cells{display:flex;align-items:stretch;height:100%;flex:1;overflow:hidden}
 .meta-cell{display:flex;align-items:center;gap:6px;padding:0 18px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0}
-.meta-label{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.meta-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
 .meta-value{font-size:12px;color:var(--text);font-variant-numeric:tabular-nums}
 .pulse{width:5px;height:5px;border-radius:50%;background:#2d8a5a;animation:blink 2.4s ease-in-out infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -39,7 +39,7 @@ body::after{
 /* SAMPLE BANNER */
 .sample-banner{display:none;align-items:center;gap:10px;padding:7px 18px;border-bottom:1px solid var(--border);background:var(--surf);flex-shrink:0}
 .sample-badge{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:1px 6px;flex-shrink:0}
-.sample-text{font-size:9px;color:var(--muted)}
+.sample-text{font-size:9px;color:var(--dim)}
 
 /* RANK STRIP */
 .rank-strip-wrap{position:relative;flex-shrink:0;border-bottom:1px solid var(--border)}
@@ -50,21 +50,23 @@ body::after{
 .rank-card:hover{background:var(--surf2)}
 .rank-card.is-active{background:var(--accentA)}
 .rank-top{display:flex;align-items:baseline;gap:5px;margin-bottom:3px}
-.rank-num{font-size:8px;color:var(--muted);letter-spacing:.06em;flex-shrink:0;padding-top:1px}
-.rank-score{font-family:var(--serif);font-size:20px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--muted)}
+.rank-num{font-size:9px;color:var(--dim);letter-spacing:.06em;flex-shrink:0;padding-top:1px}
+.rank-score{font-family:var(--serif);font-size:20px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text)}
 .rank-card.s-current:first-of-type .rank-score,.rank-card.s-current.rank-first .rank-score{color:var(--accent)}
 .rank-score-swapped{color:#9e8818 !important}
 .rank-swap{font-size:14px;margin-left:2px;line-height:1;vertical-align:middle}
 .rank-model{font-size:9px;letter-spacing:.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
-.rank-speed{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.04em}
+.rank-speed{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:.04em}
 
 /* TABLE */
 .table-wrap{flex:1;overflow:auto}
 .bench-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .bench-table thead th{
   position:sticky;top:0;background:var(--bg);z-index:10;
-  padding:9px 12px;text-align:center;font-size:8px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--muted);
+  padding:9px 12px;text-align:center;font-size:9px;letter-spacing:.13em;
+  /* --muted on the near-black ground was 2.6:1 — below AA and unreadable at
+     this size. --dim is 5.5:1 and still recessive against the data. */
+  text-transform:uppercase;color:var(--dim);
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap
 }
 .bench-table thead th.th-model{text-align:left;min-width:185px}
@@ -80,20 +82,20 @@ body::after{
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
-.overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:var(--text)}
-.overall-num.is-swapped{color:#d4a84a}
+.overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
+.overall-num.is-swapped{color:inherit}
 .td-score{text-align:center;padding:14px 8px;min-width:76px;transition:opacity .15s}
 .td-score.is-swapped{background:rgba(165,140,28,0.08) !important}
-.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:var(--text);display:block}
-.score-num.is-swapped{color:#9e8818;font-size:11px}
-.score-n{font-size:8px;color:var(--dim);display:block;margin-top:1px}
-.score-swap{font-size:11px;color:#9e8818;display:block;margin-top:1px;letter-spacing:.02em}
+.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:inherit;display:block}
+.score-num.is-swapped{color:inherit;font-size:11px}
+.score-n{font-size:8px;color:currentColor;opacity:.68;display:block;margin-top:1px}
+.score-swap{font-size:11px;color:currentColor;opacity:.85;display:block;margin-top:1px;letter-spacing:.02em}
 
 /* SIDEBAR */
 .sidebar{display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
 .sidebar::-webkit-scrollbar{display:none}
 .sb-block{padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-label{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:13px}
+.sb-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:13px}
 #radar{display:block;margin:0 auto}
 .radar-legend{display:flex;flex-direction:column;gap:5px;margin-top:13px}
 .legend-item{display:flex;align-items:center;gap:7px;cursor:pointer;padding:2px 3px;transition:opacity .12s}
@@ -106,7 +108,7 @@ body::after{
 .speed-model{font-size:9px;color:var(--dim);flex:0 0 115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .speed-track{flex:1;height:2px;background:var(--border)}
 .speed-fill{height:100%;transition:width .5s cubic-bezier(.16,1,.3,1)}
-.speed-val{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 40px;text-align:right}
+.speed-val{font-size:9px;color:var(--text);font-variant-numeric:tabular-nums;flex:0 0 40px;text-align:right}
 
 /* DROPZONE */
 .dropzone{border:1px dashed var(--border);padding:16px 10px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
@@ -114,7 +116,7 @@ body::after{
 .dropzone-sm{padding:8px 10px}
 .drop-text{font-size:10px;letter-spacing:.08em;color:var(--dim);margin-bottom:3px}
 .dropzone-sm .drop-text{font-size:9px;margin-bottom:0}
-.drop-sub{font-size:9px;color:var(--muted)}
+.drop-sub{font-size:9px;color:var(--dim)}
 
 /* LOADER ROWS */
 .loader-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
@@ -369,11 +371,61 @@ function allModels() {
   return [...ranked, ...prev, ...config];
 }
 
+/* Score heatmap: the three sovren hues (red 138,46,46 -> amber 165,140,28 ->
+   green 45,138,90), kept as translucent fills over the dark ground so the
+   cells retain their depth and the row hover/active states show through.
+
+   Luminance rises monotonically with the score, which is what makes 75% and
+   100% actually distinguishable — the previous scheme varied only opacity
+   within three hard bands, so a whole band read as one colour while 74% vs
+   75% jumped a hue. Because the ordering lives in luminance rather than hue,
+   the ramp still reads correctly in greyscale and with red-green colour
+   blindness.
+
+   The steps are deliberately uneven, fanning out at the top where every model
+   actually scores: the last four span a 5x luminance range.
+
+   Ink is light on the translucent fills and dark on the bright greens. There
+   is a band around luminance 0.12-0.20 where neither ink clears WCAG AA on a
+   dark ground, so the ramp steps across it: the top three are solid brightened
+   greens rather than more opacity on the sovren green, which at full strength
+   lands inside that band. Worst pair in the ramp: 4.55:1. */
+const SCORE_RAMP = [
+  ['rgba(138,46,46,0.11)','#dcd9d4'],   // sovren red
+  ['rgba(143,65,42,0.17)','#dcd9d4'],
+  ['rgba(149,84,39,0.24)','#dcd9d4'],
+  ['rgba(154,102,35,0.34)','#dcd9d4'],
+  ['rgba(160,121,32,0.42)','#dcd9d4'],
+  ['rgba(165,140,28,0.49)','#dcd9d4'],  // sovren amber
+  ['rgba(141,140,40,0.62)','#dcd9d4'],
+  ['rgba(117,139,53,0.70)','#dcd9d4'],
+  ['#44a36e','#0f0d0c'],                // sovren green, brightened
+  ['#5ebe89','#0f0d0c'],
+  ['#7dd9a5','#0f0d0c'],
+];
+
+/* The ramp spans 30-100%, not 0-100%. Scores on these benchmarks cluster near
+   the top — in the 20-model baseline, 14 of 31 distinct values sat inside a
+   single decile — so a linear 0-100% mapping spends most of its range on
+   scores that never occur and paints 75% and 100% as neighbouring greens.
+   Anchoring the low end at 30% (a model failing outright) spreads the field
+   across the part of the scale that carries information. The mapping is still
+   a fixed function of the score, not of the data on screen, so a colour means
+   the same thing on every dashboard. */
+const SCORE_FLOOR = 0.30;
+
+function scoreStep(s) {
+  const t = (s - SCORE_FLOOR) / (1 - SCORE_FLOOR);
+  const i = Math.max(0, Math.min(SCORE_RAMP.length - 1, Math.round(t * (SCORE_RAMP.length - 1))));
+  return SCORE_RAMP[i];
+}
 function scoreBg(s) {
   if (s === null || s === undefined) return 'transparent';
-  const op = (0.06 + s * 0.50).toFixed(2);
-  const rgb = s >= .75 ? '45,138,90' : s >= .50 ? '165,140,28' : '138,46,46';
-  return `rgba(${rgb},${op})`;
+  return scoreStep(s)[0];
+}
+function scoreFg(s) {
+  if (s === null || s === undefined) return '';
+  return scoreStep(s)[1];
 }
 
 function hexRgb(hex) {
@@ -551,6 +603,7 @@ function renderTable() {
     tdOv.className = 'td-overall';
     if (ov >= 0) {
       tdOv.style.background = scoreBg(ov);
+      tdOv.style.color = scoreFg(ov);   // ink that clears AA on this step
       const swap = hasSwap(m);
       tdOv.innerHTML = `<span class="overall-num${swap?' is-swapped':''}">${(ov*100).toFixed(1)}${swap?'💀':''}</span>` +
         (swap ? `<span class="score-swap">partial data</span>` : '');
@@ -569,6 +622,7 @@ function renderTable() {
       if (isSwapped) td.classList.add('is-swapped');
       if (s !== null && !isSwapped) {
         td.style.background = scoreBg(s);
+        td.style.color = scoreFg(s);    // ink that clears AA on this step
         td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>` + (n ? `<span class="score-n">n=${n}</span>` : '');
       } else if (s !== null && isSwapped) {
         td.innerHTML = `<span class="score-num is-swapped">💀 ${(s*100).toFixed(0)}</span>` +

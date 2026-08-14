@@ -476,9 +476,23 @@ swapping.
 ### v0.2 — measurement, scoring, and model-support overhaul
 
 Everything below changes what the numbers mean. **v0.1 results are not
-comparable to v0.2 results** — re-run rather than merge. The scale of the
-correction is best shown by one cell: `gemma4:26b-mlx` on MMLU scored 0/5 under
-v0.1 scoring on the newer runtime, and 5/5 once the answer extractor was fixed.
+comparable to v0.2 results** — re-run rather than merge.
+
+The scale of the correction, measured on the same models and hardware:
+
+| what was wrong | before | after |
+|---|---|---|
+| MCQ answers extracted from the first `[ABCD]` in the text | `gemma4:26b-mlx` MMLU **0/5** | **5/5** |
+| Spider prompt omitted the database schema | `llama3.2:3b` **0%** | **50%** |
+| Spider, whole fleet (schema + representative sampling) | 0–20% | **35–80%** |
+| `think` sent to models that do not support it | 4 models scored **1.00/5** on empty answers | **4.26–4.46/5** |
+| Read timeout fired during prefill | `muse-glimmer:30b-mlx` **79.4** overall | **83.7** |
+| Speed charged prompt processing to generation | `llama3.2:3b` **19.0** tok/s | **98.0** tok/s |
+
+The v0.2 baseline is 20 model variants × 7 benchmarks × 2700 samples with
+**1 errored sample** total. Under v0.1 measurement the same fleet produced
+13 models with at least one aborted benchmark, nearly all of which turned out
+to be measurement artefacts rather than real limits.
 
 **Methodology**
 
@@ -565,6 +579,19 @@ v0.1 scoring on the newer runtime, and 5/5 once the answer extractor was fixed.
   metadata lacks the attention shape needed for the KV-cache term, instead of
   silently falling back to a weights-only number that understated usage by
   several GB.
+- **The score heatmap actually separates scores.** It was three hard bands with
+  only opacity varying inside each, so a whole band read as one colour (75% and
+  100% were indistinguishable) while 74% vs 75% jumped a hue. It is now an
+  11-step ramp across the same three sovren hues, with luminance rising
+  monotonically — so the ordering survives greyscale and red-green colour
+  blindness — spanning 30–100% rather than 0–100% because scores cluster near
+  the top, and fanning out hardest over the last four steps.
+- **Contrast fixed throughout.** Every step carries the ink that clears WCAG AA
+  on it (worst pair 4.55:1), and the ramp steps across the luminance band where
+  neither light nor dark ink would pass. Swap-marker text inherits its cell's
+  ink rather than a fixed amber that measured **1.42:1** on the bright green
+  steps. Column headers and rank-strip labels moved off `--muted`, which was
+  2.6:1 on the near-black ground — below AA even for large text.
 - Models are unloaded between runs, so two large models are never resident at
   once.
 
