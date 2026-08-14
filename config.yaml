@@ -1,19 +1,72 @@
 ollama:
   base_url: "http://localhost:11434/v1"
   api_key: "ollama"
-  timeout: 120
-  max_tokens: 2048
+  timeout: 600
+  # Answer budget. This is a runaway cap, not a target — models stop at EOS long
+  # before it, so a generous value costs nothing except on pathological loops.
+  # Too tight is actively harmful: a model cut off mid-answer scores zero on a
+  # question it might have got right, which measures the budget, not the model.
+  max_tokens: 4096
+  # Thinking needs several times the budget: chain-of-thought is spent before
+  # the answer is even started. At 2048 thinking models were failing by
+  # exhaustion rather than incapability.
+  think_max_tokens: 16384
+  default_ctx: 32768     # Default num_ctx for all models (per-model ctx: overrides)
+  # Samples are drawn with this seed, not taken from the head of the dataset, so
+  # every model sees an identical representative set rather than a fixed slice.
+  # MMLU additionally stratifies across its subjects. Changing this changes
+  # which questions are asked, so scores are only comparable at a fixed seed.
+  sample_seed: 42
 
 models:
-  # Locally available on this machine (CPU only, 8 cores, 30GB RAM)
-  - llama3.1:8b
-  - qwen2.5:7b
-  - qwen2.5-coder:7b
-  - gemma4:e4b
-  - qwen3:8b
-  - deepseek-r1:7b
-  - llama3.2:3b
-  - qwen2.5:1.5b
+  # All locally available Ollama models on this machine, smallest-first for early results.
+  # Use dict format (model: name, ctx: N) to set num_ctx in the Ollama API call.
+  # This limits KV cache to a realistic working context for your hardware. Without it
+  # Ollama uses the model's built-in value (typically 2048–4096, not the max context).
+  # The VRAM estimate uses configured ctx (or 4096 fallback if unset).
+  - llama3.2:3b                  # ~3B
+  - llama3.1:8b                  # ~8B
+  - qwen2.5-coder:7b             # ~7B
+  - model: gemma4-12b-agentic:latest    # ~12B, Q8_0
+    ctx: 16384
+  - model: gemma4-12b-agentic-mtp:latest  # ~12B, Q8_0
+    ctx: 16384
+  - model: codestral:22b                # ~22B
+    ctx: 16384
+  - model: devstral-small-2:latest  # ~22B, 384K max
+    ctx: 16384
+  - model: gemma4:26b-mlx         # ~26B, nvfp4
+    ctx: 32768
+  - model: nemotron-3-nano:30b    # ~30B, 1M max ctx
+    ctx: 32768
+  - model: gemma4:31b-mlx         # ~31B, nvfp4
+    ctx: 32768                    # its old swap-aborts were false positives from
+                                  # the wall-clock guard; the new guard adjudicates
+                                  # real pressure in seconds, so keep ctx realistic
+  - qwen3:32b                    # ~32B (thinking enabled for philosophical)
+  - qwen3-32b-nothink:latest     # ~32B (no_think baked in)
+  - qwen2.5-coder:32b            # ~32B
+  - qwen3-coder:latest           # ~32B coding-focused, 256K max
+  - model: nemotron-cascade-2:latest  # ~30B, 256K max
+    ctx: 32768
+  - model: qwen3.6:27b           # ~27B (Qwen 3.6 dense flagship), 256K max
+    ctx: 32768
+
+  # Each of the two new models is benchmarked twice — thinking off and on — as
+  # separate labelled rows, so the impact of thinking is read directly off the
+  # table instead of being confounded with the model.
+  - model: muse-glimmer:30b-mlx  # Meta, 30B agentic multimodal, DFlash, 128K
+    ctx: 32768
+    think: false
+  - model: muse-glimmer:30b-mlx
+    ctx: 32768
+    think: true                  # → "muse-glimmer:30b-mlx +think"
+  - model: qwen3.6:35b-mlx       # Qwen 35B-A3B MoE (~3B active), 256K max
+    ctx: 32768
+    think: false
+  - model: qwen3.6:35b-mlx
+    ctx: 32768
+    think: true                  # → "qwen3.6:35b-mlx +think"
 
 # Judge configuration for philosophical benchmark.
 # Model must support JSON-formatted responses.
@@ -24,13 +77,19 @@ models:
 #   provider: "ensemble"   — multiple local Ollama models, scores averaged
 #
 judge:
-  provider: "opencode"
+  # Local, because the free cloud judge became unreachable mid-run (every call
+  # timing out) and silently zeroed the philosophical scores. A weaker but
+  # reliable judge applied identically to every model is worth more than a
+  # stronger one that fails partway through a run.
+  provider: "ollama"
+  ollama_single_model: "llama3.1:8b"   # small (4.6GB) so it can coexist with
+                                       # the model under test without swapping
+  timeout: 180
   cloud_model: "opencode/deepseek-v4-flash-free"
-  ollama_single_model: "llama3.1:8b"
   ensemble_models:
-    - qwen3:8b
-    - deepseek-r1:7b
     - llama3.1:8b
+    - gemma4-12b-agentic:latest
+    - devstral-small-2:latest
 
 benchmarks:
   reasoning:
@@ -42,30 +101,30 @@ benchmarks:
       - "formal_logic"
       - "high_school_mathematics"
       - "philosophy"
-    n_samples: 5
+    n_samples: 20
 
   math:
     enabled: true
     dataset: "openai/gsm8k"
     split: "test"
-    n_samples: 10
+    n_samples: 25
 
   coding:
     enabled: true
     datasets:
       - "openai/openai_humaneval"
       - "google-research-datasets/mbpp"
-    n_samples: 5
+    n_samples: 20
     execution_timeout: 10
 
   sql:
     enabled: true
     dataset: "xlangai/spider"
-    n_samples: 5
+    n_samples: 20
 
   philosophical:
     enabled: true
-    n_samples: 5
+    n_samples: 10
     judge_rubric:
       - "Depth of reasoning (1-5)"
       - "Coherence and logical consistency (1-5)"
@@ -80,3 +139,37 @@ benchmarks:
 output:
   dir: "results"
   save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 2
+  memory_guard:
+    enabled: true
+    poll_interval: 1.0            # how often the watchdog samples (cheap: ~4ms)
+    # Prefill: a long TTFT is legitimate (cold load, extended thinking), so
+    # nothing is killed on slowness alone — only sustained OS swap, plus this
+    # generous absolute backstop.
+    ttft_ceiling_seconds: 300
+    # Decode: thrash shows up as the token rate collapsing. Rates are measured
+    # over wall-clock windows, never per-token gaps — tokens arrive in bursts
+    # (many per step under speculative decoding), so consecutive gaps can be
+    # microseconds apart and imply nonsense rates like 20000 tok/s.
+    token_stall_seconds: 20       # absolute silence no healthy generation shows
+    decode_degradation_factor: 10 # collapse vs this call's own established rate
+    baseline_window_seconds: 5    # observe this long to establish the rate
+    baseline_tokens: 16           # ...and require at least this many tokens
+    window_seconds: 5             # trailing window compared against it
+    # OS corroboration — grades a trip as hard (model doesn't fit; skip its
+    # remaining benchmarks) vs soft (one bad sample; continue).
+    # Portable: macOS reads vm_stat, Linux reads /proc/vmstat, others degrade
+    # to timing-only. On a CPU-only box this is the *most* reliable signal,
+    # since there is no VRAM for the model to spill out of.
+    swap_bytes_per_sec: 33554432  # 32 MB/s of swap-out
+    swap_sustain_seconds: 5
+    # Throughput floor: "too slow to be worth benchmarking", which is a
+    # different question from thrashing. Unlike the old max_baseline_seconds
+    # this is tok/s, so it does not care how long the answer is.
+    # 0 disables (default). Apple Silicon / GPU: ~3.0 is a sane floor.
+    # CPU-only laptop: 0.5 or leave at 0 — slow is expected there, not a fault.
+    min_decode_tps: 0.0
+    min_decode_tps_after_tokens: 32

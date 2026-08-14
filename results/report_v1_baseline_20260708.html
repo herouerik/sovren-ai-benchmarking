@@ -1,4 +1,4 @@
-<!-- __META_REFRESH__ -->
+<meta http-equiv="refresh" content="60">
 <title>Sovren — LLM Benchmark Results</title>
 <style>
 :root {
@@ -26,7 +26,7 @@ body::after{
 .topbar{height:44px;border-bottom:1px solid var(--border);display:flex;align-items:center;background:var(--bg);flex-shrink:0}
 .topbar-cells{display:flex;align-items:stretch;height:100%;flex:1;overflow:hidden}
 .meta-cell{display:flex;align-items:center;gap:6px;padding:0 18px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0}
-.meta-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.meta-label{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .meta-value{font-size:12px;color:var(--text);font-variant-numeric:tabular-nums}
 .pulse{width:5px;height:5px;border-radius:50%;background:#2d8a5a;animation:blink 2.4s ease-in-out infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -39,7 +39,7 @@ body::after{
 /* SAMPLE BANNER */
 .sample-banner{display:none;align-items:center;gap:10px;padding:7px 18px;border-bottom:1px solid var(--border);background:var(--surf);flex-shrink:0}
 .sample-badge{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:1px 6px;flex-shrink:0}
-.sample-text{font-size:9px;color:var(--dim)}
+.sample-text{font-size:9px;color:var(--muted)}
 
 /* RANK STRIP */
 .rank-strip-wrap{position:relative;flex-shrink:0;border-bottom:1px solid var(--border)}
@@ -50,23 +50,21 @@ body::after{
 .rank-card:hover{background:var(--surf2)}
 .rank-card.is-active{background:var(--accentA)}
 .rank-top{display:flex;align-items:baseline;gap:5px;margin-bottom:3px}
-.rank-num{font-size:9px;color:var(--dim);letter-spacing:.06em;flex-shrink:0;padding-top:1px}
-.rank-score{font-family:var(--serif);font-size:20px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text)}
+.rank-num{font-size:8px;color:var(--muted);letter-spacing:.06em;flex-shrink:0;padding-top:1px}
+.rank-score{font-family:var(--serif);font-size:20px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--muted)}
 .rank-card.s-current:first-of-type .rank-score,.rank-card.s-current.rank-first .rank-score{color:var(--accent)}
 .rank-score-swapped{color:#9e8818 !important}
 .rank-swap{font-size:14px;margin-left:2px;line-height:1;vertical-align:middle}
 .rank-model{font-size:9px;letter-spacing:.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
-.rank-speed{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:.04em}
+.rank-speed{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.04em}
 
 /* TABLE */
 .table-wrap{flex:1;overflow:auto}
 .bench-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .bench-table thead th{
   position:sticky;top:0;background:var(--bg);z-index:10;
-  padding:9px 12px;text-align:center;font-size:9px;letter-spacing:.13em;
-  /* --muted on the near-black ground was 2.6:1 — below AA and unreadable at
-     this size. --dim is 5.5:1 and still recessive against the data. */
-  text-transform:uppercase;color:var(--dim);
+  padding:9px 12px;text-align:center;font-size:8px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap
 }
 .bench-table thead th.th-model{text-align:left;min-width:185px}
@@ -82,20 +80,20 @@ body::after{
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
-.overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
-.overall-num.is-swapped{color:inherit}
+.overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:var(--text)}
+.overall-num.is-swapped{color:#d4a84a}
 .td-score{text-align:center;padding:14px 8px;min-width:76px;transition:opacity .15s}
 .td-score.is-swapped{background:rgba(165,140,28,0.08) !important}
-.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:inherit;display:block}
-.score-num.is-swapped{color:inherit;font-size:11px}
-.score-n{font-size:8px;color:currentColor;opacity:.68;display:block;margin-top:1px}
-.score-swap{font-size:11px;color:currentColor;opacity:.85;display:block;margin-top:1px;letter-spacing:.02em}
+.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:var(--text);display:block}
+.score-num.is-swapped{color:#9e8818;font-size:11px}
+.score-n{font-size:8px;color:var(--dim);display:block;margin-top:1px}
+.score-swap{font-size:11px;color:#9e8818;display:block;margin-top:1px;letter-spacing:.02em}
 
 /* SIDEBAR */
 .sidebar{display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
 .sidebar::-webkit-scrollbar{display:none}
 .sb-block{padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:13px}
+.sb-label{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:13px}
 #radar{display:block;margin:0 auto}
 .radar-legend{display:flex;flex-direction:column;gap:5px;margin-top:13px}
 .legend-item{display:flex;align-items:center;gap:7px;cursor:pointer;padding:2px 3px;transition:opacity .12s}
@@ -108,7 +106,7 @@ body::after{
 .speed-model{font-size:9px;color:var(--dim);flex:0 0 115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .speed-track{flex:1;height:2px;background:var(--border)}
 .speed-fill{height:100%;transition:width .5s cubic-bezier(.16,1,.3,1)}
-.speed-val{font-size:9px;color:var(--text);font-variant-numeric:tabular-nums;flex:0 0 40px;text-align:right}
+.speed-val{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 40px;text-align:right}
 
 /* DROPZONE */
 .dropzone{border:1px dashed var(--border);padding:16px 10px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
@@ -116,7 +114,7 @@ body::after{
 .dropzone-sm{padding:8px 10px}
 .drop-text{font-size:10px;letter-spacing:.08em;color:var(--dim);margin-bottom:3px}
 .dropzone-sm .drop-text{font-size:9px;margin-bottom:0}
-.drop-sub{font-size:9px;color:var(--dim)}
+.drop-sub{font-size:9px;color:var(--muted)}
 
 /* LOADER ROWS */
 .loader-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
@@ -236,7 +234,7 @@ body::after{
 <div id="tip" role="tooltip"><span class="tip-title"></span><span class="tip-body"></span></div>
 
 <script>
-// __INJECT_DATA__
+const BENCHMARK_DATA = {"run_id": "recovered_20260706_235042", "timestamp": "2026-08-12 14:24", "total_samples": 1380, "models": ["llama3.2:3b", "qwen2.5-coder:7b", "llama3.1:8b", "gemma4-12b-agentic:latest", "gemma4-12b-agentic-mtp:latest", "qwen3-coder:latest", "qwen2.5-coder:32b", "qwen3:32b", "qwen3-32b-nothink:latest", "nemotron-3-nano:30b", "nemotron-cascade-2:latest", "devstral-small-2:latest", "qwen3.6:27b", "qwen3-32b-nothink", "codestral:22b", "gemma4:26b-mlx", "gemma4:31b-mlx"], "benchmarks": ["mmlu", "arc", "gsm8k", "philosophical", "spider", "humaneval", "mbpp"], "scores": {"llama3.2:3b": {"mmlu": 0.3, "arc": 0.7, "gsm8k": 0.74, "philosophical": 0.576, "spider": 1.0, "humaneval": 0.8, "mbpp": 0.6}, "qwen2.5-coder:7b": {"mmlu": 0.4, "arc": 0.8, "gsm8k": 0.82, "philosophical": 0.6880000000000001, "spider": 0.4, "humaneval": 0.4, "mbpp": 1.0}, "llama3.1:8b": {"mmlu": 0.35, "arc": 0.8, "gsm8k": 0.76, "philosophical": 0.6639999999999999, "spider": 0.8, "humaneval": 1.0, "mbpp": 0.6}, "gemma4-12b-agentic:latest": {"mmlu": 0.2, "arc": 0.95, "gsm8k": 0.98, "philosophical": 0.192, "spider": 0.2, "humaneval": 1.0, "mbpp": 1.0}, "gemma4-12b-agentic-mtp:latest": {"mmlu": 0.2, "arc": 0.95, "gsm8k": 0.98, "philosophical": 0.17600000000000002, "spider": 0.2, "humaneval": 1.0, "mbpp": 1.0}, "qwen3-coder:latest": {"mmlu": 0.4, "arc": 0.95, "gsm8k": 0.98, "philosophical": 0.9120000000000001, "spider": 1.0, "humaneval": 0.4, "mbpp": 1.0}, "qwen2.5-coder:32b": {"mmlu": 0.4, "arc": 0.9, "gsm8k": 0.96, "philosophical": 0.144, "spider": 0.6, "humaneval": 0.2, "mbpp": 0.8}, "qwen3:32b": {"mmlu": 0.7, "arc": 0.95, "gsm8k": 0.88, "philosophical": 0.0, "spider": 0.0, "humaneval": 0.0, "mbpp": 0.0}, "qwen3-32b-nothink:latest": {"mmlu": 0.7, "arc": 0.95, "gsm8k": 0.84, "philosophical": 0.0, "spider": 0.0, "humaneval": 0.0, "mbpp": 0.0}, "nemotron-3-nano:30b": {"mmlu": 1.0, "arc": 0.8, "philosophical": 0.17600000000000002, "spider": 0.0, "humaneval": 0.4, "mbpp": 0.8}, "nemotron-cascade-2:latest": {"mmlu": 1.0, "arc": 0.8, "philosophical": 0.17600000000000002, "spider": 0.4, "humaneval": 1.0, "mbpp": 1.0}, "devstral-small-2:latest": {"mmlu": 0.6, "arc": 0.8, "gsm8k": 0.8, "philosophical": 0.168, "spider": 0.8, "humaneval": 0.8, "mbpp": 0.6}, "qwen3.6:27b": {"mbpp": 0.0}, "qwen3-32b-nothink": {"humaneval": 0.0}, "codestral:22b": {"mmlu": 0.4, "arc": 0.6, "gsm8k": 0.7, "philosophical": 0.42400000000000004, "spider": 0.6, "humaneval": 0.4, "mbpp": 0.2}, "gemma4:26b-mlx": {"mmlu": 0.8, "arc": 0.95, "gsm8k": 0.96, "philosophical": 0.8960000000000001, "spider": 0.55, "humaneval": 1.0, "mbpp": 0.75}, "gemma4:31b-mlx": {"mmlu": 0.65, "arc": 1.0, "gsm8k": 0.96, "philosophical": 0.8119999999999999, "spider": 0.55, "humaneval": 1.0, "mbpp": 0.85}}, "speeds": {"llama3.2:3b": 59.582894155680606, "qwen2.5-coder:7b": 30.179161116829526, "llama3.1:8b": 29.26858859110568, "gemma4-12b-agentic:latest": 14.863004355989371, "gemma4-12b-agentic-mtp:latest": 11.58429906491734, "qwen3-coder:latest": 43.09432000460318, "qwen2.5-coder:32b": 7.436061740480119, "qwen3:32b": 7.289097530187125, "qwen3-32b-nothink:latest": 9.63915623199119, "nemotron-3-nano:30b": 38.46193937404808, "nemotron-cascade-2:latest": 39.31168305434124, "devstral-small-2:latest": 9.207427864725346, "qwen3.6:27b": 0.0, "qwen3-32b-nothink": 0.0, "codestral:22b": 14.599796117630106, "gemma4:26b-mlx": 62.63448259957919, "gemma4:31b-mlx": 11.229273776689292}, "sample_sizes": {"llama3.2:3b": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "qwen2.5-coder:7b": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "llama3.1:8b": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "gemma4-12b-agentic:latest": {"mmlu": 5, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "gemma4-12b-agentic-mtp:latest": {"mmlu": 5, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "qwen3-coder:latest": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "qwen2.5-coder:32b": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "qwen3:32b": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "qwen3-32b-nothink:latest": {"mmlu": 20, "arc": 20, "gsm8k": 50, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "nemotron-3-nano:30b": {"mmlu": 5, "arc": 5, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "nemotron-cascade-2:latest": {"mmlu": 5, "arc": 5, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "devstral-small-2:latest": {"mmlu": 5, "arc": 5, "gsm8k": 10, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "qwen3.6:27b": {"mbpp": 5}, "qwen3-32b-nothink": {"humaneval": 5}, "codestral:22b": {"mmlu": 5, "arc": 5, "gsm8k": 10, "philosophical": 5, "spider": 5, "humaneval": 5, "mbpp": 5}, "gemma4:26b-mlx": {"mmlu": 20, "arc": 20, "gsm8k": 25, "philosophical": 10, "spider": 20, "humaneval": 20, "mbpp": 20}, "gemma4:31b-mlx": {"mmlu": 20, "arc": 20, "gsm8k": 25, "philosophical": 10, "spider": 20, "humaneval": 20, "mbpp": 20}}, "model_timestamps": {"llama3.2:3b": "2026-07-07T23:47:10", "qwen2.5-coder:7b": "2026-07-07T23:47:26", "llama3.1:8b": "2026-07-07T23:47:18", "gemma4-12b-agentic:latest": "2026-07-08T07:54:21", "gemma4-12b-agentic-mtp:latest": "2026-07-08T07:58:50", "qwen3-coder:latest": "2026-07-08T00:20:31", "qwen2.5-coder:32b": "2026-07-08T00:20:19", "qwen3:32b": "2026-07-08T00:44:33", "qwen3-32b-nothink:latest": "2026-07-08T00:19:51", "nemotron-3-nano:30b": "2026-07-07T23:52:39", "nemotron-cascade-2:latest": "2026-07-08T00:21:09", "devstral-small-2:latest": "2026-07-08T08:09:53", "qwen3.6:27b": "2026-07-08T00:28:36", "qwen3-32b-nothink": "2026-07-08T00:56:36", "codestral:22b": "2026-07-08T08:06:29", "gemma4:26b-mlx": "2026-08-12T13:37:14", "gemma4:31b-mlx": "2026-08-12T14:24:13"}, "swap_benches": {"llama3.2:3b": [], "qwen2.5-coder:7b": [], "llama3.1:8b": [], "gemma4-12b-agentic:latest": ["mmlu", "philosophical"], "gemma4-12b-agentic-mtp:latest": ["mmlu", "philosophical"], "qwen3-coder:latest": [], "qwen2.5-coder:32b": ["philosophical"], "qwen3:32b": ["philosophical", "spider", "humaneval", "mbpp"], "qwen3-32b-nothink:latest": ["philosophical", "spider", "humaneval", "mbpp"], "nemotron-3-nano:30b": ["arc", "philosophical"], "nemotron-cascade-2:latest": ["arc", "philosophical"], "devstral-small-2:latest": ["gsm8k", "philosophical"], "qwen3.6:27b": ["mbpp"], "qwen3-32b-nothink": ["humaneval"], "codestral:22b": ["philosophical"], "gemma4:26b-mlx": [], "gemma4:31b-mlx": []}, "all_models": ["llama3.2:3b", "llama3.1:8b", "qwen2.5-coder:7b", "gemma4-12b-agentic:latest", "gemma4-12b-agentic-mtp:latest", "codestral:22b", "devstral-small-2:latest", "gemma4:26b-mlx", "nemotron-3-nano:30b", "gemma4:31b-mlx", "qwen3:32b", "qwen3-32b-nothink:latest", "qwen2.5-coder:32b", "qwen3-coder:latest", "nemotron-cascade-2:latest", "qwen3.6:27b"], "model_info": {"gemma4:26b-mlx": {"quantization": "nvfp4", "context_length": 262144, "size_gb": 15.5, "effective_ctx": 32768}, "gemma4:31b-mlx": {"quantization": "nvfp4", "context_length": 262144, "size_gb": 18.8, "effective_ctx": 32768, "params": "31.3B"}, "gemma4-12b-agentic:latest": {"quantization": "Q8_0", "context_length": 262144, "size_gb": 11.8, "effective_ctx": 32768, "params": "11.9B", "vram_estimate": 34.9}, "gemma4-12b-agentic-mtp:latest": {"quantization": "Q8_0", "context_length": 262144, "size_gb": 12.2, "effective_ctx": 32768, "params": "11.9B", "vram_estimate": 35.3}, "llama3.2:3b": {"params": "3.2B", "quantization": "Q4_K_M", "context_length": 131072, "size_gb": 1.9, "effective_ctx": 32768, "vram_estimate": 5.5}, "llama3.1:8b": {"params": "8.0B", "quantization": "Q4_K_M", "context_length": 131072, "size_gb": 4.6, "effective_ctx": 32768, "vram_estimate": 8.8}, "qwen2.5-coder:7b": {"params": "7.6B", "quantization": "Q4_K_M", "context_length": 32768, "size_gb": 4.4, "effective_ctx": 32768, "vram_estimate": 6.4}, "codestral:22b": {"params": "22.2B", "quantization": "Q4_0", "context_length": 32768, "size_gb": 11.7, "effective_ctx": 16384, "vram_estimate": 15.8}, "devstral-small-2:latest": {"params": "24.0B", "quantization": "Q4_K_M", "context_length": 393216, "size_gb": 14.1, "effective_ctx": 16384, "vram_estimate": 17.9}, "nemotron-3-nano:30b": {"params": "31.6B", "quantization": "Q4_K_M", "context_length": 1048576, "size_gb": 22.6, "effective_ctx": 32768, "vram_estimate": 40.8}, "qwen3:32b": {"params": "32.8B", "quantization": "Q4_K_M", "context_length": 40960, "size_gb": 18.8, "effective_ctx": 32768, "vram_estimate": 24.7}, "qwen3-32b-nothink:latest": {"params": "32.8B", "quantization": "Q4_K_M", "context_length": 40960, "size_gb": 18.8, "effective_ctx": 32768, "vram_estimate": 24.7}, "qwen2.5-coder:32b": {"params": "32.8B", "quantization": "Q4_K_M", "context_length": 32768, "size_gb": 18.5, "effective_ctx": 32768, "vram_estimate": 27.4}, "qwen3-coder:latest": {"params": "30.5B", "quantization": "Q4_K_M", "context_length": 262144, "size_gb": 17.3, "effective_ctx": 32768, "vram_estimate": 19.7}, "nemotron-cascade-2:latest": {"params": "31.6B", "quantization": "Q4_K_M", "context_length": 262144, "size_gb": 22.6, "effective_ctx": 32768, "vram_estimate": 40.8}, "qwen3.6:27b": {"params": "27.8B", "quantization": "Q4_K_M", "context_length": 262144, "size_gb": 16.2, "effective_ctx": 32768, "vram_estimate": 56.9}}};
 
 // Sample shows all three states: green (run), yellow (previous), gray (pending)
 const SAMPLE_DATA = {
@@ -371,61 +369,11 @@ function allModels() {
   return [...ranked, ...prev, ...config];
 }
 
-/* Score heatmap: the three sovren hues (red 138,46,46 -> amber 165,140,28 ->
-   green 45,138,90), kept as translucent fills over the dark ground so the
-   cells retain their depth and the row hover/active states show through.
-
-   Luminance rises monotonically with the score, which is what makes 75% and
-   100% actually distinguishable — the previous scheme varied only opacity
-   within three hard bands, so a whole band read as one colour while 74% vs
-   75% jumped a hue. Because the ordering lives in luminance rather than hue,
-   the ramp still reads correctly in greyscale and with red-green colour
-   blindness.
-
-   The steps are deliberately uneven, fanning out at the top where every model
-   actually scores: the last four span a 5x luminance range.
-
-   Ink is light on the translucent fills and dark on the bright greens. There
-   is a band around luminance 0.12-0.20 where neither ink clears WCAG AA on a
-   dark ground, so the ramp steps across it: the top three are solid brightened
-   greens rather than more opacity on the sovren green, which at full strength
-   lands inside that band. Worst pair in the ramp: 4.55:1. */
-const SCORE_RAMP = [
-  ['rgba(138,46,46,0.11)','#dcd9d4'],   // sovren red
-  ['rgba(143,65,42,0.17)','#dcd9d4'],
-  ['rgba(149,84,39,0.24)','#dcd9d4'],
-  ['rgba(154,102,35,0.34)','#dcd9d4'],
-  ['rgba(160,121,32,0.42)','#dcd9d4'],
-  ['rgba(165,140,28,0.49)','#dcd9d4'],  // sovren amber
-  ['rgba(141,140,40,0.62)','#dcd9d4'],
-  ['rgba(117,139,53,0.70)','#dcd9d4'],
-  ['#44a36e','#0f0d0c'],                // sovren green, brightened
-  ['#5ebe89','#0f0d0c'],
-  ['#7dd9a5','#0f0d0c'],
-];
-
-/* The ramp spans 30-100%, not 0-100%. Scores on these benchmarks cluster near
-   the top — in the 20-model baseline, 14 of 31 distinct values sat inside a
-   single decile — so a linear 0-100% mapping spends most of its range on
-   scores that never occur and paints 75% and 100% as neighbouring greens.
-   Anchoring the low end at 30% (a model failing outright) spreads the field
-   across the part of the scale that carries information. The mapping is still
-   a fixed function of the score, not of the data on screen, so a colour means
-   the same thing on every dashboard. */
-const SCORE_FLOOR = 0.30;
-
-function scoreStep(s) {
-  const t = (s - SCORE_FLOOR) / (1 - SCORE_FLOOR);
-  const i = Math.max(0, Math.min(SCORE_RAMP.length - 1, Math.round(t * (SCORE_RAMP.length - 1))));
-  return SCORE_RAMP[i];
-}
 function scoreBg(s) {
   if (s === null || s === undefined) return 'transparent';
-  return scoreStep(s)[0];
-}
-function scoreFg(s) {
-  if (s === null || s === undefined) return '';
-  return scoreStep(s)[1];
+  const op = (0.06 + s * 0.50).toFixed(2);
+  const rgb = s >= .75 ? '45,138,90' : s >= .50 ? '165,140,28' : '138,46,46';
+  return `rgba(${rgb},${op})`;
 }
 
 function hexRgb(hex) {
@@ -566,19 +514,7 @@ function renderTable() {
     const ts = getTs(m);
     const mi = D.model_info?.[m];
     const tags = [];
-    // Dense vs sparse drives both speed and quality, so it leads the tag list.
-    // A sparse model reports only its *active* parameters, which is why a
-    // "larger" model can be much faster and weaker than a smaller dense one.
     if (mi?.params) tags.push(mi.params);
-    if (mi?.params_active) tags.push(`${mi.params_active} active`);
-    if (mi?.experts) {
-      tags.push(`MoE ${mi.experts}×${mi.experts_used || '?'}`);
-    } else if (mi?.sparse) {
-      tags.push('MoE');
-    } else if (mi?.params) {
-      tags.push('dense');
-    }
-    if (mi?.architecture) tags.push(mi.architecture);
     if (mi?.size_gb) tags.push(`${mi.size_gb}GB`);
     if (mi?.vram_estimate) tags.push(`~${mi.vram_estimate}GBvRAM`);
     if (mi?.effective_ctx || mi?.context_length) {
@@ -603,7 +539,6 @@ function renderTable() {
     tdOv.className = 'td-overall';
     if (ov >= 0) {
       tdOv.style.background = scoreBg(ov);
-      tdOv.style.color = scoreFg(ov);   // ink that clears AA on this step
       const swap = hasSwap(m);
       tdOv.innerHTML = `<span class="overall-num${swap?' is-swapped':''}">${(ov*100).toFixed(1)}${swap?'💀':''}</span>` +
         (swap ? `<span class="score-swap">partial data</span>` : '');
@@ -622,7 +557,6 @@ function renderTable() {
       if (isSwapped) td.classList.add('is-swapped');
       if (s !== null && !isSwapped) {
         td.style.background = scoreBg(s);
-        td.style.color = scoreFg(s);    // ink that clears AA on this step
         td.innerHTML = `<span class="score-num">${(s*100).toFixed(0)}</span>` + (n ? `<span class="score-n">n=${n}</span>` : '');
       } else if (s !== null && isSwapped) {
         td.innerHTML = `<span class="score-num is-swapped">💀 ${(s*100).toFixed(0)}</span>` +

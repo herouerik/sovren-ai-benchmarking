@@ -32,6 +32,36 @@ def extract_sql(response: str) -> str:
     return response.strip()
 
 
+_SCHEMA_CACHE: dict[str, str] = {}
+
+
+def read_schema(db_path: Path) -> str:
+    """Return the CREATE TABLE statements for a Spider SQLite database.
+
+    Text-to-SQL is a schema-conditioned task: without the table and column
+    names the model can only guess them, which is not what Spider measures.
+    The schema is read from the database file itself so it always matches what
+    the query will be executed against.
+    """
+    key = str(db_path)
+    if key in _SCHEMA_CACHE:
+        return _SCHEMA_CACHE[key]
+    schema = ""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        rows = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%' AND sql IS NOT NULL"
+        ).fetchall()
+        conn.close()
+        schema = "\n".join(r[0].strip() for r in rows if r and r[0])
+    except Exception:
+        schema = ""
+    _SCHEMA_CACHE[key] = schema
+    return schema
+
+
 class SpiderBenchmark(BaseBenchmark):
     name = "spider"
 
@@ -41,13 +71,20 @@ class SpiderBenchmark(BaseBenchmark):
         for i, row in enumerate(ds):
             db_id = row.get("db_id", "")
             db_path = _SPIDER_DB_DIR / db_id / f"{db_id}.sqlite"
+            exists = db_path.exists()
+            schema = read_schema(db_path) if exists else ""
+            if schema:
+                prompt = (f"Database: {db_id}\n\nSchema:\n{schema}\n\n"
+                          f"Question: {row['question']}")
+            else:
+                prompt = f"Database: {db_id}\n\nQuestion: {row['question']}"
             samples.append({
                 "id": f"spider_{i}",
                 "question": row["question"],
                 "schema": db_id,
-                "prompt": f"Database: {db_id}\n\nQuestion: {row['question']}",
+                "prompt": prompt,
                 "expected_sql": row["query"],
-                "db_path": str(db_path) if db_path.exists() else None,
+                "db_path": str(db_path) if exists else None,
             })
         return samples
 
