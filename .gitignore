@@ -15,6 +15,7 @@ __pycache__/
 .DS_Store
 .datasets_ready
 config.yaml
+config-eh*
 
 docs_steering/
 
