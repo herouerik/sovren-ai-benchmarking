@@ -1,6 +1,6 @@
 {
-  "run_id": "20260812_143651+20260814_164855+20260814_154755",
-  "timestamp": "2026-08-14 16:53",
+  "run_id": "20260812_143651+20260814_164855+20260814_154755+20260815_092914+20260815_093111",
+  "timestamp": "2026-08-15 12:03",
   "models": [
     "llama3.2:3b",
     "llama3.1:8b",
@@ -24,7 +24,12 @@
     "qwen3.6:35b-mlx +think",
     "qwen3-coder-next:sovereign-128k",
     "qwen3-coder:30b-sovereign",
-    "qwen3.6-128k:latest"
+    "qwen3.6-128k:latest",
+    "deepseek-r1:70b",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
+    "gemma4:31b",
+    "llama4:scout",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M"
   ],
   "benchmarks": [
     "mmlu",
@@ -33,7 +38,8 @@
     "humaneval",
     "mbpp",
     "spider",
-    "philosophical"
+    "philosophical",
+    "bfcl"
   ],
   "scores": {
     "llama3.2:3b": {
@@ -43,7 +49,8 @@
       "humaneval": 0.45,
       "mbpp": 0.6,
       "spider": 0.5,
-      "philosophical": 0.8600000000000001
+      "philosophical": 0.8600000000000001,
+      "bfcl": 0.65
     },
     "llama3.1:8b": {
       "mmlu": 0.65,
@@ -52,7 +59,8 @@
       "humaneval": 0.7,
       "mbpp": 0.6,
       "spider": 0.55,
-      "philosophical": 0.8920000000000001
+      "philosophical": 0.8920000000000001,
+      "bfcl": 0.8
     },
     "qwen2.5-coder:7b": {
       "mmlu": 0.6,
@@ -61,7 +69,8 @@
       "humaneval": 0.65,
       "mbpp": 0.75,
       "spider": 0.65,
-      "philosophical": 0.8520000000000001
+      "philosophical": 0.8520000000000001,
+      "bfcl": 0.0
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 0.75,
@@ -70,7 +79,8 @@
       "humaneval": 0.75,
       "mbpp": 0.6,
       "spider": 0.65,
-      "philosophical": 0.916
+      "philosophical": 0.916,
+      "bfcl": 0.8
     },
     "gemma4-12b-agentic-mtp:latest": {
       "mmlu": 0.75,
@@ -79,7 +89,8 @@
       "humaneval": 0.75,
       "mbpp": 0.6,
       "spider": 0.65,
-      "philosophical": 0.916
+      "philosophical": 0.916,
+      "bfcl": 0.8
     },
     "codestral:22b": {
       "mmlu": 0.5,
@@ -88,7 +99,8 @@
       "humaneval": 0.7,
       "mbpp": 0.6,
       "spider": 0.65,
-      "philosophical": 0.8560000000000001
+      "philosophical": 0.8560000000000001,
+      "bfcl": 0.0
     },
     "devstral-small-2:latest": {
       "mmlu": 0.7,
@@ -97,7 +109,8 @@
       "humaneval": 0.85,
       "mbpp": 0.7,
       "spider": 0.7,
-      "philosophical": 0.9
+      "philosophical": 0.9,
+      "bfcl": 0.85
     },
     "gemma4:26b-mlx": {
       "mmlu": 0.75,
@@ -106,7 +119,8 @@
       "humaneval": 0.95,
       "mbpp": 0.5,
       "spider": 0.75,
-      "philosophical": 0.924
+      "philosophical": 0.924,
+      "bfcl": 0.8
     },
     "nemotron-3-nano:30b": {
       "mmlu": 0.65,
@@ -115,7 +129,8 @@
       "humaneval": 0.75,
       "mbpp": 0.65,
       "spider": 0.65,
-      "philosophical": 0.952
+      "philosophical": 0.952,
+      "bfcl": 0.65
     },
     "gemma4:31b-mlx": {
       "mmlu": 1.0,
@@ -124,7 +139,8 @@
       "humaneval": 0.95,
       "mbpp": 0.65,
       "spider": 0.7,
-      "philosophical": 0.916
+      "philosophical": 0.916,
+      "bfcl": 0.85
     },
     "qwen3:32b": {
       "mmlu": 0.85,
@@ -133,7 +149,8 @@
       "humaneval": 0.85,
       "mbpp": 0.6,
       "spider": 0.6,
-      "philosophical": 0.8800000000000001
+      "philosophical": 0.8800000000000001,
+      "bfcl": 0.8
     },
     "qwen3-32b-nothink:latest": {
       "mmlu": 0.85,
@@ -142,7 +159,8 @@
       "humaneval": 0.85,
       "mbpp": 0.6,
       "spider": 0.6,
-      "philosophical": 0.8800000000000001
+      "philosophical": 0.8800000000000001,
+      "bfcl": 0.85
     },
     "qwen2.5-coder:32b": {
       "mmlu": 0.8,
@@ -151,7 +169,8 @@
       "humaneval": 0.8,
       "mbpp": 0.7,
       "spider": 0.75,
-      "philosophical": 0.8680000000000001
+      "philosophical": 0.8680000000000001,
+      "bfcl": 0.0
     },
     "qwen3-coder:latest": {
       "mmlu": 1.0,
@@ -160,7 +179,8 @@
       "humaneval": 0.75,
       "mbpp": 0.65,
       "spider": 0.35,
-      "philosophical": 0.924
+      "philosophical": 0.924,
+      "bfcl": 0.85
     },
     "nemotron-cascade-2:latest": {
       "mmlu": 0.65,
@@ -169,7 +189,8 @@
       "humaneval": 0.75,
       "mbpp": 0.6,
       "spider": 0.6,
-      "philosophical": 0.9480000000000001
+      "philosophical": 0.9480000000000001,
+      "bfcl": 0.4
     },
     "qwen3.6:27b": {
       "mmlu": 0.9,
@@ -178,7 +199,8 @@
       "humaneval": 0.8,
       "mbpp": 0.75,
       "spider": 0.8,
-      "philosophical": 0.96
+      "philosophical": 0.96,
+      "bfcl": 0.9
     },
     "muse-glimmer:30b-mlx +think": {
       "mmlu": 0.9,
@@ -187,7 +209,8 @@
       "humaneval": 0.95,
       "mbpp": 0.65,
       "spider": 0.6,
-      "philosophical": 0.944
+      "philosophical": 0.944,
+      "bfcl": 0.5
     },
     "qwen3.6:35b-mlx": {
       "mmlu": 0.8,
@@ -196,7 +219,8 @@
       "humaneval": 0.95,
       "mbpp": 0.6,
       "spider": 0.65,
-      "philosophical": 0.884
+      "philosophical": 0.884,
+      "bfcl": 0.75
     },
     "muse-glimmer:30b-mlx": {
       "mmlu": 0.9,
@@ -205,7 +229,8 @@
       "humaneval": 0.95,
       "mbpp": 0.45,
       "spider": 0.65,
-      "philosophical": 0.952
+      "philosophical": 0.952,
+      "bfcl": 0.4
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 1.0,
@@ -214,48 +239,72 @@
       "humaneval": 0.85,
       "mbpp": 0.5,
       "spider": 0.65,
-      "philosophical": 0.96
+      "philosophical": 0.96,
+      "bfcl": 0.85
     },
     "qwen3-coder-next:sovereign-128k": {
       "mmlu": 0.7,
       "gsm8k": 1.0,
-      "humaneval": 0.8
+      "humaneval": 0.8,
+      "bfcl": 0.9
     },
     "qwen3-coder:30b-sovereign": {
       "mmlu": 0.9,
       "gsm8k": 1.0,
-      "humaneval": 0.8
+      "humaneval": 0.8,
+      "bfcl": 0.85
     },
     "qwen3.6-128k:latest": {
       "mmlu": 0.6,
       "gsm8k": 1.0,
-      "humaneval": 0.9
+      "humaneval": 0.9,
+      "bfcl": 0.9
+    },
+    "deepseek-r1:70b": {
+      "bfcl": 0.0
+    },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "bfcl": 0.65
+    },
+    "gemma4:31b": {
+      "bfcl": 0.8
+    },
+    "llama4:scout": {
+      "bfcl": 0.2
+    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
+      "bfcl": 0.0
     }
   },
   "speeds": {
-    "llama3.2:3b": 97.05641434366295,
-    "llama3.1:8b": 47.278406198125275,
-    "qwen2.5-coder:7b": 48.68026678443606,
-    "gemma4-12b-agentic:latest": 18.87770364787093,
-    "gemma4-12b-agentic-mtp:latest": 18.66545316474359,
-    "codestral:22b": 19.192154966274213,
-    "devstral-small-2:latest": 15.93978532669894,
-    "gemma4:26b-mlx": 64.8910909133121,
-    "nemotron-3-nano:30b": 51.61482693866909,
-    "gemma4:31b-mlx": 11.403695541229895,
-    "qwen3:32b": 11.91315387557137,
-    "qwen3-32b-nothink:latest": 11.909757748949048,
-    "qwen2.5-coder:32b": 11.783428812466182,
-    "qwen3-coder:latest": 75.17651896825573,
-    "nemotron-cascade-2:latest": 52.34626155727412,
-    "qwen3.6:27b": 12.66570079574509,
-    "muse-glimmer:30b-mlx +think": 20.91220954294857,
-    "qwen3.6:35b-mlx": 70.77670470364203,
-    "muse-glimmer:30b-mlx": 21.46980796366274,
-    "qwen3.6:35b-mlx +think": 70.57343150147352,
-    "qwen3-coder-next:sovereign-128k": 25.61876119552726,
-    "qwen3-coder:30b-sovereign": 40.54919619244072,
-    "qwen3.6-128k:latest": 29.354779701106633
+    "llama3.2:3b": 33.62007832866332,
+    "llama3.1:8b": 20.64599736758945,
+    "qwen2.5-coder:7b": 21.337380925568834,
+    "gemma4-12b-agentic:latest": 9.109774546731675,
+    "gemma4-12b-agentic-mtp:latest": 24.8042166709602,
+    "codestral:22b": 0.0,
+    "devstral-small-2:latest": 16.309305315571983,
+    "gemma4:26b-mlx": 63.31692969252951,
+    "nemotron-3-nano:30b": 49.9767339134276,
+    "gemma4:31b-mlx": 11.201452934241221,
+    "qwen3:32b": 11.648418619340017,
+    "qwen3-32b-nothink:latest": 11.627113403996274,
+    "qwen2.5-coder:32b": 11.790428227678325,
+    "qwen3-coder:latest": 60.27494566202786,
+    "nemotron-cascade-2:latest": 50.370309207242,
+    "qwen3.6:27b": 9.983102963351824,
+    "muse-glimmer:30b-mlx +think": 21.593399893793766,
+    "qwen3.6:35b-mlx": 71.97859396339447,
+    "muse-glimmer:30b-mlx": 22.66691690285351,
+    "qwen3.6:35b-mlx +think": 72.22677386616951,
+    "qwen3-coder-next:sovereign-128k": 35.18479145803748,
+    "qwen3-coder:30b-sovereign": 28.53737863149572,
+    "qwen3.6-128k:latest": 39.010879258000045,
+    "deepseek-r1:70b": 4.63915664115767,
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.611515828605626,
+    "gemma4:31b": 9.673076444825332,
+    "llama4:scout": 14.5806174518681,
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": 0.0
   },
   "sample_sizes": {
     "llama3.2:3b": {
@@ -265,7 +314,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "llama3.1:8b": {
       "mmlu": 20,
@@ -274,7 +324,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen2.5-coder:7b": {
       "mmlu": 20,
@@ -283,7 +334,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 20,
@@ -292,7 +344,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "gemma4-12b-agentic-mtp:latest": {
       "mmlu": 20,
@@ -301,7 +354,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "codestral:22b": {
       "mmlu": 20,
@@ -310,7 +364,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "devstral-small-2:latest": {
       "mmlu": 20,
@@ -319,7 +374,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "gemma4:26b-mlx": {
       "mmlu": 20,
@@ -328,7 +384,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "nemotron-3-nano:30b": {
       "mmlu": 20,
@@ -337,7 +394,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "gemma4:31b-mlx": {
       "mmlu": 20,
@@ -346,7 +404,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3:32b": {
       "mmlu": 20,
@@ -355,7 +414,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3-32b-nothink:latest": {
       "mmlu": 20,
@@ -364,7 +424,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen2.5-coder:32b": {
       "mmlu": 20,
@@ -373,7 +434,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3-coder:latest": {
       "mmlu": 20,
@@ -382,7 +444,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "nemotron-cascade-2:latest": {
       "mmlu": 20,
@@ -391,7 +454,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3.6:27b": {
       "mmlu": 20,
@@ -400,7 +464,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "muse-glimmer:30b-mlx +think": {
       "mmlu": 20,
@@ -409,7 +474,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3.6:35b-mlx": {
       "mmlu": 20,
@@ -418,7 +484,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "muse-glimmer:30b-mlx": {
       "mmlu": 20,
@@ -427,7 +494,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 20,
@@ -436,48 +504,72 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3-coder-next:sovereign-128k": {
       "mmlu": 10,
       "gsm8k": 10,
-      "humaneval": 10
+      "humaneval": 10,
+      "bfcl": 20
     },
     "qwen3-coder:30b-sovereign": {
       "mmlu": 10,
       "gsm8k": 10,
-      "humaneval": 10
+      "humaneval": 10,
+      "bfcl": 20
     },
     "qwen3.6-128k:latest": {
       "mmlu": 10,
       "gsm8k": 10,
-      "humaneval": 10
+      "humaneval": 10,
+      "bfcl": 20
+    },
+    "deepseek-r1:70b": {
+      "bfcl": 20
+    },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "bfcl": 20
+    },
+    "gemma4:31b": {
+      "bfcl": 20
+    },
+    "llama4:scout": {
+      "bfcl": 20
+    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
+      "bfcl": 20
     }
   },
   "model_timestamps": {
-    "llama3.2:3b": "2026-08-13T01:10:08",
-    "llama3.1:8b": "2026-08-13T01:14:03",
-    "qwen2.5-coder:7b": "2026-08-13T01:17:08",
-    "gemma4-12b-agentic:latest": "2026-08-13T01:28:15",
-    "gemma4-12b-agentic-mtp:latest": "2026-08-13T01:44:50",
-    "codestral:22b": "2026-08-13T01:51:35",
-    "devstral-small-2:latest": "2026-08-13T02:05:36",
-    "gemma4:26b-mlx": "2026-08-13T02:11:41",
-    "nemotron-3-nano:30b": "2026-08-13T02:21:49",
-    "gemma4:31b-mlx": "2026-08-13T02:48:27",
-    "qwen3:32b": "2026-08-13T03:18:54",
-    "qwen3-32b-nothink:latest": "2026-08-13T03:49:18",
-    "qwen2.5-coder:32b": "2026-08-12T23:25:45",
-    "qwen3-coder:latest": "2026-08-12T23:33:05",
-    "nemotron-cascade-2:latest": "2026-08-12T23:49:49",
-    "qwen3.6:27b": "2026-08-13T00:58:38",
-    "muse-glimmer:30b-mlx +think": "2026-08-13T07:14:35",
-    "qwen3.6:35b-mlx": "2026-08-13T07:26:30",
-    "muse-glimmer:30b-mlx": "2026-08-13T13:10:16",
-    "qwen3.6:35b-mlx +think": "2026-08-13T15:35:00",
-    "qwen3-coder-next:sovereign-128k": "2026-08-14T16:52:41",
-    "qwen3-coder:30b-sovereign": "2026-08-14T15:55:11",
-    "qwen3.6-128k:latest": "2026-08-14T16:00:38"
+    "llama3.2:3b": "2026-08-15T09:32:00",
+    "llama3.1:8b": "2026-08-15T09:33:29",
+    "qwen2.5-coder:7b": "2026-08-15T09:34:55",
+    "gemma4-12b-agentic:latest": "2026-08-15T09:37:59",
+    "gemma4-12b-agentic-mtp:latest": "2026-08-15T09:39:27",
+    "codestral:22b": "2026-08-15T09:39:35",
+    "devstral-small-2:latest": "2026-08-15T09:41:39",
+    "gemma4:26b-mlx": "2026-08-15T09:42:13",
+    "nemotron-3-nano:30b": "2026-08-15T09:43:32",
+    "gemma4:31b-mlx": "2026-08-15T09:46:31",
+    "qwen3:32b": "2026-08-15T10:07:48",
+    "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
+    "qwen2.5-coder:32b": "2026-08-15T10:14:32",
+    "qwen3-coder:latest": "2026-08-15T10:15:37",
+    "nemotron-cascade-2:latest": "2026-08-15T10:16:41",
+    "qwen3.6:27b": "2026-08-15T10:23:05",
+    "muse-glimmer:30b-mlx +think": "2026-08-15T11:26:33",
+    "qwen3.6:35b-mlx": "2026-08-15T11:27:32",
+    "muse-glimmer:30b-mlx": "2026-08-15T11:19:21",
+    "qwen3.6:35b-mlx +think": "2026-08-15T11:30:34",
+    "qwen3-coder-next:sovereign-128k": "2026-08-15T11:17:04",
+    "qwen3-coder:30b-sovereign": "2026-08-15T12:00:46",
+    "qwen3.6-128k:latest": "2026-08-15T11:47:45",
+    "deepseek-r1:70b": "2026-08-15T11:00:46",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-15T11:06:26",
+    "gemma4:31b": "2026-08-15T11:11:48",
+    "llama4:scout": "2026-08-15T11:39:23",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "2026-08-15T11:56:21"
   },
   "swap_benches": {
     "llama3.2:3b": [],
@@ -504,66 +596,53 @@
     ],
     "qwen3-coder-next:sovereign-128k": [],
     "qwen3-coder:30b-sovereign": [],
-    "qwen3.6-128k:latest": []
+    "qwen3.6-128k:latest": [],
+    "deepseek-r1:70b": [],
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": [],
+    "gemma4:31b": [],
+    "llama4:scout": [],
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": []
   },
   "model_info": {
     "muse-glimmer:30b-mlx": {
-      "quantization": "nvfp4",
-      "context_length": 131072,
-      "size_gb": 19.8,
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
       "effective_ctx": 32768,
-      "params": "32.3B",
-      "architecture": "muse_glimmer",
-      "vram_estimate": 23.4,
       "think": false
     },
     "qwen3.6:35b-mlx +think": {
-      "quantization": "nvfp4",
-      "context_length": 262144,
-      "size_gb": 20.4,
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
       "effective_ctx": 32768,
-      "params": "35.1B",
-      "architecture": "qwen3_5_moe",
-      "think": true,
-      "sparse": true
+      "think": true
     },
     "muse-glimmer:30b-mlx +think": {
-      "quantization": "nvfp4",
-      "context_length": 131072,
-      "size_gb": 19.8,
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
       "effective_ctx": 32768,
-      "params": "32.3B",
-      "architecture": "muse_glimmer",
-      "vram_estimate": 23.4,
       "think": true
     },
     "qwen3.6:35b-mlx": {
-      "quantization": "nvfp4",
-      "context_length": 262144,
-      "size_gb": 20.4,
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
       "effective_ctx": 32768,
-      "params": "35.1B",
-      "architecture": "qwen3_5_moe",
-      "think": false,
-      "sparse": true
+      "think": false
     },
     "llama3.2:3b": {
-      "quantization": "Q4_K_M",
-      "context_length": 131072,
-      "size_gb": 1.9,
-      "effective_ctx": 32768,
-      "params": "3.2B",
-      "architecture": "llama",
-      "vram_estimate": 5.5
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "llama3.1:8b": {
-      "quantization": "Q4_K_M",
-      "context_length": 131072,
-      "size_gb": 4.6,
-      "effective_ctx": 32768,
-      "params": "8.0B",
-      "architecture": "llama",
-      "vram_estimate": 8.8
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "qwen2.5-coder:7b": {
       "quantization": "Q4_K_M",
@@ -575,31 +654,22 @@
       "vram_estimate": 6.4
     },
     "gemma4-12b-agentic:latest": {
-      "quantization": "Q8_0",
-      "context_length": 262144,
-      "size_gb": 11.8,
-      "effective_ctx": 16384,
-      "params": "11.9B",
-      "architecture": "gemma4",
-      "vram_estimate": 23.6
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 16384
     },
     "gemma4-12b-agentic-mtp:latest": {
-      "quantization": "Q8_0",
-      "context_length": 262144,
-      "size_gb": 12.2,
-      "effective_ctx": 16384,
-      "params": "11.9B",
-      "architecture": "gemma4",
-      "vram_estimate": 24.1
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 16384
     },
     "codestral:22b": {
-      "quantization": "Q4_0",
-      "context_length": 32768,
-      "size_gb": 11.7,
-      "effective_ctx": 16384,
-      "params": "22.2B",
-      "architecture": "llama",
-      "vram_estimate": 15.8
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 16384
     },
     "devstral-small-2:latest": {
       "quantization": "Q4_K_M",
@@ -611,60 +681,40 @@
       "vram_estimate": 17.9
     },
     "gemma4:26b-mlx": {
-      "quantization": "nvfp4",
-      "context_length": 262144,
-      "size_gb": 15.5,
-      "effective_ctx": 32768,
-      "params_active": "6.3B",
-      "sparse": true,
-      "architecture": "gemma4"
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "nemotron-3-nano:30b": {
-      "quantization": "Q4_K_M",
-      "context_length": 1048576,
-      "size_gb": 22.6,
-      "effective_ctx": 32768,
-      "params": "31.6B",
-      "architecture": "nemotron_h_moe",
-      "experts": 128,
-      "experts_used": 6,
-      "sparse": true,
-      "vram_estimate": 40.8
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "gemma4:31b-mlx": {
-      "quantization": "nvfp4",
-      "context_length": 262144,
-      "size_gb": 18.8,
-      "effective_ctx": 32768,
-      "params": "31.3B",
-      "architecture": "gemma4"
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "qwen3:32b": {
-      "quantization": "Q4_K_M",
-      "context_length": 40960,
-      "size_gb": 18.8,
-      "effective_ctx": 32768,
-      "params": "32.8B",
-      "architecture": "qwen3",
-      "vram_estimate": 24.7
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "qwen3-32b-nothink:latest": {
-      "quantization": "Q4_K_M",
-      "context_length": 40960,
-      "size_gb": 18.8,
-      "effective_ctx": 32768,
-      "params": "32.8B",
-      "architecture": "qwen3",
-      "vram_estimate": 24.7
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "qwen2.5-coder:32b": {
-      "quantization": "Q4_K_M",
-      "context_length": 32768,
-      "size_gb": 18.5,
-      "effective_ctx": 32768,
-      "params": "32.8B",
-      "architecture": "qwen2",
-      "vram_estimate": 27.4
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "qwen3-coder:latest": {
       "quantization": "Q4_K_M",
@@ -679,31 +729,106 @@
       "vram_estimate": 19.7
     },
     "nemotron-cascade-2:latest": {
-      "quantization": "Q4_K_M",
-      "context_length": 262144,
-      "size_gb": 22.6,
-      "effective_ctx": 32768,
-      "params": "31.6B",
-      "architecture": "nemotron_h_moe",
-      "experts": 128,
-      "experts_used": 6,
-      "sparse": true,
-      "vram_estimate": 40.8
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
     },
     "qwen3.6:27b": {
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
+    },
+    "qwen3-coder-next:sovereign-128k": {
+      "quantization": "IQ4_XS",
+      "context_length": 262144,
+      "size_gb": 39.9,
+      "effective_ctx": 131072,
+      "params": "79.7B",
+      "architecture": "qwen3next",
+      "experts": 512,
+      "experts_used": 10,
+      "sparse": true,
+      "vram_estimate": 47.9
+    },
+    "qwen3-coder:30b-sovereign": {
       "quantization": "Q4_K_M",
       "context_length": 262144,
-      "size_gb": 16.2,
+      "size_gb": 17.3,
       "effective_ctx": 32768,
-      "params": "27.8B",
-      "architecture": "qwen35",
-      "vram_estimate": 56.9
+      "params": "30.5B",
+      "architecture": "qwen3moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 19.7
     },
-    "qwen3-coder-next:sovereign-128k": {},
-    "qwen3-coder:30b-sovereign": {},
-    "qwen3.6-128k:latest": {}
+    "qwen3.6-128k:latest": {
+      "quantization": "Q4_K_M",
+      "context_length": 262144,
+      "size_gb": 22.3,
+      "effective_ctx": 262144,
+      "params": "36.0B",
+      "architecture": "qwen35moe",
+      "experts": 256,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 103.4
+    },
+    "deepseek-r1:70b": {
+      "quantization": "Q4_K_M",
+      "context_length": 131072,
+      "size_gb": 39.6,
+      "effective_ctx": 32768,
+      "params": "70.6B",
+      "architecture": "llama",
+      "vram_estimate": 51.6
+    },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "quantization": "Q3_K_M",
+      "context_length": 131072,
+      "size_gb": 53.1,
+      "effective_ctx": 8192,
+      "params": "110.5B",
+      "architecture": "glm4moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 56.2
+    },
+    "gemma4:31b": {
+      "quantization": "Q4_K_M",
+      "context_length": 262144,
+      "size_gb": 18.5,
+      "effective_ctx": 98304,
+      "params": "31.3B",
+      "architecture": "gemma4",
+      "vram_estimate": 137.6
+    },
+    "llama4:scout": {
+      "quantization": "Q4_K_M",
+      "context_length": 10485760,
+      "size_gb": 62.8,
+      "effective_ctx": 131072,
+      "params": "108.6B",
+      "architecture": "llama4",
+      "experts": 16,
+      "experts_used": 1,
+      "sparse": true,
+      "vram_estimate": 89.9
+    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
+      "quantization": "Q4_K_M",
+      "context_length": 131072,
+      "size_gb": 19.7,
+      "effective_ctx": 131072,
+      "params": "27.9B",
+      "architecture": "muse-glimmer",
+      "vram_estimate": 31.2
+    }
   },
-  "total_samples": 2790,
+  "total_samples": 3350,
   "all_models": [
     "llama3.2:3b",
     "llama3.1:8b",
@@ -724,6 +849,14 @@
     "muse-glimmer:30b-mlx",
     "muse-glimmer:30b-mlx +think",
     "qwen3.6:35b-mlx",
-    "qwen3.6:35b-mlx +think"
+    "qwen3.6:35b-mlx +think",
+    "deepseek-r1:70b",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
+    "gemma4:31b",
+    "qwen3-coder-next:sovereign-128k",
+    "llama4:scout",
+    "qwen3.6-128k:latest",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M",
+    "qwen3-coder:30b-sovereign"
   ]
 }
