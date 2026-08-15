@@ -217,16 +217,22 @@ def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[dict]
     return [resolve_model_entry(m, default_ctx) for m in raw]
 
 
-def collect_model_info(model_entries: list[str | dict], default_ctx: int | None = None) -> dict[str, dict]:
+def collect_model_info(model_entries: list[str | dict], default_ctx: int | None = None,
+                       native_base_url: str | None = None) -> dict[str, dict]:
     """Query Ollama API for model details and disk size.
 
     Accepts both string model names and dict entries with 'model' and optional 'ctx'.
 
     Returns dict of model_name → {params, context_length, size_gb, quantization,
-                                  vram_estimate, effective_ctx}.
+                                  vram_estimate, effective_ctx, official_name, role}.
     """
     import httpx
-    base_url = "http://localhost:11434"
+    # Was hardcoded to localhost, which is wrong for any config pointing
+    # base_url at a remote host (e.g. config-m4-remote.yaml, run from a
+    # different machine than the one actually serving the models) — every
+    # /api/show call silently 404'd against the wrong machine's model store,
+    # and every model in that run got empty attributes with no error surfaced.
+    base_url = (native_base_url or "http://localhost:11434").rstrip("/").removesuffix("/v1")
 
     # Disk size straight from the Ollama API rather than reconstructing its
     # on-disk manifest/blob path ourselves — that path assumed Ollama's models
@@ -259,6 +265,31 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
             mi = data.get("model_info", {})
 
             entry["quantization"] = details.get("quantization_level", "?")
+
+            # Ollama's /api/show does not expose the GGUF's own general.name
+            # field (visible only in the server's load-time log, e.g.
+            # "general.name = DeepSeek R1 Distill Llama 70B") — so the closest
+            # real, non-fabricated official name comes from general.basename
+            # (+ general.size_label) when present, falling back to
+            # details.family (+ parameter_size) when it is not. Both are
+            # actual GGUF/Ollama metadata, never guessed from the tag string.
+            basename = mi.get("general.basename")
+            size_label = mi.get("general.size_label")
+            family = details.get("family")
+            param_size = details.get("parameter_size")
+            if basename:
+                entry["official_name"] = f"{basename} {size_label}" if size_label else basename
+            elif family:
+                entry["official_name"] = f"{family} {param_size}" if param_size else family
+
+            # "sovereign" is not a model family — it is this fleet's naming
+            # convention for the tier used as the swarm's planner/orchestrator
+            # (confirmed via LTK recall: qwen3-coder-next:sovereign-128k is
+            # the planner model behind the challenger-pattern AHA records).
+            # Surfaced explicitly so the raw tag doesn't read as an unexplained
+            # model family to anyone unfamiliar with the pfclabs convention.
+            if "sovereign" in model_name.lower():
+                entry["role"] = "Sovereign (fleet planner/orchestrator tier)"
 
             # Context length key varies by architecture
             ctx_key = next((k for k in mi if "context_length" in k), None)
@@ -432,7 +463,7 @@ def main():
         return kept + new_results
 
     # Collect model info (params, context, size) once before the run starts
-    model_info = collect_model_info(model_entries, default_ctx)
+    model_info = collect_model_info(model_entries, default_ctx, cfg.get("ollama", {}).get("base_url"))
 
     # Merge baseline model_info for models not in current run (--models limits scope)
     if isinstance(baseline_results, dict) and "metadata" in baseline_results:

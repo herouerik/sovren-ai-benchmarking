@@ -81,6 +81,8 @@ body::after{
 .model-name{font-size:11px;color:var(--text);white-space:nowrap}
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
+.model-raw-tag{font-size:9px;color:var(--dim);white-space:nowrap;font-family:var(--mono);margin-top:1px;opacity:.75}
+.model-role{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;border-radius:2px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
 .overall-num.is-swapped{color:inherit}
@@ -237,8 +239,8 @@ body::after{
 
 <script>
 const BENCHMARK_DATA = {
-  "run_id": "20260812_143651+20260814_164855+20260814_154755+20260815_092914+20260815_093111",
-  "timestamp": "2026-08-15 12:03",
+  "run_id": "20260812_143651+20260814_164855+20260814_154755+20260815_092914+20260815_093111+20260815_092914+20260815_093111",
+  "timestamp": "2026-08-15 12:15",
   "models": [
     "llama3.2:3b",
     "llama3.1:8b",
@@ -843,47 +845,72 @@ const BENCHMARK_DATA = {
   },
   "model_info": {
     "muse-glimmer:30b-mlx": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
+      "quantization": "nvfp4",
+      "official_name": "muse_glimmer 32.3B",
+      "context_length": 131072,
+      "size_gb": 19.8,
       "effective_ctx": 32768,
+      "params": "32.3B",
+      "architecture": "muse_glimmer",
+      "vram_estimate": 23.4,
       "think": false
     },
     "qwen3.6:35b-mlx +think": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5_moe 35.1B",
+      "context_length": 262144,
+      "size_gb": 20.4,
       "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "sparse": true,
       "think": true
     },
     "muse-glimmer:30b-mlx +think": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
+      "quantization": "nvfp4",
+      "official_name": "muse_glimmer 32.3B",
+      "context_length": 131072,
+      "size_gb": 19.8,
       "effective_ctx": 32768,
+      "params": "32.3B",
+      "architecture": "muse_glimmer",
+      "vram_estimate": 23.4,
       "think": true
     },
     "qwen3.6:35b-mlx": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5_moe 35.1B",
+      "context_length": 262144,
+      "size_gb": 20.4,
       "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "sparse": true,
       "think": false
     },
     "llama3.2:3b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "Llama-3.2 3B",
+      "context_length": 131072,
+      "size_gb": 1.9,
+      "effective_ctx": 32768,
+      "params": "3.2B",
+      "architecture": "llama",
+      "vram_estimate": 5.5
     },
     "llama3.1:8b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "Meta-Llama-3.1 8B",
+      "context_length": 131072,
+      "size_gb": 4.6,
+      "effective_ctx": 32768,
+      "params": "8.0B",
+      "architecture": "llama",
+      "vram_estimate": 8.8
     },
     "qwen2.5-coder:7b": {
       "quantization": "Q4_K_M",
+      "official_name": "Qwen2.5-Coder 7B",
       "context_length": 32768,
       "size_gb": 4.4,
       "effective_ctx": 32768,
@@ -892,25 +919,38 @@ const BENCHMARK_DATA = {
       "vram_estimate": 6.4
     },
     "gemma4-12b-agentic:latest": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 16384
+      "quantization": "Q8_0",
+      "official_name": "gemma4 11.9B",
+      "context_length": 262144,
+      "size_gb": 11.8,
+      "effective_ctx": 16384,
+      "params": "11.9B",
+      "architecture": "gemma4",
+      "vram_estimate": 23.6
     },
     "gemma4-12b-agentic-mtp:latest": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 16384
+      "quantization": "Q8_0",
+      "official_name": "gemma4 11.9B",
+      "context_length": 262144,
+      "size_gb": 12.2,
+      "effective_ctx": 16384,
+      "params": "11.9B",
+      "architecture": "gemma4",
+      "vram_estimate": 24.1
     },
     "codestral:22b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 16384
+      "quantization": "Q4_0",
+      "official_name": "llama 22.2B",
+      "context_length": 32768,
+      "size_gb": 11.7,
+      "effective_ctx": 16384,
+      "params": "22.2B",
+      "architecture": "llama",
+      "vram_estimate": 15.8
     },
     "devstral-small-2:latest": {
       "quantization": "Q4_K_M",
+      "official_name": "mistral3 24.0B",
       "context_length": 393216,
       "size_gb": 14.1,
       "effective_ctx": 16384,
@@ -919,43 +959,70 @@ const BENCHMARK_DATA = {
       "vram_estimate": 17.9
     },
     "gemma4:26b-mlx": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "nvfp4",
+      "official_name": "gemma4 6.3B",
+      "context_length": 262144,
+      "size_gb": 15.5,
+      "effective_ctx": 32768,
+      "params_active": "6.3B",
+      "sparse": true,
+      "architecture": "gemma4"
     },
     "nemotron-3-nano:30b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "NVIDIA-Nemotron-3-Nano 30B-A3B",
+      "context_length": 1048576,
+      "size_gb": 22.6,
+      "effective_ctx": 32768,
+      "params": "31.6B",
+      "architecture": "nemotron_h_moe",
+      "experts": 128,
+      "experts_used": 6,
+      "sparse": true,
+      "vram_estimate": 40.8
     },
     "gemma4:31b-mlx": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "nvfp4",
+      "official_name": "gemma4 31.3B",
+      "context_length": 262144,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "31.3B",
+      "architecture": "gemma4"
     },
     "qwen3:32b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3 32B",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
     },
     "qwen3-32b-nothink:latest": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3 32B",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
     },
     "qwen2.5-coder:32b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen2.5-Coder 32B",
+      "context_length": 32768,
+      "size_gb": 18.5,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen2",
+      "vram_estimate": 27.4
     },
     "qwen3-coder:latest": {
       "quantization": "Q4_K_M",
+      "official_name": "Qwen3-Coder 30B-A3B",
       "context_length": 262144,
       "size_gb": 17.3,
       "effective_ctx": 32768,
@@ -967,19 +1034,32 @@ const BENCHMARK_DATA = {
       "vram_estimate": 19.7
     },
     "nemotron-cascade-2:latest": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "nemotron_h_moe 31.6B",
+      "context_length": 262144,
+      "size_gb": 22.6,
+      "effective_ctx": 32768,
+      "params": "31.6B",
+      "architecture": "nemotron_h_moe",
+      "experts": 128,
+      "experts_used": 6,
+      "sparse": true,
+      "vram_estimate": 40.8
     },
     "qwen3.6:27b": {
-      "quantization": "?",
-      "context_length": null,
-      "size_gb": 0.0,
-      "effective_ctx": 32768
+      "quantization": "Q4_K_M",
+      "official_name": "qwen35 27.8B",
+      "context_length": 262144,
+      "size_gb": 16.2,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen35",
+      "vram_estimate": 56.9
     },
     "qwen3-coder-next:sovereign-128k": {
       "quantization": "IQ4_XS",
+      "official_name": "qwen3next 79.7B",
+      "role": "Sovereign (fleet planner/orchestrator tier)",
       "context_length": 262144,
       "size_gb": 39.9,
       "effective_ctx": 131072,
@@ -992,6 +1072,8 @@ const BENCHMARK_DATA = {
     },
     "qwen3-coder:30b-sovereign": {
       "quantization": "Q4_K_M",
+      "official_name": "Qwen3-Coder 30B-A3B",
+      "role": "Sovereign (fleet planner/orchestrator tier)",
       "context_length": 262144,
       "size_gb": 17.3,
       "effective_ctx": 32768,
@@ -1004,6 +1086,7 @@ const BENCHMARK_DATA = {
     },
     "qwen3.6-128k:latest": {
       "quantization": "Q4_K_M",
+      "official_name": "qwen35moe 36.0B",
       "context_length": 262144,
       "size_gb": 22.3,
       "effective_ctx": 262144,
@@ -1016,6 +1099,7 @@ const BENCHMARK_DATA = {
     },
     "deepseek-r1:70b": {
       "quantization": "Q4_K_M",
+      "official_name": "DeepSeek-R1-Distill-Llama 70B",
       "context_length": 131072,
       "size_gb": 39.6,
       "effective_ctx": 32768,
@@ -1025,6 +1109,7 @@ const BENCHMARK_DATA = {
     },
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
       "quantization": "Q3_K_M",
+      "official_name": "Glm-4.5-Air 128x9.4B",
       "context_length": 131072,
       "size_gb": 53.1,
       "effective_ctx": 8192,
@@ -1037,6 +1122,7 @@ const BENCHMARK_DATA = {
     },
     "gemma4:31b": {
       "quantization": "Q4_K_M",
+      "official_name": "gemma4 31.3B",
       "context_length": 262144,
       "size_gb": 18.5,
       "effective_ctx": 98304,
@@ -1046,6 +1132,7 @@ const BENCHMARK_DATA = {
     },
     "llama4:scout": {
       "quantization": "Q4_K_M",
+      "official_name": "llama4 108.6B",
       "context_length": 10485760,
       "size_gb": 62.8,
       "effective_ctx": 131072,
@@ -1058,6 +1145,7 @@ const BENCHMARK_DATA = {
     },
     "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
       "quantization": "Q4_K_M",
+      "official_name": "Muse-Glimmer 30B",
       "context_length": 131072,
       "size_gb": 19.7,
       "effective_ctx": 131072,
@@ -1398,7 +1486,7 @@ function renderStrip() {
         `<span class="rank-score${hasSwap(m)?' rank-score-swapped':''}">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
         (hasSwap(m) ? '<span class="rank-swap">💀</span>' : '') +
       `</div>` +
-      `<div class="rank-model">${m}</div>` +
+      `<div class="rank-model">${D.model_info?.[m]?.official_name || m}</div>` +
       (spd ? `<div class="rank-speed">${spd.toFixed(1)} t/s</div>`
            : status === 'pending' ? `<div class="rank-speed" style="color:var(--border)">pending</div>` : '');
 
@@ -1465,9 +1553,15 @@ function renderTable() {
       }
     }
     if (mi?.quantization) tags.push(mi.quantization);
+    // Prefer the real GGUF-derived official name (general.basename/family,
+    // never fabricated — see collect_model_info() in run_benchmark.py) as
+    // the headline; the raw Ollama tag is still shown underneath since it's
+    // what you'd actually `ollama pull`, just demoted to a secondary line.
+    const displayName = mi?.official_name || m;
+    const showRawTag = mi?.official_name && mi.official_name !== m;
     tdM.innerHTML = `<div class="model-row">
       <span class="model-dot" style="background:${color}"></span>
-      <div><span class="model-name">${m}</span>${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
+      <div><span class="model-name">${displayName}</span>${showRawTag ? `<div class="model-raw-tag">${m}</div>` : ''}${mi?.role ? `<div class="model-role">${mi.role}</div>` : ''}${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
     tr.appendChild(tdM);
 
     // Overall cell
