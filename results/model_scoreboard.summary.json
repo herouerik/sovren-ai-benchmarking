@@ -1,0 +1,260 @@
+{
+  "source": "results/merged.summary.json",
+  "run_id": "20260812_143651+20260814_164855+20260814_154755+20260815_092914+20260815_093111+20260815_092914+20260815_093111+20260815_092914+20260815_093111",
+  "generated_from_run_timestamp": "2026-08-15 15:44",
+  "note": "Local/sovereign-tier only (GPU server + MacBook, Ollama-hosted). Cloud models (Gemini/Claude/NIM) are not covered by this benchmark and are not in this file. Consumers that also route cloud candidates (e.g. pfclabs-codingswarm's atomic_pipeline.py _STRONG_PROVIDERS) need a separate mechanism for that half of the decision. Regenerate this file by re-running tools/export_model_scoreboard.py whenever a new benchmark run completes.",
+  "models": {
+    "llama3.2:3b": {
+      "host": "macbook",
+      "bfcl": 0.65,
+      "humaneval": 0.45,
+      "overall": 0.6238,
+      "speed_tok_s": 33.6,
+      "effective_ctx": 32768,
+      "params": "3.2B"
+    },
+    "llama3.1:8b": {
+      "host": "macbook",
+      "bfcl": 0.8,
+      "humaneval": 0.7,
+      "overall": 0.7127,
+      "speed_tok_s": 20.6,
+      "effective_ctx": 32768,
+      "params": "8.0B"
+    },
+    "qwen2.5-coder:7b": {
+      "host": "macbook",
+      "bfcl": 0.0,
+      "humaneval": 0.65,
+      "overall": 0.6428,
+      "speed_tok_s": 21.3,
+      "effective_ctx": 32768,
+      "params": "7.6B"
+    },
+    "gemma4-12b-agentic:latest": {
+      "host": "macbook",
+      "bfcl": 0.8,
+      "humaneval": 0.75,
+      "overall": 0.792,
+      "speed_tok_s": 9.1,
+      "effective_ctx": 16384,
+      "params": "11.9B"
+    },
+    "gemma4-12b-agentic-mtp:latest": {
+      "host": "macbook",
+      "bfcl": 0.8,
+      "humaneval": 0.75,
+      "overall": 0.792,
+      "speed_tok_s": 24.8,
+      "effective_ctx": 16384,
+      "params": "11.9B"
+    },
+    "codestral:22b": {
+      "host": "macbook",
+      "bfcl": 0.0,
+      "humaneval": 0.7,
+      "overall": 0.607,
+      "speed_tok_s": 0.0,
+      "effective_ctx": 16384,
+      "params": "22.2B"
+    },
+    "devstral-small-2:latest": {
+      "host": "macbook",
+      "bfcl": 0.85,
+      "humaneval": 0.85,
+      "overall": 0.8375,
+      "speed_tok_s": 16.3,
+      "effective_ctx": 16384,
+      "params": "24.0B"
+    },
+    "gemma4:26b-mlx": {
+      "host": "macbook",
+      "bfcl": 0.8,
+      "humaneval": 0.95,
+      "overall": 0.8343,
+      "speed_tok_s": 63.3,
+      "effective_ctx": 32768,
+      "params": null
+    },
+    "nemotron-3-nano:30b": {
+      "host": "macbook",
+      "bfcl": 0.65,
+      "humaneval": 0.75,
+      "overall": 0.7828,
+      "speed_tok_s": 50.0,
+      "effective_ctx": 32768,
+      "params": "31.6B"
+    },
+    "gemma4:31b-mlx": {
+      "host": "macbook",
+      "bfcl": 0.85,
+      "humaneval": 0.95,
+      "overall": 0.8832,
+      "speed_tok_s": 11.2,
+      "effective_ctx": 32768,
+      "params": "31.3B"
+    },
+    "qwen3:32b": {
+      "host": "macbook",
+      "bfcl": 0.8,
+      "humaneval": 0.85,
+      "overall": 0.8163,
+      "speed_tok_s": 11.6,
+      "effective_ctx": 32768,
+      "params": "32.8B"
+    },
+    "qwen3-32b-nothink:latest": {
+      "host": "macbook",
+      "bfcl": 0.85,
+      "humaneval": 0.85,
+      "overall": 0.8225,
+      "speed_tok_s": 11.6,
+      "effective_ctx": 32768,
+      "params": "32.8B"
+    },
+    "qwen2.5-coder:32b": {
+      "host": "macbook",
+      "bfcl": 0.0,
+      "humaneval": 0.8,
+      "overall": 0.7335,
+      "speed_tok_s": 11.8,
+      "effective_ctx": 32768,
+      "params": "32.8B"
+    },
+    "qwen3-coder:latest": {
+      "host": "macbook",
+      "bfcl": 0.85,
+      "humaneval": 0.75,
+      "overall": 0.7905,
+      "speed_tok_s": 60.3,
+      "effective_ctx": 32768,
+      "params": "30.5B"
+    },
+    "nemotron-cascade-2:latest": {
+      "host": "macbook",
+      "bfcl": 0.4,
+      "humaneval": 0.75,
+      "overall": 0.7322,
+      "speed_tok_s": 50.4,
+      "effective_ctx": 32768,
+      "params": "31.6B"
+    },
+    "qwen3.6:27b": {
+      "host": "macbook",
+      "bfcl": 0.9,
+      "humaneval": 0.8,
+      "overall": 0.8838,
+      "speed_tok_s": 10.0,
+      "effective_ctx": 32768,
+      "params": "27.8B"
+    },
+    "muse-glimmer:30b-mlx": {
+      "host": "macbook",
+      "bfcl": 0.4,
+      "humaneval": 0.95,
+      "overall": 0.7827,
+      "speed_tok_s": 22.7,
+      "effective_ctx": 32768,
+      "params": "32.3B"
+    },
+    "muse-glimmer:30b-mlx +think": {
+      "host": "macbook",
+      "bfcl": 0.5,
+      "humaneval": 0.95,
+      "overall": 0.818,
+      "speed_tok_s": 21.6,
+      "effective_ctx": 32768,
+      "params": "32.3B"
+    },
+    "qwen3.6:35b-mlx": {
+      "host": "macbook",
+      "bfcl": 0.75,
+      "humaneval": 0.95,
+      "overall": 0.8243,
+      "speed_tok_s": 72.0,
+      "effective_ctx": 32768,
+      "params": "35.1B"
+    },
+    "qwen3.6:35b-mlx +think": {
+      "host": "macbook",
+      "bfcl": 0.85,
+      "humaneval": 0.85,
+      "overall": 0.8512,
+      "speed_tok_s": 72.2,
+      "effective_ctx": 32768,
+      "params": "35.1B"
+    },
+    "deepseek-r1:70b": {
+      "host": "gpu_server",
+      "bfcl": 0.0,
+      "humaneval": null,
+      "overall": 0.0,
+      "speed_tok_s": 4.6,
+      "effective_ctx": 32768,
+      "params": "70.6B"
+    },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "host": "gpu_server",
+      "bfcl": 0.65,
+      "humaneval": null,
+      "overall": 0.65,
+      "speed_tok_s": 17.6,
+      "effective_ctx": 8192,
+      "params": "110.5B"
+    },
+    "gemma4:31b": {
+      "host": "gpu_server",
+      "bfcl": 0.8,
+      "humaneval": null,
+      "overall": 0.8,
+      "speed_tok_s": 9.7,
+      "effective_ctx": 98304,
+      "params": "31.3B"
+    },
+    "qwen3-coder-next:sovereign-128k": {
+      "host": "gpu_server",
+      "bfcl": 0.9,
+      "humaneval": 0.8,
+      "overall": 0.85,
+      "speed_tok_s": 35.2,
+      "effective_ctx": 131072,
+      "params": "79.7B"
+    },
+    "llama4:scout": {
+      "host": "gpu_server",
+      "bfcl": 0.2,
+      "humaneval": null,
+      "overall": 0.2,
+      "speed_tok_s": 14.6,
+      "effective_ctx": 131072,
+      "params": "108.6B"
+    },
+    "qwen3.6-128k:latest": {
+      "host": "gpu_server",
+      "bfcl": 0.9,
+      "humaneval": 0.9,
+      "overall": 0.85,
+      "speed_tok_s": 39.0,
+      "effective_ctx": 262144,
+      "params": "36.0B"
+    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
+      "host": "gpu_server",
+      "bfcl": 0.0,
+      "humaneval": null,
+      "overall": 0.0,
+      "speed_tok_s": 0.0,
+      "effective_ctx": 131072,
+      "params": "27.9B"
+    },
+    "qwen3-coder:30b-sovereign": {
+      "host": "gpu_server",
+      "bfcl": 0.85,
+      "humaneval": 0.8,
+      "overall": 0.8875,
+      "speed_tok_s": 28.5,
+      "effective_ctx": 32768,
+      "params": "30.5B"
+    }
+  }
+}
