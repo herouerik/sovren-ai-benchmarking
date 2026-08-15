@@ -81,6 +81,8 @@ body::after{
 .model-name{font-size:11px;color:var(--text);white-space:nowrap}
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
+.model-raw-tag{font-size:9px;color:var(--dim);white-space:nowrap;font-family:var(--mono);margin-top:1px;opacity:.75}
+.model-role{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;border-radius:2px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
 .overall-num.is-swapped{color:inherit}
@@ -537,7 +539,7 @@ function renderStrip() {
         `<span class="rank-score${hasSwap(m)?' rank-score-swapped':''}">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
         (hasSwap(m) ? '<span class="rank-swap">💀</span>' : '') +
       `</div>` +
-      `<div class="rank-model">${m}</div>` +
+      `<div class="rank-model">${D.model_info?.[m]?.official_name || m}</div>` +
       (spd ? `<div class="rank-speed">${spd.toFixed(1)} t/s</div>`
            : status === 'pending' ? `<div class="rank-speed" style="color:var(--border)">pending</div>` : '');
 
@@ -604,9 +606,15 @@ function renderTable() {
       }
     }
     if (mi?.quantization) tags.push(mi.quantization);
+    // Prefer the real GGUF-derived official name (general.basename/family,
+    // never fabricated — see collect_model_info() in run_benchmark.py) as
+    // the headline; the raw Ollama tag is still shown underneath since it's
+    // what you'd actually `ollama pull`, just demoted to a secondary line.
+    const displayName = mi?.official_name || m;
+    const showRawTag = mi?.official_name && mi.official_name !== m;
     tdM.innerHTML = `<div class="model-row">
       <span class="model-dot" style="background:${color}"></span>
-      <div><span class="model-name">${m}</span>${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
+      <div><span class="model-name">${displayName}</span>${showRawTag ? `<div class="model-raw-tag">${m}</div>` : ''}${mi?.role ? `<div class="model-role">${mi.role}</div>` : ''}${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
     tr.appendChild(tdM);
 
     // Overall cell
