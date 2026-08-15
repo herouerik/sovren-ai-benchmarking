@@ -119,7 +119,7 @@ class SpeedBenchmark(BaseBenchmark):
     def system_prompt(self) -> str | None:
         return None
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         # No accuracy signal — just check the model responded at all
         return {"passed": bool(response.strip()), "score": 1.0 if response.strip() else 0.0}
 

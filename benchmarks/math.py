@@ -29,7 +29,7 @@ class GSM8KBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return SYSTEM
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         predicted = extract_number(response)
         passed = predicted is not None and predicted == sample["answer"]
         return {"passed": passed, "score": float(passed), "predicted": predicted, "expected": sample["answer"]}

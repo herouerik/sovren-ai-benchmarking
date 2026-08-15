@@ -72,12 +72,19 @@ class OllamaClient:
     def complete_native(self, model: str, prompt: str, system: str = None,
                         max_tokens: int = 2048, temperature: float = 0.0,
                         ctx: int | None = None, guard_cfg: dict | None = None,
-                        think: bool | None = None, keep_alive=None) -> dict:
+                        think: bool | None = None, keep_alive=None,
+                        tools: list[dict] | None = None) -> dict:
         """Streaming completion over Ollama's native /api/chat.
 
         Separates thinking from the answer: `reasoning` holds chain-of-thought,
         `content` holds only what gets scored. Both count as liveness for the
         watchdog, so a long thinking phase is not mistaken for a stalled call.
+
+        `tools`, when given, is passed through verbatim (OpenAI-style function
+        schemas) and any `message.tool_calls` the model emits are collected
+        into the returned `tool_calls` list. Ollama emits a tool call as one
+        complete structured chunk rather than token-streaming it, but calls
+        are accumulated across chunks regardless in case a model splits them.
         """
         import httpx
 
@@ -90,6 +97,8 @@ class OllamaClient:
         if ctx:
             options["num_ctx"] = ctx
         body = {"model": model, "messages": messages, "stream": True, "options": options}
+        if tools:
+            body["tools"] = tools
         # Only send `think` to models that support it. Asking a non-thinking
         # model to think is a hard error and returns nothing, which would be
         # scored as a failed answer rather than an unsupported request.
@@ -106,6 +115,7 @@ class OllamaClient:
         ttft = None
         parts: list[str] = []
         reasoning_parts: list[str] = []
+        tool_calls: list[dict] = []
         final: dict = {}
 
         # A read timeout is the backstop for the watchdog: closing the response
@@ -135,7 +145,8 @@ class OllamaClient:
                         msg = chunk.get("message") or {}
                         thinking = msg.get("thinking")
                         content = msg.get("content")
-                        if thinking or content:
+                        chunk_tool_calls = msg.get("tool_calls")
+                        if thinking or content or chunk_tool_calls:
                             watchdog.on_token()
                         if thinking:
                             reasoning_parts.append(thinking)
@@ -143,6 +154,10 @@ class OllamaClient:
                             if ttft is None:
                                 ttft = time.perf_counter() - start
                             parts.append(content)
+                        if chunk_tool_calls:
+                            if ttft is None:
+                                ttft = time.perf_counter() - start
+                            tool_calls.extend(chunk_tool_calls)
                         if chunk.get("done"):
                             final = chunk
                 except Exception:
@@ -153,7 +168,7 @@ class OllamaClient:
         except Exception as e:
             watchdog.stop()
             return {
-                "content": "", "reasoning": "", "ttft": None,
+                "content": "", "reasoning": "", "tool_calls": [], "ttft": None,
                 "elapsed": time.perf_counter() - start, "decode_elapsed": 0,
                 "prompt_tokens": 0, "completion_tokens": 0,
                 "tok_per_sec": 0, "decode_tps": 0, "think": think,
@@ -179,6 +194,7 @@ class OllamaClient:
         return {
             "content": content,
             "reasoning": "".join(reasoning_parts),
+            "tool_calls": tool_calls,
             "ttft": ttft,
             "elapsed": total_elapsed,
             "decode_elapsed": decode_elapsed,
