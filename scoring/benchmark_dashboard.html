@@ -284,7 +284,7 @@ let D    = (typeof BENCHMARK_DATA !== 'undefined') ? BENCHMARK_DATA : SAMPLE_DAT
 let PREV = D.is_sample ? SAMPLE_PREV : null;
 let CONFIG_MODELS = D.all_models ? [...D.all_models] : [];
 
-const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.'};
+const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.',bfcl:'BFCL',bfcl_multi_turn_long_context:'BFCL-MT'};
 const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a','#7ad4c8','#d4a0c8'];
 
 const BENCH_TIPS = {
@@ -323,6 +323,14 @@ const BENCH_TIPS = {
   swap: {
     title: '💀 Memory Swap — Benchmarks Aborted',
     body: 'This model is too large for the available unified memory on this machine. macOS started swapping model weights to disk, causing per-sample inference time to spike 5×+ above normal. The benchmark was aborted to avoid a multi-hour hang. The reported score for this cell is not comparable to other models — it is a mix of partial results and zeroed-out swap failures.'
+  },
+  bfcl: {
+    title: 'Berkeley Function-Calling Leaderboard — Single-Turn',
+    body: 'Given a user request and a set of function/tool schemas, the model must call the right function(s) with the right arguments — or correctly call none at all. Covers four categories: simple (one function, no decoys), multiple (right function among distractors), parallel (several calls to the same function in one turn), and parallel-multiple (several calls across different functions). Scored by a local AST-style match against BFCL\'s possible-answer sets — function name plus every parameter value drawn from an acceptable-value set — not exact string match. Tests tool-use correctness directly, the axis none of the other benchmarks here touch.'
+  },
+  bfcl_multi_turn_long_context: {
+    title: 'Berkeley Function-Calling Leaderboard — Multi-Turn, Long Context',
+    body: 'A multi-turn tool-call loop against a live, stateful simulated environment (file system, trading bot, vehicle controls, etc.), with extra state padding injected specifically to stress tracking across a long dialogue history. The model calls a function, gets a real result back, and continues — for several turns. Scored by comparing the environment\'s final state after the model\'s run against the same environment driven by the ground-truth call sequence — not by inspecting individual calls. This is the benchmark most likely to actually separate large-context models from each other; everything else here is closer to single-shot.'
   }
 };
 
