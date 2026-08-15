@@ -1,0 +1,24 @@
+ollama:
+  base_url: "http://192.168.68.115:11436/v1"
+  api_key: "ollama"
+  timeout: 300
+  max_tokens: 4096
+  default_ctx: 32768
+  sample_seed: 42
+
+models:
+  # Pool-b candidates (2x P100, 32GB): incumbent 30b vs long-context 36B.
+  - model: qwen3-coder:30b-sovereign
+    ctx: 32768
+  - model: qwen3.6-128k:latest
+    ctx: 32768
+
+output:
+  dir: "results"
+  save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 1
+  memory_guard:
+    enabled: false
