@@ -1,6 +1,6 @@
 {
-  "run_id": "20260812_143651+20260814_164855+20260814_154755+20260815_092914+20260815_093111+20260815_092914+20260815_093111",
-  "timestamp": "2026-08-15 12:15",
+  "run_id": "20260812_143651+20260814_164855+20260814_154755+20260815_092914+20260815_093111+20260815_092914+20260815_093111+20260815_092914+20260815_093111",
+  "timestamp": "2026-08-15 15:44",
   "models": [
     "llama3.2:3b",
     "llama3.1:8b",
@@ -605,6 +605,7 @@
   },
   "model_info": {
     "muse-glimmer:30b-mlx": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "nvfp4",
       "official_name": "muse_glimmer 32.3B",
       "context_length": 131072,
@@ -616,6 +617,7 @@
       "think": false
     },
     "qwen3.6:35b-mlx +think": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "nvfp4",
       "official_name": "qwen3_5_moe 35.1B",
       "context_length": 262144,
@@ -627,6 +629,7 @@
       "think": true
     },
     "muse-glimmer:30b-mlx +think": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "nvfp4",
       "official_name": "muse_glimmer 32.3B",
       "context_length": 131072,
@@ -638,6 +641,7 @@
       "think": true
     },
     "qwen3.6:35b-mlx": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "nvfp4",
       "official_name": "qwen3_5_moe 35.1B",
       "context_length": 262144,
@@ -649,6 +653,7 @@
       "think": false
     },
     "llama3.2:3b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Llama-3.2 3B",
       "context_length": 131072,
@@ -659,6 +664,7 @@
       "vram_estimate": 5.5
     },
     "llama3.1:8b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Meta-Llama-3.1 8B",
       "context_length": 131072,
@@ -669,6 +675,7 @@
       "vram_estimate": 8.8
     },
     "qwen2.5-coder:7b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Qwen2.5-Coder 7B",
       "context_length": 32768,
@@ -679,6 +686,7 @@
       "vram_estimate": 6.4
     },
     "gemma4-12b-agentic:latest": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q8_0",
       "official_name": "gemma4 11.9B",
       "context_length": 262144,
@@ -689,6 +697,7 @@
       "vram_estimate": 23.6
     },
     "gemma4-12b-agentic-mtp:latest": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q8_0",
       "official_name": "gemma4 11.9B",
       "context_length": 262144,
@@ -699,6 +708,7 @@
       "vram_estimate": 24.1
     },
     "codestral:22b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_0",
       "official_name": "llama 22.2B",
       "context_length": 32768,
@@ -709,6 +719,7 @@
       "vram_estimate": 15.8
     },
     "devstral-small-2:latest": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "mistral3 24.0B",
       "context_length": 393216,
@@ -719,6 +730,7 @@
       "vram_estimate": 17.9
     },
     "gemma4:26b-mlx": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "nvfp4",
       "official_name": "gemma4 6.3B",
       "context_length": 262144,
@@ -729,6 +741,7 @@
       "architecture": "gemma4"
     },
     "nemotron-3-nano:30b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "NVIDIA-Nemotron-3-Nano 30B-A3B",
       "context_length": 1048576,
@@ -742,6 +755,7 @@
       "vram_estimate": 40.8
     },
     "gemma4:31b-mlx": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "nvfp4",
       "official_name": "gemma4 31.3B",
       "context_length": 262144,
@@ -751,6 +765,7 @@
       "architecture": "gemma4"
     },
     "qwen3:32b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Qwen3 32B",
       "context_length": 40960,
@@ -761,6 +776,7 @@
       "vram_estimate": 24.7
     },
     "qwen3-32b-nothink:latest": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Qwen3 32B",
       "context_length": 40960,
@@ -771,6 +787,7 @@
       "vram_estimate": 24.7
     },
     "qwen2.5-coder:32b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Qwen2.5-Coder 32B",
       "context_length": 32768,
@@ -781,6 +798,7 @@
       "vram_estimate": 27.4
     },
     "qwen3-coder:latest": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "Qwen3-Coder 30B-A3B",
       "context_length": 262144,
@@ -794,6 +812,7 @@
       "vram_estimate": 19.7
     },
     "nemotron-cascade-2:latest": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "nemotron_h_moe 31.6B",
       "context_length": 262144,
@@ -807,6 +826,7 @@
       "vram_estimate": 40.8
     },
     "qwen3.6:27b": {
+      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
       "quantization": "Q4_K_M",
       "official_name": "qwen35 27.8B",
       "context_length": 262144,
@@ -817,6 +837,7 @@
       "vram_estimate": 56.9
     },
     "qwen3-coder-next:sovereign-128k": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "IQ4_XS",
       "official_name": "qwen3next 79.7B",
       "role": "Sovereign (fleet planner/orchestrator tier)",
@@ -831,6 +852,7 @@
       "vram_estimate": 47.9
     },
     "qwen3-coder:30b-sovereign": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q4_K_M",
       "official_name": "Qwen3-Coder 30B-A3B",
       "role": "Sovereign (fleet planner/orchestrator tier)",
@@ -845,6 +867,7 @@
       "vram_estimate": 19.7
     },
     "qwen3.6-128k:latest": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q4_K_M",
       "official_name": "qwen35moe 36.0B",
       "context_length": 262144,
@@ -858,6 +881,7 @@
       "vram_estimate": 103.4
     },
     "deepseek-r1:70b": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q4_K_M",
       "official_name": "DeepSeek-R1-Distill-Llama 70B",
       "context_length": 131072,
@@ -868,6 +892,7 @@
       "vram_estimate": 51.6
     },
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q3_K_M",
       "official_name": "Glm-4.5-Air 128x9.4B",
       "context_length": 131072,
@@ -881,6 +906,7 @@
       "vram_estimate": 56.2
     },
     "gemma4:31b": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q4_K_M",
       "official_name": "gemma4 31.3B",
       "context_length": 262144,
@@ -891,6 +917,7 @@
       "vram_estimate": 137.6
     },
     "llama4:scout": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q4_K_M",
       "official_name": "llama4 108.6B",
       "context_length": 10485760,
@@ -904,6 +931,7 @@
       "vram_estimate": 89.9
     },
     "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
+      "host": "GPU Server (6x P100, unified pool)",
       "quantization": "Q4_K_M",
       "official_name": "Muse-Glimmer 30B",
       "context_length": 131072,

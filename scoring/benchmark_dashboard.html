@@ -83,6 +83,7 @@ body::after{
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
 .model-raw-tag{font-size:9px;color:var(--dim);white-space:nowrap;font-family:var(--mono);margin-top:1px;opacity:.75}
 .model-role{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;border-radius:2px}
+.model-host{font-size:8px;letter-spacing:.03em;color:#5a9ed4;border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;margin-right:4px;border-radius:2px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
 .overall-num.is-swapped{color:inherit}
@@ -614,7 +615,7 @@ function renderTable() {
     const showRawTag = mi?.official_name && mi.official_name !== m;
     tdM.innerHTML = `<div class="model-row">
       <span class="model-dot" style="background:${color}"></span>
-      <div><span class="model-name">${displayName}</span>${showRawTag ? `<div class="model-raw-tag">${m}</div>` : ''}${mi?.role ? `<div class="model-role">${mi.role}</div>` : ''}${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
+      <div><span class="model-name">${displayName}</span>${showRawTag ? `<div class="model-raw-tag">${m}</div>` : ''}${mi?.host ? `<span class="model-host">${mi.host}</span>` : ''}${mi?.role ? `<span class="model-role">${mi.role}</span>` : ''}${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
     tr.appendChild(tdM);
 
     // Overall cell

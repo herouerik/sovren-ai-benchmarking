@@ -217,6 +217,33 @@ def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[dict]
     return [resolve_model_entry(m, default_ctx) for m in raw]
 
 
+# Known inference hosts on this fleet, keyed by the IP each config's base_url
+# actually points at — not by platform.node()/platform.machine(), which only
+# describe whatever machine happens to be running run_benchmark.py itself.
+# That distinction matters here specifically: this harness is routinely run
+# FROM one machine to drive inference on ANOTHER (e.g. config-m4-remote.yaml
+# runs on the GPU server but serves from the M4), so the script's own host is
+# not the inference host and must never be used to label results.
+_KNOWN_HOSTS = {
+    "192.168.68.115": "GPU Server (6x P100, unified pool)",
+    "192.168.68.106": "M4 MacBook Pro (48GB, MLX+Ollama)",
+}
+
+
+def _infer_host_label(base_url: str) -> str:
+    import re
+    m = re.search(r"://([^:/]+)", base_url or "")
+    host = m.group(1) if m else ""
+    if host in _KNOWN_HOSTS:
+        return _KNOWN_HOSTS[host]
+    if host in ("localhost", "127.0.0.1", "::1"):
+        # Whichever machine actually ran this invocation of run_benchmark.py —
+        # correct in this one case, since "localhost" means script host and
+        # inference host are the same machine by construction.
+        return f"local ({platform.node()})"
+    return host or "unknown host"
+
+
 def collect_model_info(model_entries: list[str | dict], default_ctx: int | None = None,
                        native_base_url: str | None = None) -> dict[str, dict]:
     """Query Ollama API for model details and disk size.
@@ -224,7 +251,7 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
     Accepts both string model names and dict entries with 'model' and optional 'ctx'.
 
     Returns dict of model_name → {params, context_length, size_gb, quantization,
-                                  vram_estimate, effective_ctx, official_name, role}.
+                                  vram_estimate, effective_ctx, official_name, role, host}.
     """
     import httpx
     # Was hardcoded to localhost, which is wrong for any config pointing
@@ -232,7 +259,9 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
     # different machine than the one actually serving the models) — every
     # /api/show call silently 404'd against the wrong machine's model store,
     # and every model in that run got empty attributes with no error surfaced.
-    base_url = (native_base_url or "http://localhost:11434").rstrip("/").removesuffix("/v1")
+    resolved_base_url = native_base_url or "http://localhost:11434"
+    host_label = _infer_host_label(resolved_base_url)
+    base_url = resolved_base_url.rstrip("/").removesuffix("/v1")
 
     # Disk size straight from the Ollama API rather than reconstructing its
     # on-disk manifest/blob path ourselves — that path assumed Ollama's models
@@ -257,7 +286,7 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
     info = {}
     for spec in configs:
         model_name, effective_ctx = spec["model"], spec["ctx"]
-        entry = {}
+        entry = {"host": host_label}
         try:
             resp = httpx.post(f"{base_url}/api/show", json={"model": model_name}, timeout=10)
             data = resp.json()
