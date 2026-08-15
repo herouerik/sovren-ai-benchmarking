@@ -126,6 +126,15 @@ benchmarks:
     enabled: true
     n_samples: 20
 
+  # Phase 2 of the BFCL build (docs/ROADMAP.md §E): multi-turn, state-based
+  # scoring, Long-Context subcategory only so far. Genuinely expensive per
+  # sample — up to 4 turns x up to 20 tool calls each, observed ~450-500s for
+  # ONE sample against qwen3.6 on the GPU pool. Left disabled by default;
+  # enable deliberately with a small n_samples, not as part of a routine run.
+  bfcl_multi_turn_long_context:
+    enabled: false
+    n_samples: 5
+
   sql:
     enabled: true
     dataset: "xlangai/spider"

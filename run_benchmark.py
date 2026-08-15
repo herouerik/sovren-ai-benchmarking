@@ -38,6 +38,7 @@ from benchmarks.sql import SpiderBenchmark
 from benchmarks.philosophical import PhilosophicalBenchmark
 from benchmarks.speed import SpeedBenchmark
 from benchmarks.bfcl import BFCLBenchmark
+from benchmarks.bfcl_multi_turn import BFCLMultiTurnLongContextBenchmark
 from scoring.report import save_results, print_summary
 from scoring.generate_report import aggregate, load_config_models, find_template
 
@@ -53,6 +54,7 @@ BENCHMARK_REGISTRY = {
     "philosophical": PhilosophicalBenchmark,
     "speed":         SpeedBenchmark,
     "bfcl":          BFCLBenchmark,
+    "bfcl_multi_turn_long_context": BFCLMultiTurnLongContextBenchmark,
 }
 
 

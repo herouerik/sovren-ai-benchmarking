@@ -74,7 +74,29 @@ class OllamaClient:
                         ctx: int | None = None, guard_cfg: dict | None = None,
                         think: bool | None = None, keep_alive=None,
                         tools: list[dict] | None = None) -> dict:
-        """Streaming completion over Ollama's native /api/chat.
+        """Single-turn streaming completion over Ollama's native /api/chat.
+
+        Builds a one-shot messages list from prompt/system and delegates to
+        `complete_chat`, which holds the actual streaming/parsing logic shared
+        with multi-turn callers (see its docstring).
+        """
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        return self.complete_chat(model, messages, max_tokens=max_tokens,
+                                   temperature=temperature, ctx=ctx, guard_cfg=guard_cfg,
+                                   think=think, keep_alive=keep_alive, tools=tools)
+
+    def complete_chat(self, model: str, messages: list[dict],
+                      max_tokens: int = 2048, temperature: float = 0.0,
+                      ctx: int | None = None, guard_cfg: dict | None = None,
+                      think: bool | None = None, keep_alive=None,
+                      tools: list[dict] | None = None) -> dict:
+        """Streaming completion over Ollama's native /api/chat for an arbitrary
+        message history (multi-turn tool-call loops, assistant/tool messages
+        already appended by the caller) — `complete_native` is the single-turn
+        convenience wrapper around this for every other benchmark.
 
         Separates thinking from the answer: `reasoning` holds chain-of-thought,
         `content` holds only what gets scored. Both count as liveness for the
@@ -87,11 +109,6 @@ class OllamaClient:
         are accumulated across chunks regardless in case a model splits them.
         """
         import httpx
-
-        messages = []
-        if system:
-            messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
 
         options = {"temperature": temperature, "num_predict": max_tokens}
         if ctx:
