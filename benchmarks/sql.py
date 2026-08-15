@@ -91,7 +91,7 @@ class SpiderBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return SYSTEM
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         predicted_sql = extract_sql(response)
 
         # If we have the DB file, execute both and compare result sets

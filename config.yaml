@@ -117,6 +117,15 @@ benchmarks:
     n_samples: 20
     execution_timeout: 10
 
+  # Phase 1 of the BFCL build (docs/ROADMAP.md §E): single-turn AST categories
+  # (simple/multiple/parallel/parallel_multiple), stratified across all four.
+  # No judge, no execution sandbox — scoring is a local AST-style match against
+  # BFCL's possible-answer sets. New and unvalidated against the full model
+  # fleet yet; leave enabled but keep n_samples modest until confirmed.
+  bfcl:
+    enabled: true
+    n_samples: 20
+
   sql:
     enabled: true
     dataset: "xlangai/spider"

@@ -37,6 +37,7 @@ from benchmarks.coding import HumanEvalBenchmark, MBPPBenchmark
 from benchmarks.sql import SpiderBenchmark
 from benchmarks.philosophical import PhilosophicalBenchmark
 from benchmarks.speed import SpeedBenchmark
+from benchmarks.bfcl import BFCLBenchmark
 from scoring.report import save_results, print_summary
 from scoring.generate_report import aggregate, load_config_models, find_template
 
@@ -51,6 +52,7 @@ BENCHMARK_REGISTRY = {
     "spider":      SpiderBenchmark,
     "philosophical": PhilosophicalBenchmark,
     "speed":         SpeedBenchmark,
+    "bfcl":          BFCLBenchmark,
 }
 
 

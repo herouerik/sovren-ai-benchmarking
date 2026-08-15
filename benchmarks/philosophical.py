@@ -26,7 +26,7 @@ class PhilosophicalBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return "You are a thoughtful philosopher. Engage deeply and honestly with the question."
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         criteria = self.config.get("judge_rubric", [
             "Depth of reasoning (1-5)",
             "Coherence and logical consistency (1-5)",

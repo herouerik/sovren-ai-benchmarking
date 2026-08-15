@@ -61,7 +61,7 @@ class MMLUBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return SYSTEM
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         predicted = extract_choice(response, "ABCD")
         passed = predicted == sample["answer"]
         return {"passed": passed, "score": float(passed), "predicted": predicted, "expected": sample["answer"]}
@@ -87,7 +87,7 @@ class ARCBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return SYSTEM
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         predicted = extract_choice(response, "ABCD1234")
         passed = predicted == sample["answer"].upper()
         return {"passed": passed, "score": float(passed), "predicted": predicted, "expected": sample["answer"]}

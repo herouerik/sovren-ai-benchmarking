@@ -34,11 +34,19 @@ class BaseBenchmark(ABC):
         """Return list of sample dicts with at minimum 'id' and 'prompt' keys."""
 
     @abstractmethod
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         """Return scoring dict with at minimum 'passed' (bool) and 'score' (float 0-1)."""
 
     def format_prompt(self, sample: dict) -> str:
         return sample["prompt"]
+
+    def format_tools(self, sample: dict) -> list[dict] | None:
+        """Override to supply OpenAI-style function schemas for a sample.
+
+        None (the default) means no `tools` are sent — every existing
+        text-scoring benchmark leaves this alone.
+        """
+        return None
 
     # Set in subclasses whose samples span groups that must all be represented
     # (MMLU spans academic subjects). Without stratification, taking the first N
@@ -134,6 +142,7 @@ class BaseBenchmark(ABC):
                 ctx=ctx,
                 guard_cfg=guard_cfg,
                 think=think,
+                tools=self.format_tools(sample),
             )
 
             elapsed = response["elapsed"]
@@ -163,7 +172,7 @@ class BaseBenchmark(ABC):
                         on_sample(j + 1, actual_n, result)
                 raise MemorySwapAbort(swap_err, partial_results=results)
 
-            scoring = self.score(sample, response["content"]) if not response["error"] else {"passed": False, "score": 0.0}
+            scoring = self.score(sample, response["content"], tool_calls=response.get("tool_calls")) if not response["error"] else {"passed": False, "score": 0.0}
             result = {
                 "id": sample.get("id", ""),
                 "model": model,

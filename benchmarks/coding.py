@@ -77,7 +77,7 @@ class HumanEvalBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return SYSTEM
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         code = extract_code(response)
         entry = sample.get("entry_point", "")
         # Completion-style models (e.g. codestral) return only the function body
@@ -128,7 +128,7 @@ class MBPPBenchmark(BaseBenchmark):
     def system_prompt(self) -> str:
         return SYSTEM
 
-    def score(self, sample: dict, response: str) -> dict:
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
         code = extract_code(response)
         result = execute_python(
             code,
