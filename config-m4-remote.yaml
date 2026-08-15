@@ -1,0 +1,87 @@
+ollama:
+  # Same M4 machine as config.yaml, reached over the LAN instead of localhost
+  # — this file is meant to be run FROM the GPU server (192.168.68.115) to
+  # drive bfcl against the M4's model fleet remotely, the same pattern
+  # config-gpu-unified.yaml already uses in the other direction.
+  base_url: "http://192.168.68.106:11434/v1"
+  api_key: "ollama"
+  timeout: 600
+  max_tokens: 4096
+  think_max_tokens: 16384
+  default_ctx: 32768
+  sample_seed: 42
+
+models:
+  # Mirrors config.yaml's model list on 2026-08-15. Kept as a separate file
+  # rather than editing config.yaml directly — that file is the M4's own
+  # local config and shouldn't be repurposed for a remote-only base_url.
+  - llama3.2:3b
+  - llama3.1:8b
+  - qwen2.5-coder:7b
+  - model: gemma4-12b-agentic:latest
+    ctx: 16384
+  - model: gemma4-12b-agentic-mtp:latest
+    ctx: 16384
+  - model: codestral:22b
+    ctx: 16384
+  - model: devstral-small-2:latest
+    ctx: 16384
+  - model: gemma4:26b-mlx
+    ctx: 32768
+  - model: nemotron-3-nano:30b
+    ctx: 32768
+  - model: gemma4:31b-mlx
+    ctx: 32768
+  - qwen3:32b
+  - qwen3-32b-nothink:latest
+  - qwen2.5-coder:32b
+  - qwen3-coder:latest
+  - model: nemotron-cascade-2:latest
+    ctx: 32768
+  - model: qwen3.6:27b
+    ctx: 32768
+  - model: muse-glimmer:30b-mlx
+    ctx: 32768
+    think: false
+  - model: muse-glimmer:30b-mlx
+    ctx: 32768
+    think: true
+  - model: qwen3.6:35b-mlx
+    ctx: 32768
+    think: false
+  - model: qwen3.6:35b-mlx
+    ctx: 32768
+    think: true
+
+benchmarks:
+  bfcl:
+    enabled: true
+    n_samples: 20
+
+output:
+  dir: "results"
+  save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 2
+  # Kept enabled for the timing-based degradation detection (decode rate
+  # collapse, TTFT ceiling), which works fine over the network. But the
+  # vm_stat-based swap corroboration that decides hard-vs-soft abort reads
+  # *this* process's host — the GPU server, not the M4 — so it cannot
+  # actually see real M4 memory pressure when run remotely like this. A trip
+  # will still fire on slowness, just always classified soft (one sample
+  # skipped, run continues) rather than hard (whole model skipped).
+  memory_guard:
+    enabled: true
+    poll_interval: 1.0
+    ttft_ceiling_seconds: 300
+    token_stall_seconds: 20
+    decode_degradation_factor: 10
+    baseline_window_seconds: 5
+    baseline_tokens: 16
+    window_seconds: 5
+    swap_bytes_per_sec: 33554432
+    swap_sustain_seconds: 5
+    min_decode_tps: 0.0
+    min_decode_tps_after_tokens: 32
