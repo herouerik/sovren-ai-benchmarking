@@ -145,6 +145,26 @@ actual use case — routing work to local models — but is a larger build.
 
 Written 2026-08-15, after scoping against the current benchmark harness code.
 
+**Status (2026-08-15, same day): Phase 1 done, Phase 2 done for Long-Context.**
+Both landed and were verified against a real model (qwen3.6-128k), not just
+imported cleanly. One correction to the plan below: `bfcl-eval` was never
+actually used — attempting the install showed it pulls in sglang/vllm/
+cuda-bindings (multiple GB) as hard dependencies just to reach its dataset
+and checker utilities. Both phases instead use `huggingface_hub` (already a
+dependency) to pull BFCL's dataset JSON directly, plus a local reimplementation
+of the AST/state-diff scoring logic — see `benchmarks/bfcl.py` and
+`benchmarks/bfcl_multi_turn.py` module docstrings for the full reasoning.
+Phase 2's stateful env classes are vendored (Apache 2.0, attributed in
+`benchmarks/bfcl_multi_turn_envs/NOTICE.md`) rather than imported from that
+package for the same reason. Base/Missing-Functions/Missing-Parameters
+multi-turn subcategories share the same engine and are not yet wired up —
+straightforward follow-on (new `BENCHMARK_REGISTRY` entry, different category
+constant) once there's a reason to prioritize them over Long-Context.
+
+Real cost data point: one Long-Context sample (4 turns, 28 tool calls)
+against qwen3.6-128k took ~450-500s on the unified GPU pool. Left disabled
+by default in `config.yaml`; enable deliberately with a small `n_samples`.
+
 BFCL V4 (current, last leaderboard update Jul 2026) splits into single-turn
 categories (Non-Live/Live × single/multiple/parallel/parallel-multiple) and an
 800-example multi-turn suite with four subcategories: Base, Missing-Functions,
