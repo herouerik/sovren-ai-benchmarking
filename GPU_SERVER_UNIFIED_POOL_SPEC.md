@@ -6,6 +6,40 @@
 
 ---
 
+## Handover — GPU Server agent, 2026-08-15
+
+Setup is **done and live**, but several details below turned out wrong once actually run against this box. Read this before trusting anything in sections 1–7 — they're left as-is for the historical record, not because they're accurate.
+
+**What's actually running:** `ollama-unified.service`, active + enabled, `CUDA_VISIBLE_DEVICES=1,2,3,4,5,6` (P100s only). Ollama itself is **0.32.9**, upgraded from the 0.20.5 this spec was written against (needed for `muse-glimmer` support — see below). `ollama.service`/`ollama-meta.service`/`ollama-b.service` (the real split-pool service names — see next point) are stopped + disabled.
+
+**Corrections to the steps above:**
+- **§1/§6 service names are fictional.** There is no `ollama-pool-a`/`ollama-pool-b` on this host. The real services are `ollama.service` (was Pool A, 4× P100, port 11434), `ollama-b.service` (was Pool B, 2× P100, port 11436), `ollama-meta.service` (GPU0/RTX2080Ti, port 11435). If you ever roll back, use these real names, not what §6 says.
+- **§2.1 env file is wrong on two settings.** `OLLAMA_GPU_OVERHEAD=0` causes a full CPU fallback (0 layers offloaded) on this fleet's P100s — the value that actually works is `OLLAMA_GPU_OVERHEAD=268435456` (matches what `ollama.service`'s own override.conf already used, pre-existing fleet knowledge). Also add `CUDA_VISIBLE_DEVICES=1,2,3,4,5,6` explicitly — without it Ollama also grabs GPU0 (RTX 2080 Ti, mismatched 11GB card), which was a repeated single-GPU OOM bottleneck for `gemma4:31b` at high context and got removed. Current real file is `/etc/ollama/unified.env` — read it directly rather than trusting this doc's §2.1 block.
+- **§2.2 systemd unit**: dropped `Type=notify` (this Ollama build doesn't reliably send the readiness notification, risks a start-timeout hang) and `DeviceAllow` (unnecessary — the three real pre-existing services on this host don't use it either and work fine). Current real unit is `/etc/systemd/system/ollama-unified.service`.
+- **§3 model list is stale.** `GLM-4.5-Air` isn't a real pullable name — the actual model is `MichelRosselli/GLM-4.5-Air:Q3_K_M`. `muse-glimmer` wasn't runnable at all on 0.20.5 (unknown architecture error) — that's why Ollama got upgraded to 0.32.9 this session.
+
+**Context ceilings — use these, not blind defaults.** Each model's compute-graph buffer must fit on a *single* P100 (16GB) regardless of the pool's aggregate 96GB — this is architecture-dependent, not just model-size-dependent, and was wrong to assume as "131072 everywhere." Bisected and verified via `offloaded N/N layers to GPU` in the ollama-unified log (not just "loads without erroring" — partial offload silently degrades to CPU speed):
+
+| Model | max ctx (full offload) |
+|---|---|
+| `deepseek-r1:70b` | 32768 |
+| `MichelRosselli/GLM-4.5-Air:Q3_K_M` | 8192 |
+| `gemma4:31b` | 98304 |
+| `qwen3-coder-next:sovereign-128k` | 131072 |
+| `llama4:scout` | 131072 (~90GB footprint — uses the pool best) |
+| `qwen3.6-128k:latest` | 262144 (native max, only ~39GB used) |
+| `muse-glimmer` (`hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M`) | 131072 (native max, only ~6GB/GPU — most efficient of all) |
+
+These are already written into `config-gpu-unified.yaml` in this repo — that file is the current source of truth, not §3 of this doc.
+
+**New capability on this pool:** `benchmarks/bfcl.py` (function-calling, single-turn) and `benchmarks/bfcl_multi_turn.py` (stateful multi-turn, Long-Context subcategory) landed this session — see `docs/ROADMAP.md` §E for the full design and status. Multi-turn is genuinely expensive (~450-500s/sample observed against qwen3.6 on this pool) and is disabled by default in `config.yaml`.
+
+**Access note:** this agent did not have blanket sudo on this box — only specific pre-authorized `systemctl restart/stop/start` commands for the pre-existing services. Every privileged step (env/unit file writes, `daemon-reload`, the Ollama binary upgrade) was done by writing a script and asking the human operator to run it with `sudo`. Expect the same constraint if you're picking this up.
+
+**Not pushed:** all changes are committed locally on `main` in `sovren-ai-benchmarking` (5 commits, 2026-08-15) but not pushed to `origin` — pending human review.
+
+---
+
 ## 1. Stop Existing Pools
 
 ```bash
