@@ -348,9 +348,12 @@ function hasSwap(m)          { return getSwapBenches(m).length > 0; }
 function overallOf(m) {
   const sc = getScores(m);
   if (!sc) return -1;
-  const benches = getBenches();
-  const vals = benches.map(b => sc[b] ?? 0);
-  return vals.reduce((a,b)=>a+b,0) / vals.length;
+  // Average only over benchmarks this model actually ran. Treating missing
+  // benchmarks as 0 would unfairly tank models from runs covering a subset
+  // of benchmarks (e.g. GPU pools running 3 of 7 next to a full M4 run).
+  const benches = getBenches().filter(b => sc[b] !== undefined && sc[b] !== null);
+  if (!benches.length) return -1;
+  return benches.reduce((a,b)=>a+sc[b],0) / benches.length;
 }
 
 function getTs(m) {
