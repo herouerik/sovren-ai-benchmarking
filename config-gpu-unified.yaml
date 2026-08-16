@@ -62,6 +62,73 @@ models:
   - model: qwen3-coder:30b-sovereign
     ctx: 32768
 
+  # Released 2026-08-03 (open weights ~1wk later); same "qwen35" family
+  # lineage as qwen3.6, and it shows — full 66/66 offload at its full native
+  # ctx 262144 with no ceiling issue found, same pattern as qwen3.6-128k.
+  # Ollama's /api/tags capabilities list omits "tools" for this model but
+  # tool-calling works correctly in practice (verified directly) — a metadata
+  # gap, not a real limitation. Pulled via hf.co/unsloth (bartowski's GGUF
+  # repeatedly hit a reproducible 504 at the final pull step across 5 tries
+  # with different timeouts — a bartowski-repo-specific issue, not a network
+  # timeout; unsloth's single-blob GGUF for the same model pulled cleanly).
+  - model: hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M
+    ctx: 262144
+
+# Matches config.yaml's (the M4's) benchmark group n_samples exactly, plus
+# sample_seed: 42 already set above — same questions, same sample counts, so
+# GPU-server scores are directly comparable to the M4 baseline, not just
+# roughly similar. Added 2026-08-15 to fill the coverage gap: these 8 models
+# previously had bfcl (all) plus mmlu/gsm8k/humaneval (3 of them only, from
+# an earlier partial baseline) — this run gives full parity with the M4's
+# 7-benchmark + bfcl coverage.
+benchmarks:
+  reasoning:
+    enabled: true
+    dataset: "cais/mmlu"
+    subjects:
+      - "abstract_algebra"
+      - "logical_fallacies"
+      - "formal_logic"
+      - "high_school_mathematics"
+      - "philosophy"
+    n_samples: 20
+
+  math:
+    enabled: true
+    dataset: "openai/gsm8k"
+    split: "test"
+    n_samples: 25
+
+  coding:
+    enabled: true
+    datasets:
+      - "openai/openai_humaneval"
+      - "google-research-datasets/mbpp"
+    n_samples: 20
+    execution_timeout: 10
+
+  sql:
+    enabled: true
+    dataset: "xlangai/spider"
+    n_samples: 20
+
+  philosophical:
+    enabled: true
+    n_samples: 10
+    judge_rubric:
+      - "Depth of reasoning (1-5)"
+      - "Coherence and logical consistency (1-5)"
+      - "Acknowledgment of multiple perspectives (1-5)"
+      - "Originality of insight (1-5)"
+      - "Clarity of expression (1-5)"
+
+# Same judge as config.yaml — a consistent scorer across both machines is
+# what makes the philosophical column comparable at all.
+judge:
+  provider: "ollama"
+  ollama_single_model: "llama3.1:8b"
+  timeout: 180
+
 output:
   dir: "results"
   save_raw: true
