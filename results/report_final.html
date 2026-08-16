@@ -171,6 +171,10 @@ body::after{
 #tip .tip-body{display:block}
 .bench-table thead th.has-tip{cursor:help}
 .bench-table thead th.has-tip:hover{color:var(--dim);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.bench-table thead th.sortable{cursor:pointer}
+.bench-table thead th.sortable:hover{color:var(--text)}
+.bench-table thead th.sort-active{color:var(--accent)}
+.sort-arrow{margin-left:3px;font-size:8px;display:inline-block;opacity:.85}
 </style>
 
 <div class="topbar">
@@ -1498,11 +1502,52 @@ function modelStatus(m) {
   return 'pending';
 }
 
+// Column header click-to-sort. 'model' sorts by the same name shown on
+// screen (official_name when present, else the raw tag); 'overall' and each
+// benchmark key sort by score. Default direction is the useful one per type
+// (A-Z for the name, largest-first for a score) on first click; a second
+// click on the same column reverses it.
+let sortState = { col: 'overall', dir: 'desc' };
+function defaultDirFor(col) { return col === 'model' ? 'asc' : 'desc'; }
+
+function sortValue(m, col) {
+  if (col === 'model') {
+    const mi = D.model_info?.[m];
+    return (mi?.official_name || m).toLowerCase();
+  }
+  return col === 'overall' ? overallOf(m) : getScore(m, col);
+}
+
+function compareModels(a, b, col, dir) {
+  const va = sortValue(a, col), vb = sortValue(b, col);
+  // A model missing this column's value sorts to the end regardless of
+  // direction — reversing sort order shouldn't send blank cells to the top.
+  const aMissing = va === null || va === undefined || va === -1;
+  const bMissing = vb === null || vb === undefined || vb === -1;
+  if (aMissing && bMissing) return 0;
+  if (aMissing) return 1;
+  if (bMissing) return -1;
+  if (col === 'model') {
+    const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+    return dir === 'asc' ? cmp : -cmp;
+  }
+  return dir === 'asc' ? va - vb : vb - va;
+}
+
+function onHeaderClick(col) {
+  if (sortState.col === col) {
+    sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortState = { col, dir: defaultDirFor(col) };
+  }
+  renderTable();
+}
+
 function allModels() {
   const primary  = D.models || [];
   const prev     = (PREV?.models || []).filter(m => !primary.includes(m));
   const config   = CONFIG_MODELS.filter(m => !primary.includes(m) && !(PREV?.models||[]).includes(m));
-  const ranked   = [...primary].sort((a,b) => overallOf(b) - overallOf(a));
+  const ranked   = [...primary].sort((a,b) => compareModels(a, b, sortState.col, sortState.dir));
   return [...ranked, ...prev, ...config];
 }
 
@@ -1601,7 +1646,22 @@ function makeTipTh(key, label, cls) {
     th.addEventListener('mouseenter', showTip);
     th.addEventListener('mouseleave', hideTip);
   }
+  makeSortable(th, key);
   return th;
+}
+
+// Shared by the MODEL header and every score column (via makeTipTh) — 'key'
+// is the same column identifier sortValue()/compareModels() use.
+function makeSortable(th, key) {
+  th.classList.add('sortable');
+  if (sortState.col === key) {
+    th.classList.add('sort-active');
+    const arrow = document.createElement('span');
+    arrow.className = 'sort-arrow';
+    arrow.textContent = sortState.dir === 'asc' ? '▲' : '▼';
+    th.appendChild(arrow);
+  }
+  th.addEventListener('click', () => onHeaderClick(key));
 }
 
 /* ── META ─────────────────────────────────────── */
@@ -1681,6 +1741,7 @@ function renderTable() {
   const hr = document.createElement('tr');
   const thM = document.createElement('th');
   thM.className = 'th-model'; thM.textContent = 'MODEL';
+  makeSortable(thM, 'model');
   hr.appendChild(thM);
   hr.appendChild(makeTipTh('overall', 'OVERALL', 'th-overall'));
   benches.forEach(b => hr.appendChild(makeTipTh(b, BENCH_LABELS[b]||b.toUpperCase())));
