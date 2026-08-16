@@ -16,12 +16,6 @@ models:
   # degrades to CPU-speed generation and would invalidate speed comparisons.
   # Bisected 2026-08-15 on Ollama 0.32.9.
 
-  # Compute-graph buffer for deepseek-r1:70b scales ~0.000128 GiB/token and
-  # must fit on a single P100 (16GB) — full 81/81 offload only up to 32768;
-  # 65536 already drops to 44/81, 131072 (this model's native ctx) is 0/81.
-  - model: deepseek-r1:70b
-    ctx: 32768
-
   # Compute-graph is much steeper here (47GiB at native ctx 131072) — full
   # 48/48 offload only up to 8192; 16384 is 44/48, 32768 drops to 11/48.
   - model: MichelRosselli/GLM-4.5-Air:Q3_K_M
@@ -73,6 +67,21 @@ models:
   # timeout; unsloth's single-blob GGUF for the same model pulled cleanly).
   - model: hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M
     ctx: 262144
+
+  # Ordered last deliberately (2026-08-17), not alphabetically or by ctx like
+  # the others above — this model is dramatically slower than everything else
+  # in the pool (~4.5 tok/s vs 5-15+ for the rest, R1-style verbose reasoning
+  # on every sample) and scored 0% on bfcl, so it's the lowest-value model to
+  # gate the other 8 behind. A prior run got ~65% through this model's 7
+  # benchmarks before being killed to reprioritize the other 8 first — nothing
+  # was lost from that (checkpoints only write after a model's full benchmark
+  # set completes), but re-running it isn't wasted either: mmlu/arc/gsm8k
+  # scored 100%/100%/96% before the kill, worth seeing if that holds.
+  # Compute-graph buffer for deepseek-r1:70b scales ~0.000128 GiB/token and
+  # must fit on a single P100 (16GB) — full 81/81 offload only up to 32768;
+  # 65536 already drops to 44/81, 131072 (this model's native ctx) is 0/81.
+  - model: deepseek-r1:70b
+    ctx: 32768
 
 # Matches config.yaml's (the M4's) benchmark group n_samples exactly, plus
 # sample_seed: 42 already set above — same questions, same sample counts, so
