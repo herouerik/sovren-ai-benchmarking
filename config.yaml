@@ -67,6 +67,12 @@ models:
   - model: qwen3.6:35b-mlx
     ctx: 32768
     think: true                  # → "qwen3.6:35b-mlx +think"
+  - model: qwen3.8:27b-mlx       # Qwen 3.8 27B, agentic + vision, 262K native
+    ctx: 32768
+    think: false
+  - model: qwen3.8:27b-mlx
+    ctx: 32768
+    think: true                  # → "qwen3.8:27b-mlx +think"
 
 # Judge configuration for philosophical benchmark.
 # Model must support JSON-formatted responses.
