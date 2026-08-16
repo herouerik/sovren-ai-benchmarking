@@ -230,6 +230,25 @@ _KNOWN_HOSTS = {
 }
 
 
+def _own_lan_ip() -> str | None:
+    """This machine's primary LAN address, or None.
+
+    Uses a UDP socket to a public address purely to ask the routing table which
+    interface would be used — no packet is sent and nothing needs to be
+    reachable.
+    """
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+        finally:
+            s.close()
+    except Exception:
+        return None
+
+
 def _infer_host_label(base_url: str) -> str:
     import re
     m = re.search(r"://([^:/]+)", base_url or "")
@@ -237,9 +256,13 @@ def _infer_host_label(base_url: str) -> str:
     if host in _KNOWN_HOSTS:
         return _KNOWN_HOSTS[host]
     if host in ("localhost", "127.0.0.1", "::1"):
-        # Whichever machine actually ran this invocation of run_benchmark.py —
-        # correct in this one case, since "localhost" means script host and
-        # inference host are the same machine by construction.
+        # localhost means the script host and the inference host are the same
+        # machine, so resolve to this machine's own LAN address and look it up:
+        # a local run must produce the SAME label as a remote run against this
+        # machine, or the dashboard shows one box as two different hosts.
+        own = _own_lan_ip()
+        if own and own in _KNOWN_HOSTS:
+            return _KNOWN_HOSTS[own]
         return f"local ({platform.node()})"
     return host or "unknown host"
 

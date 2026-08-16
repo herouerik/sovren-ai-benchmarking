@@ -158,7 +158,13 @@ def find_template() -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate HTML benchmark report")
-    parser.add_argument("input", help="Path to results JSON file")
+    parser.add_argument("input", help="Path to results JSON file (or a summary, with --from-summary)")
+    parser.add_argument(
+        "--from-summary", action="store_true",
+        help="Treat the input as an already-aggregated summary rather than "
+             "per-sample records. Needed to rebuild the dashboard from a merge "
+             "of several machines, where no single machine holds every row.",
+    )
     parser.add_argument("--output", default=None, help="Output HTML path (default: same dir as input, report.html)")
     parser.add_argument("--template", default=None, help="Path to dashboard HTML template")
     parser.add_argument("--config", default=None, help="Path to config.yaml (injects all_models for status markers)")
@@ -176,21 +182,29 @@ def main() -> None:
     with open(input_path) as f:
         raw = json.load(f)
 
-    # Handle both wrapped {metadata, results} and flat list formats
-    if isinstance(raw, dict) and "results" in raw:
-        records = raw["results"]
-    elif isinstance(raw, list):
-        records = raw
+    if args.from_summary:
+        # Already aggregated — typically a merge across machines, where no
+        # single machine holds every per-sample record.
+        if not (isinstance(raw, dict) and "scores" in raw):
+            raise ValueError("--from-summary expects an aggregated summary "
+                             "(with a 'scores' key), not per-sample records.")
+        data = raw
     else:
-        raise ValueError("Results JSON must be a list of per-sample records or {metadata, results}.")
+        # Handle both wrapped {metadata, results} and flat list formats
+        if isinstance(raw, dict) and "results" in raw:
+            records = raw["results"]
+        elif isinstance(raw, list):
+            records = raw
+        else:
+            raise ValueError("Results JSON must be a list of per-sample records or {metadata, results}.")
 
-    # Auto-detect config.yaml if not specified
-    config_path = Path(args.config) if args.config else (input_path.parent.parent / "config.yaml")
-    all_models = load_config_models(config_path) if config_path.exists() else []
+        # Auto-detect config.yaml if not specified
+        config_path = Path(args.config) if args.config else (input_path.parent.parent / "config.yaml")
+        all_models = load_config_models(config_path) if config_path.exists() else []
 
-    # Extract model_info from metadata if available
-    model_info = raw.get("metadata", {}).get("model_info") if isinstance(raw, dict) else None
-    data = aggregate(records, all_models=all_models or None, model_info=model_info)
+        # Extract model_info from metadata if available
+        model_info = raw.get("metadata", {}).get("model_info") if isinstance(raw, dict) else None
+        data = aggregate(records, all_models=all_models or None, model_info=model_info)
 
     template_path = Path(args.template) if args.template else find_template()
     with open(template_path) as f:
