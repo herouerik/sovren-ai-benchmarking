@@ -82,8 +82,7 @@ body::after{
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
 .model-raw-tag{font-size:9px;color:var(--dim);white-space:nowrap;font-family:var(--mono);margin-top:1px;opacity:.75}
-.model-role{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;border-radius:2px}
-.model-host{font-size:8px;letter-spacing:.03em;color:#5a9ed4;border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;margin-right:4px;border-radius:2px}
+.model-host{font-size:8px;letter-spacing:.03em;border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;margin-right:4px;border-radius:2px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
 .overall-num.is-swapped{color:inherit}
@@ -289,6 +288,26 @@ let CONFIG_MODELS = D.all_models ? [...D.all_models] : [];
 
 const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.',bfcl:'BFCL',bfcl_multi_turn_long_context:'BFCL-MT'};
 const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a','#7ad4c8','#d4a0c8'];
+
+// One color per inference host, pinned for the two known machines so they
+// never shift as new hosts get added — M4 orange, GPU server blue, matching
+// the badge colors already in use before this was made per-host. An unknown
+// future host (e.g. a "u7 laptop") gets a deterministic color from the same
+// palette via a string hash, so it's stable across reloads without needing
+// an entry here — add one only if a specific color is wanted for it.
+const HOST_COLOR_OVERRIDES = {
+  'M4 MacBook Pro (48GB, MLX+Ollama)': '#c8681e',
+  'GPU Server (6x P100, unified pool)': '#5a9ed4',
+};
+function hostColor(host) {
+  if (!host) return COLORS[0];
+  if (HOST_COLOR_OVERRIDES[host]) return HOST_COLOR_OVERRIDES[host];
+  let h = 0;
+  for (let i = 0; i < host.length; i++) h = (h * 31 + host.charCodeAt(i)) >>> 0;
+  // Skip the two pinned slots so a new host doesn't visually collide with M4/GPU.
+  const pool = COLORS.filter(c => !Object.values(HOST_COLOR_OVERRIDES).includes(c));
+  return pool[h % pool.length];
+}
 
 const BENCH_TIPS = {
   overall: {
@@ -615,7 +634,7 @@ function renderTable() {
     const showRawTag = mi?.official_name && mi.official_name !== m;
     tdM.innerHTML = `<div class="model-row">
       <span class="model-dot" style="background:${color}"></span>
-      <div><span class="model-name">${displayName}</span>${showRawTag ? `<div class="model-raw-tag">${m}</div>` : ''}${mi?.host ? `<span class="model-host">${mi.host}</span>` : ''}${mi?.role ? `<span class="model-role">${mi.role}</span>` : ''}${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
+      <div><span class="model-name">${displayName}</span>${showRawTag ? `<div class="model-raw-tag">${m}</div>` : ''}${mi?.host ? `<span class="model-host" style="color:${hostColor(mi.host)}">${mi.host}</span>` : ''}${tags.length ? `<div class="model-tags">${tags.join(' · ')}</div>` : ''}${ts ? `<div class="model-ts">${ts}</div>` : ''}</div></div>`;
     tr.appendChild(tdM);
 
     // Overall cell

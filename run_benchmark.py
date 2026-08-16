@@ -274,7 +274,7 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
     Accepts both string model names and dict entries with 'model' and optional 'ctx'.
 
     Returns dict of model_name → {params, context_length, size_gb, quantization,
-                                  vram_estimate, effective_ctx, official_name, role, host}.
+                                  vram_estimate, effective_ctx, official_name, host}.
     """
     import httpx
     # Was hardcoded to localhost, which is wrong for any config pointing
@@ -333,15 +333,6 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
                 entry["official_name"] = f"{basename} {size_label}" if size_label else basename
             elif family:
                 entry["official_name"] = f"{family} {param_size}" if param_size else family
-
-            # "sovereign" is not a model family — it is this fleet's naming
-            # convention for the tier used as the swarm's planner/orchestrator
-            # (confirmed via LTK recall: qwen3-coder-next:sovereign-128k is
-            # the planner model behind the challenger-pattern AHA records).
-            # Surfaced explicitly so the raw tag doesn't read as an unexplained
-            # model family to anyone unfamiliar with the pfclabs convention.
-            if "sovereign" in model_name.lower():
-                entry["role"] = "Sovereign (fleet planner/orchestrator tier)"
 
             # Context length key varies by architecture
             ctx_key = next((k for k in mi if "context_length" in k), None)
