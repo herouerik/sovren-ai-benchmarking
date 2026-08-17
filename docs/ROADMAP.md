@@ -225,11 +225,62 @@ tool-use blind spot generally.
 
 ---
 
+## Dashboard file names — consolidate (needs both machines idle)
+
+There are two dashboard files doing two different jobs under names that say
+neither, and it has already caused a silently stale bookmark.
+
+| file | role | tracked |
+|---|---|---|
+| `results/report.html` | whatever *this machine* last generated or ran | ignored |
+| `results/report_final.html` | the shared, merged, cross-machine view | tracked |
+
+The split was accidental: `report.html` was the original and only name, written
+automatically by every run. `report_final.html` began life as a stable output
+name for a multi-pass chain script, which then `cp`'d it over `report.html`;
+the GPU server reasonably adopted it as the committed artifact since it is the
+one that survives a pull.
+
+The consequence is that `report.html` — the natural thing to bookmark — is
+gitignored, so a `git pull` updates `report_final.html` while the bookmark
+silently keeps showing an older, single-machine view.
+
+**Proposed:**
+
+- `results/dashboard.html` — tracked, merged, the only file to bookmark.
+- `results/report_<run_id>.html` — every live run writes here, *unconditionally*
+  (today it only diverts when `--baseline` is absent).
+- Retire `report.html` and `report_final.html`.
+
+**Do not "fix" this by symlinking `report.html` → `report_final.html`.**
+`run_benchmark.py` writes `report.html` directly during a run whenever
+`--baseline` is used; through a symlink that write follows the link and
+silently overwrites the committed merged dashboard with a mid-run,
+single-machine view. It looks fine until it is pushed.
+
+Coordination: this renames files the GPU server also writes and commits, so it
+has to land on both sides together — the rename, the `run_benchmark.py` write
+path, the `.gitignore` rules, and the `report_final.html` references in
+`tools/merge_summaries.py` and `tools/export_model_scoreboard.py`. Deferred
+until neither machine is mid-sweep, otherwise the next
+`generate_report.py --output results/report_final.html` on the other side
+recreates the old name.
+
+---
+
 ## Smaller open items
 
 - `--benchmarks` accepts registry keys (`spider`) but `config.yaml` uses group
   names (`sql`). The README's own incremental-run examples use `--benchmarks sql`,
   which argparse rejects. Accept both vocabularies.
+- Generated dashboards and `merged.summary.json` conflict in git when two
+  machines regenerate them from the same base — confirmed by simulation, and
+  guaranteed rather than unlucky because the models array is score-sorted, so
+  inserting one model rewrites the file (adding two rows changed 214 lines).
+  Resolve by regenerating, never by hand-merging: take either side, re-run
+  `tools/merge_summaries.py` over the per-machine summaries, then
+  `generate_report.py --from-summary`. The per-run summaries themselves have
+  distinct filenames and merge cleanly as pure additions.
 - `Baseline: N results loaded` prints `len()` of the wrapped
   `{metadata, results}` dict, so it always reports 2. Cosmetic but confusing.
 - Checkpoints are written after each *model*, so a model killed mid-run loses
