@@ -606,6 +606,17 @@ def main():
                 with _sc_lock:
                     sample_counts[(label, bench_name)] = len(results)
                 model_results.extend(results)
+                # Checkpoint after every benchmark, not just every model — a
+                # model's full benchmark set can run for hours, and a run
+                # killed partway through one used to lose everything that
+                # model had already finished (cost 300 samples twice on the
+                # M4, both to an interrupted host). Skipped in the parallel
+                # path: concurrent models writing to the same file would race.
+                if not parallel_models:
+                    try:
+                        _checkpoint(new_results + model_results)
+                    except Exception as e:
+                        console.print(f"[dim]checkpoint skipped: {e}[/dim]")
             except MemorySwapAbort as e:
                 swap_msg = str(e)
                 console.print(f"  [red]💀 {bench_name} aborted — memory swap detected: {swap_msg[:120]}[/red]")
