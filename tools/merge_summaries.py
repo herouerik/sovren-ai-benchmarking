@@ -36,8 +36,62 @@ _BY_MODEL = ("scores", "speeds", "sample_sizes", "model_info",
              "model_timestamps", "swap_benches")
 
 
-def merge(summaries: list[dict]) -> dict:
+def _host_of(summary: dict, model: str) -> str | None:
+    return (summary.get("model_info", {}).get(model) or {}).get("host")
+
+
+def merge_cells(summaries: list[dict]) -> tuple[dict, list[str]]:
+    """Merge per benchmark cell instead of per whole model entry.
+
+    Lets a row keep its mmlu/arc/gsm8k/philosophical from one run while taking
+    humaneval/mbpp/spider/bfcl from a later, higher-n run of the same model.
+    Later inputs win per cell.
+
+    Only ever applied when every contributing summary agrees on the model's
+    host. Cells measured on different machines must not share a row: speed is
+    hardware-bound and meaningless when mixed, and quantisation/engine differ
+    per host, so a mixed row would describe no configuration that exists.
+    Cross-host collisions fall back to whole-entry replacement and are
+    reported to the caller.
+    """
     merged: dict = {k: {} for k in _BY_MODEL}
+    conflicts: list[str] = []
+    for s in summaries:
+        for model in s.get("models", []):
+            prev_host = merged["model_info"].get(model, {}).get("host")
+            this_host = _host_of(s, model)
+            same_host = prev_host is None or this_host is None or prev_host == this_host
+            if not same_host:
+                conflicts.append(f"{model}: {prev_host} vs {this_host} — replaced whole entry")
+                for key in _BY_MODEL:
+                    if model in (s.get(key) or {}):
+                        merged[key][model] = s[key][model]
+                continue
+            # scores and sample_sizes merge cell-by-cell
+            for key in ("scores", "sample_sizes"):
+                cells = (s.get(key) or {}).get(model)
+                if cells:
+                    merged[key].setdefault(model, {}).update(cells)
+            # model_info merges key-by-key; the rest take the later value
+            info = (s.get("model_info") or {}).get(model)
+            if info:
+                merged["model_info"].setdefault(model, {}).update(info)
+            for key in ("speeds", "model_timestamps"):
+                if model in (s.get(key) or {}):
+                    merged[key][model] = s[key][model]
+            sb = (s.get("swap_benches") or {}).get(model)
+            if sb:
+                merged["swap_benches"][model] = sorted(
+                    set(merged["swap_benches"].get(model, [])) | set(sb))
+    return merged, conflicts
+
+
+def merge(summaries: list[dict], cell_level: bool = False) -> dict:
+    conflicts: list[str] = []
+    if cell_level:
+        merged, conflicts = merge_cells(summaries)
+    else:
+        merged = {k: {} for k in _BY_MODEL}
     models: list[str] = []
     benchmarks: list[str] = []
     all_models: list[str] = []
@@ -54,9 +108,10 @@ def merge(summaries: list[dict]) -> dict:
         for m in s.get("all_models", []):
             if m not in all_models:
                 all_models.append(m)
-        for key in _BY_MODEL:
-            for model, value in (s.get(key) or {}).items():
-                merged[key][model] = value
+        if not cell_level:
+            for key in _BY_MODEL:
+                for model, value in (s.get(key) or {}).items():
+                    merged[key][model] = value
         for m in s.get("models", []):
             provenance[m] = s.get("run_id", f"input{idx}")
         total += s.get("total_samples", 0) or 0
@@ -75,6 +130,8 @@ def merge(summaries: list[dict]) -> dict:
     merged["run_id"] = "merged"
     merged["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     merged["merged_from"] = provenance
+    if conflicts:
+        merged["merge_conflicts"] = conflicts
     return merged
 
 
@@ -83,6 +140,11 @@ def main() -> None:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("inputs", nargs="+", help="summary JSON files; later files win on conflict")
     ap.add_argument("--out", required=True, help="path for the merged summary")
+    ap.add_argument("--cell-level", action="store_true",
+                    help="merge per benchmark cell rather than per whole model entry, so a "
+                         "row can keep one run's benchmarks and take another's. Applied only "
+                         "when the contributing summaries agree on the model's host; "
+                         "cross-host collisions fall back to whole-entry replacement.")
     args = ap.parse_args()
 
     summaries = []
@@ -95,7 +157,7 @@ def main() -> None:
         print(f"  {p}: {len(data.get('models', []))} models, "
               f"{len(data.get('benchmarks', []))} benchmarks")
 
-    merged = merge(summaries)
+    merged = merge(summaries, cell_level=args.cell_level)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(merged, indent=2, ensure_ascii=False))
