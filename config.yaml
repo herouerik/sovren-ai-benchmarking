@@ -45,10 +45,7 @@ models:
                                   # real pressure in seconds, so keep ctx realistic
   - qwen3:32b                    # ~32B (thinking enabled for philosophical)
   - qwen3-32b-nothink:latest     # ~32B (no_think baked in)
-  - qwen2.5-coder:32b            # ~32B
   - qwen3-coder:latest           # ~32B coding-focused, 256K max
-  - model: nemotron-cascade-2:latest  # ~30B, 256K max
-    ctx: 32768
   - model: qwen3.6:27b           # ~27B (Qwen 3.6 dense flagship), 256K max
     ctx: 32768
 
@@ -140,6 +137,16 @@ benchmarks:
   bfcl_multi_turn_long_context:
     enabled: false
     n_samples: 5
+
+  # EvalPlus: the same HumanEval/MBPP problems with ~80x more tests, so
+  # edge-case-wrong solutions stop passing. Published leaderboard, so numbers
+  # are externally recognisable; the gap against the plain columns is the
+  # edge-case failure rate. Run explicitly with --benchmarks, not in the
+  # routine sweep, until validated across the fleet.
+  evalplus:
+    enabled: false
+    n_samples: 100
+    execution_timeout: 15
 
   sql:
     enabled: true
