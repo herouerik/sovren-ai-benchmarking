@@ -225,11 +225,30 @@ tool-use blind spot generally.
 
 ---
 
-## In flight on the M4 (2026-08-17) — handover state
+## M4 factorial study — COMPLETE (2026-08-18)
 
-A qwen3.6 vs qwen3.8 x MLX vs GGUF study is running unattended on the M4. Host
-is held fixed so model effect and build effect separate cleanly; the host
-dimension needs the GPU server and is **not** covered by this.
+Results in `docs/FINDINGS-qwen-factorial.md` and
+`docs/FINDINGS-qwen-evalplus.md`. Host held fixed so model effect and build
+effect separate cleanly; the host dimension needs the GPU server and is **not**
+covered by this.
+
+**Verdict: every comparison is statistically indistinguishable.** Across 400
+pooled items per arm (plus 200 on EvalPlus), all four arms land at 78.0–79.8%:
+
+| comparison | delta | p |
+|---|---|---|
+| model effect, MLX fixed | +0.5 | 0.932 |
+| model effect, GGUF fixed | +0.5 | 0.930 |
+| build effect on 3.8 | −1.2 | 0.728 |
+| build effect on 3.6 | −1.2 | 0.730 |
+
+This retires three readings the n=20 dashboard appeared to support: that 3.8 is
+worse than 3.6, that MLX is "20 points smarter" than GGUF, and that 3.8 is
+uniformly 3× faster.
+
+**Speed is the real difference, and it is asymmetric:** MLX is 3.50× faster on
+qwen3.8 (31.3 vs 8.9 tok/s) but only 1.10× on qwen3.6 (13.6 vs 12.4). Any
+"MLX is faster" claim must name the model.
 
 Why it exists: every comparison available in the dashboard moved several
 factors at once (model, quantisation+engine, host), so "3.8 is worse than 3.6"
@@ -298,6 +317,113 @@ coverage (mmlu, arc, bfcl only); `deepseek-r1:70b` was never reached this
 session and still only has its earlier bfcl score. Not retried further —
 if either model matters enough to chase, it needs sudo/dmesg access to check
 PCIe AER counters during a live run, which wasn't available here.
+
+---
+
+## Next up — do these in this order (2026-08-18)
+
+State at handover: 33 models / 10 benchmarks / 7215 samples across both hosts,
+no merge conflicts, dashboard regenerated.
+
+### 1. Fix `overall` before adding any new benchmark — highest priority
+
+`overallOf()` in the dashboard averages over whichever benchmarks a row
+happens to have. That was the right call when the only gap was GPU rows
+covering a subset. It is now actively misleading, because EvalPlus exists on
+**4 of 33 models** and EvalPlus scores run 5–7 points below their plain
+counterparts by design:
+
+| model | cells | overall |
+|---|---|---|
+| qwen3.8:27b | 10 (incl. EvalPlus) | 86.3 |
+| gemma4:31b-mlx | 8 (no EvalPlus) | 88.3 |
+
+The four models measured most thoroughly are ranked *worst* for carrying the
+harder tests. Coverage is ragged generally: 4 models at 10 benchmarks, 20 at 8,
+several at 1–7.
+
+**Fix:** compute `overall` over a fixed core set that every row has, and render
+optional columns (EvalPlus, BFCL multi-turn, LiveCodeBench) without counting
+them. Display-only change, no re-running.
+
+**Do this first.** Every new benchmark added to a subset of models makes the
+ranking worse, and LiveCodeBench would repeat it immediately.
+
+### 2. Clear two stale swap flags
+
+`qwen3.8:27b-mlx +think` (bfcl) and `qwen3.6:35b-mlx +think` (mbpp) carry 💀
+markers from runs made **before** the two guard fixes below. Minutes to re-run;
+they are artifacts, not model behaviour.
+
+Not stale: `qwen3.8:27b` (bfcl, humaneval_plus) and `qwen3.8:27b-mlx`
+(mbpp_plus). Those four aborts have a different signature — sustained
+0.4–0.6 tok/s across ~340s rather than 0.0 with an absurd ratio — so they are
+genuinely slow calls the guard correctly killed. 4 aborts in ~1800 samples.
+
+### 3. BFCL multi-turn — zero coverage
+
+`bfcl_multi_turn_long_context` ran once with the broken guard, **all 5 samples
+aborted**, and the results were discarded. No model has it. Needs a deliberate
+run now the guard is fixed; at ~450–500s per sample budget it explicitly rather
+than folding it into a sweep.
+
+### 4. EvalPlus across the wider fleet, or accept it as an optional column
+
+Only the 4 study arms have it. Either run it fleet-wide (~20 models × 200
+samples) or rely on the `overall` fix in item 1 and treat it as supplementary.
+
+### 5. Then LiveCodeBench (below)
+
+---
+
+## Guard false positives — fixed 2026-08-18, worth knowing
+
+Found because qwen3.8 was failing *every* BFCL sample with swap aborts on a
+machine with **zero swap activity** (`swapouts +0 pages` over 10s).
+
+Two distinct bugs, both in `harness/`:
+
+1. **Empty trailing window read as collapse.** A finished generation whose
+   stream is still open has no tokens in the trailing window, and the ratio
+   read that as catastrophic decode collapse — producing
+   `12 -> 0.0 tok/s, collapsed 11739695046x`. A window with fewer than two
+   tokens is now treated as silence, which `token_stall_seconds` owns. Real
+   thrash keeps producing tokens slowly.
+2. **Watchdog outlived the generation.** It now disarms on the `done` chunk.
+   The guard's job ends when the model stops generating; waiting for the server
+   to drain the stream is not thrash.
+
+Effect: `qwen3.8:27b` bfcl went 74/100 (10 spurious aborts) → 81/100 (2).
+
+**Diagnostic recipe** for "is this swap or is it slow": check
+`swapouts` delta over ~10s (zero ⇒ not thrashing), then read
+`~/.ollama/logs/server.log` for `Prompt processing progress` — steady linear
+progress is healthy, however slow it feels. A 85k-token prompt spends ~22
+minutes in prefill at ~64 tok/s before emitting a single token, which is
+inherent, not a fault. Note a second request to a busy model **queues** and
+looks like a hang.
+
+---
+
+## Host identity — declare it, never infer it
+
+`execution.host_label` (or `BENCH_HOST_LABEL`) sets a machine's published
+identity. Added because IP-based inference broke twice:
+
+- The M4 changed network (192.168.68.106 → 172.30.185.105), so every row it
+  produced landed as "unregistered host" and the cross-host merge guard
+  correctly refused to combine them with the same machine's earlier rows —
+  silently dropping mmlu/arc/gsm8k/philosophical from two models.
+- The GPU sweep arrived labelled "GPU Server (6x P100, unified pool)" while
+  this side had renamed it "i9 GPU server", splitting one machine across two
+  names and generating eight bogus conflicts.
+
+**TODO on the GPU server:** add `execution.host_label: "i9 GPU server"` to
+`config-gpu-unified.yaml`. Until it declares the label, the next sweep
+reintroduces the old name.
+
+Labels are deliberately generic — they are published in a public repo.
+`platform.node()` is no longer recorded or used as a fallback anywhere.
 
 ---
 
