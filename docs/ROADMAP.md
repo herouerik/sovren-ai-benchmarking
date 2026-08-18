@@ -325,29 +325,35 @@ PCIe AER counters during a live run, which wasn't available here.
 State at handover: 33 models / 10 benchmarks / 7215 samples across both hosts,
 no merge conflicts, dashboard regenerated.
 
-### 1. Fix `overall` before adding any new benchmark — highest priority
+### 1. Fix `overall` before adding any new benchmark — DONE (2026-08-18, GPU server)
 
-`overallOf()` in the dashboard averages over whichever benchmarks a row
-happens to have. That was the right call when the only gap was GPU rows
-covering a subset. It is now actively misleading, because EvalPlus exists on
-**4 of 33 models** and EvalPlus scores run 5–7 points below their plain
-counterparts by design:
+`overallOf()` averaged over whichever benchmarks a row happened to have,
+which unfairly tanked the 4 models carrying EvalPlus (5–7 points lower by
+design on the same problems): qwen3.8:27b landed at 86.3 vs gemma4:31b-mlx's
+88.3, despite the two being statistically indistinguishable per this same
+study.
 
-| model | cells | overall |
-|---|---|---|
-| qwen3.8:27b | 10 (incl. EvalPlus) | 86.3 |
-| gemma4:31b-mlx | 8 (no EvalPlus) | 88.3 |
+**Fixed:** `overall` now averages a fixed `CORE_BENCHES` set (mmlu, arc,
+gsm8k, humaneval, mbpp, spider, philosophical) only. BFCL, BFCL-MT, EvalPlus,
+and any future optional benchmark (LiveCodeBench) render as their own
+columns but never enter the average. qwen3.8:27b now correctly lands at
+89.7, ahead of gemma4:31b-mlx's 88.8. A model with partial core coverage
+(e.g. `llama4:scout` at mmlu+arc only) now shows an "n/7 core" flag next to
+its overall score instead of silently presenting a 2-benchmark average as
+equivalent to a 7-benchmark one. Display-only change in
+`scoring/benchmark_dashboard.html`, no re-running needed.
 
-The four models measured most thoroughly are ranked *worst* for carrying the
-harder tests. Coverage is ragged generally: 4 models at 10 benchmarks, 20 at 8,
-several at 1–7.
-
-**Fix:** compute `overall` over a fixed core set that every row has, and render
-optional columns (EvalPlus, BFCL multi-turn, LiveCodeBench) without counting
-them. Display-only change, no re-running.
-
-**Do this first.** Every new benchmark added to a subset of models makes the
-ranking worse, and LiveCodeBench would repeat it immediately.
+**Found while fixing this:** the GPU-server sweep merge (`7c48c75`) had
+silently dropped `bfcl` scores for all 8 models it touched. The pre-existing
+bfcl-only entries were still under the old host label ("GPU Server (6x P100,
+unified pool)"), so `tools/merge_summaries.py --cell-level` read it as a
+cross-host conflict and fell back to whole-entry replacement — correctly
+recorded in `merge_conflicts` inside the output JSON, but that key was never
+printed to console, so nobody saw it (the "no merge conflicts" note above,
+from immediately after, was accurate for *that* merge but the data was
+already gone from the one before it). All 8 scores restored from the
+pre-merge summary; the CLI now prints `merge_conflicts` so a silent
+whole-entry replacement can't happen unnoticed again.
 
 ### 2. Clear two stale swap flags
 
