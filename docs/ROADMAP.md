@@ -274,6 +274,33 @@ it had already finished (300 samples, twice now). See the promoted item below.
 
 ---
 
+## GPU-server full 7-benchmark sweep — done, 2 models excluded (2026-08-18)
+
+The unified-pool GPU server now has full mmlu/arc/gsm8k/humaneval/mbpp/spider/
+philosophical coverage (matching the M4's n_samples and judge model) for 7 of
+9 configured models: `GLM-4.5-Air`, `gemma4:31b`, `qwen3-coder-next:sovereign-
+128k`, `qwen3.6-128k`, `qwen3-coder:30b-sovereign`, `Qwen3.8-27B`, and
+`Muse-Glimmer-30B`. Merged into `merged.summary.json` / `report_final.html`
+(cell-level merge, so each row keeps its own host's data).
+
+**`llama4:scout` and `deepseek-r1:70b` are deliberately excluded** — both were
+already the two models flagged as troublesome (deepseek-r1: 0% bfcl, ~4.5
+tok/s, lowest value to gate the sweep behind; llama4:scout: the model that
+spans all 6 GPUs at ~94% VRAM, previously correlated with PCIe correctable bus
+errors on GPU5's riser). Reordering the sweep to run qwen models first (per
+explicit decision, since the two problem models kept blocking the others)
+worked for getting the other 7 done, but `llama4:scout` itself was then killed
+3 consecutive times — always mid-run (never during model load, even after
+pre-warming it with a direct API call first), never for any other model, no
+OOM/reboot/contention found in the logs available without sudo (no dmesg
+access on this box). Root cause still unconfirmed. `llama4:scout` has partial
+coverage (mmlu, arc, bfcl only); `deepseek-r1:70b` was never reached this
+session and still only has its earlier bfcl score. Not retried further —
+if either model matters enough to chase, it needs sudo/dmesg access to check
+PCIe AER counters during a live run, which wasn't available here.
+
+---
+
 ## LiveCodeBench — unblocked, implementation remaining
 
 Wanted because it is widely published (so numbers are externally recognisable)
