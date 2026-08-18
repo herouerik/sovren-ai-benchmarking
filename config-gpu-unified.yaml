@@ -143,6 +143,10 @@ output:
   save_raw: true
 
 execution:
+  # Declared explicitly, not inferred from IP — inference split this machine
+  # across two names ("GPU Server (6x P100, unified pool)" vs "i9 GPU server"),
+  # generating 8 bogus merge conflicts (see docs/ROADMAP.md "Host identity").
+  host_label: "i9 GPU server"
   parallel_models: false
   max_workers: 1
   memory_guard:
