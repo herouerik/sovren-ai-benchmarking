@@ -172,6 +172,12 @@ output:
   save_raw: true
 
 execution:
+  # This machine's identity in results and the dashboard. Declared rather than
+  # inferred: host was previously derived from the LAN IP, which breaks the
+  # moment a laptop changes network — rows then land as "unregistered host" and
+  # the cross-host merge guard refuses to combine them with the same machine's
+  # earlier rows. Keep it generic; it is published in a public repo.
+  host_label: "MacBook M4"
   parallel_models: false
   max_workers: 2
   memory_guard:

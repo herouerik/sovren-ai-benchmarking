@@ -100,7 +100,7 @@
   ],
   "model_info": {
     "qwen3.8:27b-mlx": {
-      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
+      "host": "MacBook M4",
       "quantization": "nvfp4",
       "official_name": "qwen3_5 27.8B",
       "context_length": 262144,
@@ -111,7 +111,7 @@
       "think": false
     },
     "qwen3.8:27b-mlx +think": {
-      "host": "M4 MacBook Pro (48GB, MLX+Ollama)",
+      "host": "MacBook M4",
       "quantization": "nvfp4",
       "official_name": "qwen3_5 27.8B",
       "context_length": 262144,

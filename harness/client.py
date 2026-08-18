@@ -177,6 +177,17 @@ class OllamaClient:
                             tool_calls.extend(chunk_tool_calls)
                         if chunk.get("done"):
                             final = chunk
+                            # Generation is over. Disarm before the stream is
+                            # drained and closed, otherwise the watchdog keeps
+                            # scoring an idle stream: with no further tokens the
+                            # trailing window empties and reads as a decode
+                            # collapse, or the silence eventually trips the
+                            # stall detector. Both scored real answers as swap
+                            # aborts on short-output benchmarks (BFCL tool
+                            # calls) while the machine had zero swap activity.
+                            # The guard's job ends when the model stops
+                            # generating; waiting on the server is not thrash.
+                            watchdog.stop()
                 except Exception:
                     if not watchdog.tripped:
                         raise

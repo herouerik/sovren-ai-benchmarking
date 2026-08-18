@@ -1,0 +1,140 @@
+{
+  "run_id": "20260818_005936",
+  "timestamp": "2026-08-18 08:49",
+  "total_samples": 800,
+  "models": [
+    "qwen3.6:27b",
+    "qwen3.6:27b-mlx",
+    "qwen3.8:27b",
+    "qwen3.8:27b-mlx"
+  ],
+  "benchmarks": [
+    "humaneval_plus",
+    "mbpp_plus"
+  ],
+  "scores": {
+    "qwen3.6:27b": {
+      "humaneval_plus": 0.8,
+      "mbpp_plus": 0.68
+    },
+    "qwen3.6:27b-mlx": {
+      "humaneval_plus": 0.82,
+      "mbpp_plus": 0.66
+    },
+    "qwen3.8:27b": {
+      "humaneval_plus": 0.91,
+      "mbpp_plus": 0.63
+    },
+    "qwen3.8:27b-mlx": {
+      "humaneval_plus": 0.9,
+      "mbpp_plus": 0.62
+    }
+  },
+  "speeds": {
+    "qwen3.6:27b": 12.378708017188966,
+    "qwen3.6:27b-mlx": 13.712396175852684,
+    "qwen3.8:27b": 8.525283421848039,
+    "qwen3.8:27b-mlx": 31.59921287317513
+  },
+  "sample_sizes": {
+    "qwen3.6:27b": {
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.6:27b-mlx": {
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.8:27b": {
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.8:27b-mlx": {
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    }
+  },
+  "model_timestamps": {
+    "qwen3.6:27b": "2026-08-18T01:34:24",
+    "qwen3.6:27b-mlx": "2026-08-18T02:02:31",
+    "qwen3.8:27b": "2026-08-18T07:37:27",
+    "qwen3.8:27b-mlx": "2026-08-18T08:49:11"
+  },
+  "swap_benches": {
+    "qwen3.6:27b": [],
+    "qwen3.6:27b-mlx": [],
+    "qwen3.8:27b": [
+      "humaneval_plus"
+    ],
+    "qwen3.8:27b-mlx": [
+      "mbpp_plus"
+    ]
+  },
+  "all_models": [
+    "llama3.2:3b",
+    "llama3.1:8b",
+    "qwen2.5-coder:7b",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "codestral:22b",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "nemotron-3-nano:30b",
+    "gemma4:31b-mlx",
+    "qwen3:32b",
+    "qwen3-32b-nothink:latest",
+    "qwen3-coder:latest",
+    "qwen3.6:27b",
+    "muse-glimmer:30b-mlx",
+    "muse-glimmer:30b-mlx +think",
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think",
+    "qwen3.8:27b-mlx",
+    "qwen3.8:27b-mlx +think"
+  ],
+  "model_info": {
+    "qwen3.6:27b": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "qwen35 27.8B",
+      "context_length": 262144,
+      "size_gb": 16.2,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen35",
+      "vram_estimate": 56.9
+    },
+    "qwen3.6:27b-mlx": {
+      "host": "MacBook M4",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5 27.4B",
+      "context_length": 262144,
+      "size_gb": 18.4,
+      "effective_ctx": 32768,
+      "params": "27.4B",
+      "architecture": "qwen3_5"
+    },
+    "qwen3.8:27b": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8 27B",
+      "context_length": 262144,
+      "size_gb": 16.5,
+      "effective_ctx": 32768,
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 24.1
+    },
+    "qwen3.8:27b-mlx": {
+      "host": "MacBook M4",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5 27.8B",
+      "context_length": 262144,
+      "size_gb": 16.9,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen3_5",
+      "think": false
+    }
+  }
+}

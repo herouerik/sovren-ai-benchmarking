@@ -184,6 +184,16 @@ class StreamWatchdog:
             if now - t_first < cfg["baseline_window_seconds"] + window:
                 continue
             recent_n = sum(1 for t in times if now - t <= window)
+            # Near-silence is not slowness. A finished generation whose stream
+            # is still open has an empty trailing window, which the ratio reads
+            # as a catastrophic collapse — it produced "12 -> 0.0 tok/s,
+            # collapsed 11739695046x" and killed 10% of a short-answer
+            # benchmark (BFCL tool calls) on a machine with zero swap activity.
+            # token_stall_seconds is the signal designed for silence and owns
+            # this case; real thrash always keeps producing tokens, just slowly,
+            # so requiring two in the window costs nothing to detect it.
+            if recent_n < 2:
+                continue
             recent_rate = recent_n / window
             if (self._baseline_rate > 0
                     and recent_rate * cfg["decode_degradation_factor"] < self._baseline_rate):

@@ -106,7 +106,9 @@ def collect_run_metadata(cfg: dict) -> dict:
         "processor": platform.processor(),
         "system": platform.system(),
         "python": platform.python_version(),
-        "node": platform.node(),
+        # platform.node() is deliberately not recorded: it is the machine's
+        # hostname, and these records are published. The fields above already
+        # describe the hardware well enough to interpret a speed number.
     }
 
     # Config snapshot (sanitised — excludes full model list to keep records lean)
@@ -227,9 +229,13 @@ def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[dict]
 # FROM one machine to drive inference on ANOTHER (e.g. config-m4-remote.yaml
 # runs on the GPU server but serves from the M4), so the script's own host is
 # not the inference host and must never be used to label results.
+# Deliberately generic: these labels are published in the dashboard and the
+# summaries, which live in a public repo. They identify the *class* of machine
+# (which is what makes a speed number interpretable) and nothing more — no
+# hostnames, no owner, no serial. Keep any new entry to the same shape.
 _KNOWN_HOSTS = {
-    "192.168.68.115": "GPU Server (6x P100, unified pool)",
-    "192.168.68.106": "M4 MacBook Pro (48GB, MLX+Ollama)",
+    "192.168.68.115": "i9 GPU server",
+    "192.168.68.106": "MacBook M4",
 }
 
 
@@ -252,7 +258,26 @@ def _own_lan_ip() -> str | None:
         return None
 
 
+# Set from config (execution.host_label) or the BENCH_HOST_LABEL env var. A
+# machine declaring its own identity is far more robust than inferring it from
+# an IP: this laptop moved from 192.168.68.106 to 172.30.185.105 simply by
+# changing network, which silently turned every row it produced into an
+# "unregistered host" and made the merge refuse to combine them with its own
+# earlier rows.
+_HOST_LABEL_OVERRIDE: str | None = None
+
+
 def _infer_host_label(base_url: str) -> str:
+    import os
+    override = _HOST_LABEL_OVERRIDE or os.environ.get("BENCH_HOST_LABEL")
+    # Only applies to a local endpoint: when base_url points at another
+    # machine, that machine's identity is what matters, not this one's.
+    if override:
+        import re as _re
+        m = _re.search(r"://([^:/]+)", base_url or "")
+        h = m.group(1) if m else ""
+        if h in ("localhost", "127.0.0.1", "::1") or h == _own_lan_ip():
+            return override
     import re
     m = re.search(r"://([^:/]+)", base_url or "")
     host = m.group(1) if m else ""
@@ -266,7 +291,11 @@ def _infer_host_label(base_url: str) -> str:
         own = _own_lan_ip()
         if own and own in _KNOWN_HOSTS:
             return _KNOWN_HOSTS[own]
-        return f"local ({platform.node()})"
+        # Never fall back to platform.node(): that hostname would be written
+        # into model_info.host, which is published in the summaries and the
+        # dashboard. Describe the machine class instead and leave it to be
+        # registered in _KNOWN_HOSTS.
+        return f"unregistered host ({platform.system()}/{platform.machine()})"
     return host or "unknown host"
 
 
@@ -397,6 +426,8 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
+    global _HOST_LABEL_OVERRIDE
+    _HOST_LABEL_OVERRIDE = cfg.get("execution", {}).get("host_label")
     client = OllamaClient(
         base_url=cfg["ollama"]["base_url"],
         api_key=cfg["ollama"].get("api_key", "ollama"),
