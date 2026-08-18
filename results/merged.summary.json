@@ -7,7 +7,8 @@
       "humaneval": 0.8,
       "mbpp": 0.65,
       "spider": 0.05,
-      "philosophical": 0.9279999999999999
+      "philosophical": 0.9279999999999999,
+      "bfcl": 0.85
     },
     "gemma4:31b-mlx": {
       "mmlu": 1.0,
@@ -70,7 +71,8 @@
       "humaneval": 0.85,
       "mbpp": 0.65,
       "spider": 0.1,
-      "philosophical": 0.9279999999999999
+      "philosophical": 0.9279999999999999,
+      "bfcl": 0.9
     },
     "qwen3.6-128k:latest": {
       "mmlu": 0.75,
@@ -79,7 +81,8 @@
       "humaneval": 0.95,
       "mbpp": 0.6,
       "spider": 0.1,
-      "philosophical": 0.96
+      "philosophical": 0.96,
+      "bfcl": 0.9
     },
     "qwen3.6:27b": {
       "mmlu": 0.9,
@@ -172,7 +175,8 @@
       "humaneval": 0.95,
       "mbpp": 0.6,
       "spider": 0.1,
-      "philosophical": 0.9359999999999999
+      "philosophical": 0.9359999999999999,
+      "bfcl": 0.8
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 0.75,
@@ -261,7 +265,8 @@
       "humaneval": 0.85,
       "mbpp": 0.7,
       "spider": 0.05,
-      "philosophical": 0.8720000000000001
+      "philosophical": 0.8720000000000001,
+      "bfcl": 0.65
     },
     "qwen2.5-coder:7b": {
       "mmlu": 0.6,
@@ -300,11 +305,13 @@
       "humaneval": 0.9,
       "mbpp": 0.7,
       "spider": 0.15,
-      "philosophical": 0.944
+      "philosophical": 0.944,
+      "bfcl": 0.6
     },
     "llama4:scout": {
       "mmlu": 0.8,
-      "arc": 1.0
+      "arc": 1.0,
+      "bfcl": 0.2
     },
     "deepseek-r1:70b": {
       "bfcl": 0.0
@@ -316,7 +323,8 @@
       "humaneval": 0.0,
       "mbpp": 0.0,
       "spider": 0.0,
-      "philosophical": 0.6719999999999999
+      "philosophical": 0.6719999999999999,
+      "bfcl": 0.0
     }
   },
   "speeds": {
@@ -362,7 +370,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "gemma4:31b-mlx": {
       "mmlu": 20,
@@ -425,7 +434,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3.6-128k:latest": {
       "mmlu": 20,
@@ -434,7 +444,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen3.6:27b": {
       "mmlu": 20,
@@ -527,7 +538,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 20,
@@ -616,7 +628,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "qwen2.5-coder:7b": {
       "mmlu": 20,
@@ -655,11 +668,13 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     },
     "llama4:scout": {
       "mmlu": 20,
-      "arc": 20
+      "arc": 20,
+      "bfcl": 20
     },
     "deepseek-r1:70b": {
       "bfcl": 20
@@ -671,7 +686,8 @@
       "humaneval": 20,
       "mbpp": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl": 20
     }
   },
   "model_info": {

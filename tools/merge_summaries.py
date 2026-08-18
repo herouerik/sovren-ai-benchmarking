@@ -170,6 +170,16 @@ def main() -> None:
           f"{merged['total_samples']} samples")
     for h, n in sorted(hosts.items(), key=lambda kv: -kv[1]):
         print(f"    {n:3d} models  {h}")
+    if merged.get("merge_conflicts"):
+        # These were previously written only into the output JSON's
+        # merge_conflicts key and never surfaced here — a whole-entry
+        # replacement silently dropped every cell not present in the winning
+        # input (e.g. bfcl, run under a not-yet-normalised host label,
+        # vanished from 8 models in one such merge before this was added).
+        print(f"\n  [!] {len(merged['merge_conflicts'])} cross-host conflict(s) — "
+              f"whole entry replaced, some cells may have been dropped:")
+        for c in merged["merge_conflicts"]:
+            print(f"      {c}")
 
 
 if __name__ == "__main__":
