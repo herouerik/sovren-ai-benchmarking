@@ -55,6 +55,7 @@ body::after{
 .rank-card.s-current:first-of-type .rank-score,.rank-card.s-current.rank-first .rank-score{color:var(--accent)}
 .rank-score-swapped{color:#9e8818 !important}
 .rank-swap{font-size:14px;margin-left:2px;line-height:1;vertical-align:middle}
+.rank-cov{font-size:9px;color:var(--dim);letter-spacing:.02em;margin-left:3px;font-variant-numeric:tabular-nums;cursor:help}
 .rank-model{font-size:9px;letter-spacing:.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
 .rank-speed{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:.04em}
 
@@ -290,7 +291,17 @@ let D    = (typeof BENCHMARK_DATA !== 'undefined') ? BENCHMARK_DATA : SAMPLE_DAT
 let PREV = D.is_sample ? SAMPLE_PREV : null;
 let CONFIG_MODELS = D.all_models ? [...D.all_models] : [];
 
-const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.',bfcl:'BFCL',bfcl_multi_turn_long_context:'BFCL-MT'};
+const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.',bfcl:'BFCL',bfcl_multi_turn_long_context:'BFCL-MT',humaneval_plus:'HumanEval+',mbpp_plus:'MBPP+'};
+
+// The 7 benchmarks every full run covers. `overall` is fixed to average only
+// over these — never the optional/harder ones (BFCL, EvalPlus, LiveCodeBench)
+// a model may additionally carry. Otherwise a model measured MORE thoroughly
+// ranks WORSE, because EvalPlus and BFCL score lower by design on the same
+// problems: qwen3.8:27b (10 cells, incl. EvalPlus) landed at 86.3 vs
+// gemma4:31b-mlx (8 cells, no EvalPlus) at 88.3 — the more-tested model
+// penalized for the extra harder columns. Optional benchmarks stay visible as
+// their own columns; they just stop feeding the summary number.
+const CORE_BENCHES = ['mmlu','arc','gsm8k','humaneval','mbpp','spider','philosophical'];
 const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a','#7ad4c8','#d4a0c8'];
 
 // One color per inference host, pinned for the two known machines so they
@@ -316,7 +327,7 @@ function hostColor(host) {
 const BENCH_TIPS = {
   overall: {
     title: 'Overall Score',
-    body: 'Mean accuracy across all benchmarks included in this run. A single-number summary — useful for ranking, but look at the per-category breakdown to understand where a model actually excels or struggles.'
+    body: 'Mean accuracy across the 7 core benchmarks only (MMLU, ARC, GSM8K, HumanEval, MBPP, Spider, Philosophical) — never the optional/harder ones a model may additionally carry (BFCL, EvalPlus, LiveCodeBench). Those score lower by design on the same problems, so counting them would rank the most-thoroughly-tested models worse; they stay visible as their own columns instead. A "n/7 core" marker means this model has not run the full core set yet, so its overall is an average over fewer benchmarks and not directly comparable to a full row.'
   },
   mmlu: {
     title: 'Massive Multitask Language Understanding',
@@ -374,12 +385,23 @@ function hasSwap(m)          { return getSwapBenches(m).length > 0; }
 function overallOf(m) {
   const sc = getScores(m);
   if (!sc) return -1;
-  // Average only over benchmarks this model actually ran. Treating missing
-  // benchmarks as 0 would unfairly tank models from runs covering a subset
-  // of benchmarks (e.g. GPU pools running 3 of 7 next to a full M4 run).
-  const benches = getBenches().filter(b => sc[b] !== undefined && sc[b] !== null);
+  // Average only over the core 7 this model actually ran, never the optional
+  // ones (see CORE_BENCHES above) — and only over core benches it HAS.
+  // Treating a missing core benchmark as 0 would unfairly tank models from
+  // runs covering a subset of the core set (e.g. a GPU pool row with only
+  // mmlu+arc so far). Use overallCoverage() to detect and flag that case.
+  const benches = CORE_BENCHES.filter(b => sc[b] !== undefined && sc[b] !== null);
   if (!benches.length) return -1;
   return benches.reduce((a,b)=>a+sc[b],0) / benches.length;
+}
+
+// How many of the 7 core benchmarks this model's overall was averaged over —
+// so a partial-core row (e.g. 2/7) can be flagged rather than silently shown
+// as if it were a full, comparable score.
+function overallCoverage(m) {
+  const sc = getScores(m);
+  if (!sc) return 0;
+  return CORE_BENCHES.filter(b => sc[b] !== undefined && sc[b] !== null).length;
 }
 
 function getTs(m) {
@@ -600,6 +622,7 @@ function renderStrip() {
   models.forEach((m, i) => {
     const status = modelStatus(m);
     const ov     = overallOf(m);
+    const cov    = overallCoverage(m);
     const spd    = getSpeed(m);
     const hasScore = ov >= 0;
     if (hasScore) rankIdx++;
@@ -618,6 +641,7 @@ function renderStrip() {
         (rank ? `<span class="rank-num">#${rank}</span>` : '') +
         `<span class="rank-score${hasSwap(m)?' rank-score-swapped':''}">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
         (hasSwap(m) ? '<span class="rank-swap">💀</span>' : '') +
+        (hasScore && cov < CORE_BENCHES.length ? `<span class="rank-cov" title="Overall averaged over ${cov}/${CORE_BENCHES.length} core benchmarks only — not comparable to a full row">${cov}/${CORE_BENCHES.length}</span>` : '') +
       `</div>` +
       `<div class="rank-model">${D.model_info?.[m]?.official_name || m}</div>` +
       (spd ? `<div class="rank-speed">${spd.toFixed(1)} t/s</div>`
@@ -649,6 +673,7 @@ function renderTable() {
     const status    = modelStatus(m);
     const color     = COLORS[i % COLORS.length];
     const ov        = overallOf(m);
+    const cov       = overallCoverage(m);
     const isPending = status === 'pending';
     const tr        = document.createElement('tr');
     tr.dataset.model = m;
@@ -706,7 +731,8 @@ function renderTable() {
       tdOv.style.color = scoreFg(ov);   // ink that clears AA on this step
       const swap = hasSwap(m);
       tdOv.innerHTML = `<span class="overall-num${swap?' is-swapped':''}">${(ov*100).toFixed(1)}${swap?'💀':''}</span>` +
-        (swap ? `<span class="score-swap">partial data</span>` : '');
+        (swap ? `<span class="score-swap">partial data</span>` : '') +
+        (cov < CORE_BENCHES.length ? `<span class="score-swap" title="Averaged over ${cov}/${CORE_BENCHES.length} core benchmarks only">${cov}/${CORE_BENCHES.length} core</span>` : '');
     } else {
       tdOv.innerHTML = `<span class="overall-num" style="color:var(--border);font-size:13px">—</span>`;
     }
