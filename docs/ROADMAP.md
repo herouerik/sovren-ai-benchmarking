@@ -320,6 +320,108 @@ PCIe AER counters during a live run, which wasn't available here.
 
 ---
 
+## qwen3.8:27b — GPU server vs M4, capability assessment (2026-08-19)
+
+Written on request, comparing the GPU server's GGUF run against the M4's
+three variants (GGUF, MLX no-think, MLX +think) on TPS, TTFT, and swap/
+spillover risk. All numbers pulled from `merged.summary.json` and, for TTFT,
+the GPU server's raw per-sample file (`results/full_gpu_pool_FINAL.json`) —
+the M4's raw records aren't committed, only its aggregate summary, so TTFT
+comparison is one-sided; noted rather than guessed at.
+
+### Throughput (decode tok/s)
+
+| variant | host | tok/s |
+|---|---|---|
+| GGUF Q4_K_M | GPU server | 8.09 |
+| GGUF Q4_K_M | M4 | 8.53 |
+| MLX nvfp4, no-think | M4 | 31.6 |
+| MLX nvfp4, +think | M4 | 29.8 |
+
+Raw GGUF throughput is a wash between the two hosts. **MLX is the actual
+speed story, and it is M4-only** — ~3.7–3.9x faster than GGUF on the same
+model, matching the factorial study's finding that this speedup is specific
+to qwen3.8 (not qwen3.6, see the M4 study above). The GPU server has no MLX
+path (Apple-only framework); its ceiling on this model is the ~8 tok/s GGUF
+number unless a different serving stack were introduced (untested).
+
+### TTFT
+
+GPU server, by category (median / max, n=20-25 except philosophical n=10):
+
+| benchmark | median | max |
+|---|---|---|
+| mmlu | 3.9s | 119.7s |
+| arc | 4.2s | 4.7s |
+| gsm8k | 4.1s | 4.8s |
+| humaneval | 4.9s | 5.9s |
+| mbpp | 3.7s | 4.2s |
+| spider | 3.7s | 4.3s |
+| philosophical | 254.0s | 639.7s |
+
+Fast and boring everywhere except `philosophical`, which runs with
+`think: true` and where the harness marks TTFT at the first *content*
+token — so 254-640s there is 12,000-31,000 characters of internal
+chain-of-thought before any visible answer, not slow prefill. Worth knowing
+so a `philosophical` outlier isn't misread as a hardware problem.
+
+### Swap / spillover risk
+
+| variant | host | aborted categories | sample exposure |
+|---|---|---|---|
+| GGUF Q4_K_M | GPU server | 0 of 8 | 20-25/category |
+| GGUF Q4_K_M | M4 | 2 of 10 (bfcl, humaneval_plus) | 100/category |
+| MLX, no-think | M4 | 1 of 10 (mbpp_plus) | 100/category |
+| MLX, +think | M4 | 1 of 10 (bfcl) — stale, pre-dates the guard fix | 20/category |
+
+Not apples-to-apples: the M4 study ran 100 samples/category on the harder
+benchmarks vs. the GPU server's 20, so it has had ~5x the exposure to
+whatever trips this. Per the earlier guard investigation, these are not real
+OS-level swap events on the M4 — a 27B@Q4 model is ~15GB, nowhere near
+exhausting 48GB — they are genuine sustained throughput collapses (0.4-0.6
+tok/s for ~340s) specific to qwen3.8 on certain BFCL/EvalPlus prompts,
+mislabeled "swap" by the guard's default `kind`. **This is a model-behavior
+risk that would plausibly also show up on the GPU server at 100-sample
+exposure** — its clean run so far looks more like "hasn't hit it yet" than
+"immune." (The GPU server's own OS-swap corroboration is real and unaffected
+by the cross-host sensor fix above, which only concerns the M4-*remote*
+case — a genuine GPU-side swap would be correctly detected.)
+
+### The capability gap that matters most: context ceiling
+
+| variant | native ctx | effective ctx |
+|---|---|---|
+| GPU server (GGUF) | 262144 | **262144** — full offload confirmed |
+| M4 (GGUF) | 262144 | 32768 |
+| M4 (MLX) | 262144 | 32768 |
+
+The GPU server runs qwen3.8 at its full native context with full GPU-layer
+offload (layer-count confirmed, not just "loads without erroring" — see the
+bisection methodology at the top of `config-gpu-unified.yaml`). The M4 is
+capped at **8x less** usable context, because 48GB unified memory has to
+hold weights + KV cache + OS overhead simultaneously, and KV cache at long
+context is what blows the budget, not the weights.
+
+### Assessment
+
+- **Speed:** a wash on GGUF (~8 tok/s either host). MLX on the M4 is the
+  real lever (~30 tok/s) if throughput is what's being optimized for — the
+  GPU server has no equivalent path for this model today.
+- **Context:** GPU server wins decisively, 8x the usable context — arguably
+  a bigger practical differentiator than the speed numbers for anything
+  agentic or long-document.
+- **Reliability:** the GPU server's clean record is real but under-tested
+  relative to the M4's exposure; not yet provably safer, just less-exercised.
+  The failure mode looks like a qwen3.8 quirk that travels with the model,
+  not a hardware-fit problem specific to either host.
+- **Bottom line:** GPU-server-hosted qwen3.8 for agentic work trades MLX's
+  raw speed for 8x the context headroom, at GGUF-level throughput. If
+  throughput matters more than context depth, M4+MLX is meaningfully
+  faster — but don't expect that speed edge to double as a reliability
+  edge; the abort risk looks orthogonal to which host runs it.
+
+---
+
 ## Next up — do these in this order (2026-08-18)
 
 State at handover: 33 models / 10 benchmarks / 7215 samples across both hosts,
