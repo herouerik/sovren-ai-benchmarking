@@ -21,9 +21,17 @@ SYSTEM = ("You are a function-calling assistant. Given a user request and a set 
 
 
 def _bfcl_type_to_json_schema_type(bfcl_type: str) -> str:
-    # BFCL's function schemas use "dict"/"any" where JSON Schema (and Ollama's
-    # /api/chat tools param) expects "object"/omitting the type entirely.
-    return {"dict": "object", "any": "string"}.get(bfcl_type, bfcl_type)
+    # BFCL's function schemas use "dict"/"any"/"float"/"tuple" where JSON
+    # Schema (and Ollama's /api/chat tools param, which compiles this into a
+    # constrained-generation grammar) expects "object"/"string"/"number"/
+    # "array". An unmapped type isn't just ignored — some backends (qwen3.8's
+    # GGUF pull, not gemma4 or qwen3.6 on the same request) hard-reject the
+    # whole call with an HTTP 400 "Unrecognized schema", which the streaming
+    # client then silently turned into a fake empty-but-successful response
+    # (see harness/client.py's status-check fix) rather than a visible error.
+    # That one unmapped type ("float") was responsible for a 26-point bfcl
+    # gap on qwen3.8 alone, affecting ~23% of samples across all 4 categories.
+    return {"dict": "object", "any": "string", "float": "number", "tuple": "array"}.get(bfcl_type, bfcl_type)
 
 
 def _convert_parameters(params: dict) -> dict:
@@ -34,6 +42,9 @@ def _convert_parameters(params: dict) -> dict:
         spec = dict(spec)
         if "type" in spec:
             spec["type"] = _bfcl_type_to_json_schema_type(spec["type"])
+        if "items" in spec and isinstance(spec["items"], dict) and "type" in spec["items"]:
+            spec["items"] = dict(spec["items"])
+            spec["items"]["type"] = _bfcl_type_to_json_schema_type(spec["items"]["type"])
         props[name] = spec
     converted["properties"] = props
     return converted
