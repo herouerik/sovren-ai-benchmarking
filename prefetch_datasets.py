@@ -25,6 +25,8 @@ DOWNLOADS = [
     ("openai/openai_humaneval",          dict(split="test")),
     ("google-research-datasets/mbpp",    dict(name="sanitized",          split="test")),
     ("xlangai/spider",                   dict(split="validation")),
+    ("evalplus/humanevalplus",           dict(split="test")),
+    ("evalplus/mbppplus",                dict(split="test")),
 ]
 
 # Spider database Google Drive file ID (full dataset zip ~100MB)
