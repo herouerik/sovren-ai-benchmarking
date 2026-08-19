@@ -21,6 +21,7 @@ from __future__ import annotations
 import os
 import platform
 import re
+import socket
 import subprocess
 from pathlib import Path
 
@@ -108,8 +109,42 @@ class LinuxSensor(PressureSensor):
         return vals["pswpin"] * self.page_size, vals["pswpout"] * self.page_size
 
 
-def get_sensor() -> PressureSensor:
-    """Return the best available sensor for this platform (never raises)."""
+def _own_lan_ip() -> str | None:
+    """This machine's primary LAN address, or None. Same trick as
+    run_benchmark.py's copy: a UDP "connect" just asks the routing table
+    which interface would be used, no packet is actually sent."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+        finally:
+            s.close()
+    except Exception:
+        return None
+
+
+def _is_local(base_url: str) -> bool:
+    m = re.search(r"://([^:/]+)", base_url or "")
+    host = m.group(1) if m else ""
+    return host in ("", "localhost", "127.0.0.1", "::1") or host == _own_lan_ip()
+
+
+def get_sensor(base_url: str | None = None) -> PressureSensor:
+    """Return the best available sensor for this platform (never raises).
+
+    `vm_stat`/`/proc/vmstat` read whatever machine this process runs on, not
+    the inference backend — fine when the harness and Ollama are the same
+    box, wrong when they are not. Benchmarking the M4 *from* the GPU server
+    (or any cross-host setup) would otherwise corroborate M4 thrash against
+    the GPU server's own unrelated memory pressure, which is worse than no
+    corroboration: it can misclassify a fine remote model as "does not fit"
+    on the strength of local noise. Pass the target `base_url`; a remote one
+    degrades to timing-only (see harness/guard.py's docstring — this is the
+    documented no-sensor path, not a special case) rather than misreport.
+    """
+    if base_url is not None and not _is_local(base_url):
+        return PressureSensor()
     system = platform.system()
     try:
         if system == "Darwin":

@@ -8,6 +8,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from harness.guard import StreamWatchdog
+from harness.pressure import get_sensor
 
 
 def resolve_env_vars(value: str) -> str:
@@ -126,7 +127,7 @@ class OllamaClient:
         if keep_alive is not None:
             body["keep_alive"] = keep_alive
 
-        watchdog = StreamWatchdog(guard_cfg)
+        watchdog = StreamWatchdog(guard_cfg, sensor=get_sensor(self.native_url))
         watchdog.begin()
         start = time.perf_counter()
         ttft = None
@@ -257,7 +258,7 @@ class OllamaClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        watchdog = StreamWatchdog(guard_cfg)
+        watchdog = StreamWatchdog(guard_cfg, sensor=get_sensor(self.native_url))
         watchdog.begin()
         start = time.perf_counter()
         ttft = None
