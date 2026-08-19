@@ -152,6 +152,21 @@ class OllamaClient:
         try:
             with httpx.stream("POST", f"{self.native_url}/api/chat", json=body,
                               timeout=timeouts) as resp:
+                if resp.status_code >= 400:
+                    # httpx.stream doesn't raise on its own for a non-2xx
+                    # status — the error body (one JSON line, e.g. Ollama's
+                    # {"error": {...}}) would otherwise be parsed the same as
+                    # a normal chunk. It has no "message"/"done" keys, so the
+                    # loop below finds no content and no tool_calls, and the
+                    # call falls through to reporting a fabricated 1-token
+                    # "successful" empty response with error=None — an actual
+                    # API rejection silently indistinguishable from a model
+                    # that just didn't answer. Found via BFCL: an invalid
+                    # JSON-schema type in a tool definition got Ollama to
+                    # reject the request with a 400, and 28 samples scored as
+                    # "no tool call attempted" instead of the real cause.
+                    resp.read()
+                    raise RuntimeError(f"HTTP {resp.status_code} from Ollama: {resp.text[:300]}")
                 watchdog.arm(on_trip=resp.close)
                 try:
                     for line in resp.iter_lines():
