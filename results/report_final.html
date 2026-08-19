@@ -282,6 +282,30 @@ const BENCHMARK_DATA = {
       "humaneval_plus": 0.91,
       "mbpp_plus": 0.63
     },
+    "gemma4:31b": {
+      "mmlu": 0.85,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.95,
+      "mbpp": 0.71,
+      "spider": 0.75,
+      "philosophical": 0.9359999999999999,
+      "bfcl": 0.85,
+      "humaneval_plus": 0.91,
+      "mbpp_plus": 0.65
+    },
+    "qwen3.6-128k:latest": {
+      "mmlu": 0.75,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.93,
+      "mbpp": 0.7,
+      "spider": 0.71,
+      "philosophical": 0.96,
+      "bfcl": 0.82,
+      "humaneval_plus": 0.88,
+      "mbpp_plus": 0.59
+    },
     "qwen3.8:27b-mlx": {
       "mmlu": 0.9,
       "arc": 1.0,
@@ -303,6 +327,16 @@ const BENCHMARK_DATA = {
       "spider": 0.65,
       "philosophical": 0.96,
       "bfcl": 0.85
+    },
+    "qwen3-coder-next:sovereign-128k": {
+      "mmlu": 0.75,
+      "arc": 0.95,
+      "gsm8k": 1.0,
+      "humaneval": 0.85,
+      "mbpp": 0.65,
+      "spider": 0.75,
+      "philosophical": 0.9279999999999999,
+      "bfcl": 0.9
     },
     "qwen3.6:27b": {
       "mmlu": 0.9,
@@ -337,6 +371,18 @@ const BENCHMARK_DATA = {
       "spider": 0.7,
       "philosophical": 0.9,
       "bfcl": 0.85
+    },
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "mmlu": 0.9,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.95,
+      "mbpp": 0.68,
+      "spider": 0.74,
+      "philosophical": 0.944,
+      "bfcl": 0.55,
+      "humaneval_plus": 0.9,
+      "mbpp_plus": 0.61
     },
     "gemma4:26b-mlx": {
       "mmlu": 0.75,
@@ -378,6 +424,16 @@ const BENCHMARK_DATA = {
       "philosophical": 0.944,
       "bfcl": 0.5
     },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "mmlu": 0.8,
+      "arc": 1.0,
+      "gsm8k": 0.92,
+      "humaneval": 0.85,
+      "mbpp": 0.7,
+      "spider": 0.75,
+      "philosophical": 0.8720000000000001,
+      "bfcl": 0.65
+    },
     "qwen3:32b": {
       "mmlu": 0.85,
       "arc": 0.95,
@@ -388,15 +444,15 @@ const BENCHMARK_DATA = {
       "philosophical": 0.8800000000000001,
       "bfcl": 0.8
     },
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
-      "mmlu": 0.9,
-      "arc": 1.0,
+    "qwen3-coder:30b-sovereign": {
+      "mmlu": 1.0,
+      "arc": 0.8,
       "gsm8k": 1.0,
-      "humaneval": 0.9,
-      "mbpp": 0.7,
-      "spider": 0.65,
-      "philosophical": 0.944,
-      "bfcl": 0.6
+      "humaneval": 0.8,
+      "mbpp": 0.65,
+      "spider": 0.35,
+      "philosophical": 0.9279999999999999,
+      "bfcl": 0.85
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 0.75,
@@ -447,56 +503,6 @@ const BENCHMARK_DATA = {
       "spider": 0.65,
       "philosophical": 0.952,
       "bfcl": 0.4
-    },
-    "gemma4:31b": {
-      "mmlu": 0.85,
-      "arc": 1.0,
-      "gsm8k": 1.0,
-      "humaneval": 0.95,
-      "mbpp": 0.6,
-      "spider": 0.75,
-      "philosophical": 0.9359999999999999,
-      "bfcl": 0.8
-    },
-    "qwen3.6-128k:latest": {
-      "mmlu": 0.75,
-      "arc": 1.0,
-      "gsm8k": 1.0,
-      "humaneval": 0.95,
-      "mbpp": 0.6,
-      "spider": 0.7,
-      "philosophical": 0.96,
-      "bfcl": 0.9
-    },
-    "qwen3-coder:30b-sovereign": {
-      "mmlu": 1.0,
-      "arc": 0.8,
-      "gsm8k": 1.0,
-      "humaneval": 0.8,
-      "mbpp": 0.65,
-      "spider": 0.35,
-      "philosophical": 0.9279999999999999,
-      "bfcl": 0.85
-    },
-    "qwen3-coder-next:sovereign-128k": {
-      "mmlu": 0.75,
-      "arc": 0.95,
-      "gsm8k": 1.0,
-      "humaneval": 0.85,
-      "mbpp": 0.65,
-      "spider": 0.75,
-      "philosophical": 0.9279999999999999,
-      "bfcl": 0.9
-    },
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
-      "mmlu": 0.8,
-      "arc": 1.0,
-      "gsm8k": 0.92,
-      "humaneval": 0.85,
-      "mbpp": 0.7,
-      "spider": 0.75,
-      "philosophical": 0.8720000000000001,
-      "bfcl": 0.65
     },
     "qwen2.5-coder:32b": {
       "mmlu": 0.8,
@@ -558,16 +564,7 @@ const BENCHMARK_DATA = {
       "philosophical": 0.8560000000000001,
       "bfcl": 0.0
     },
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
-      "mmlu": 0.0,
-      "arc": 0.0,
-      "gsm8k": 0.0,
-      "humaneval": 0.0,
-      "mbpp": 0.0,
-      "spider": 0.1,
-      "philosophical": 0.6719999999999999,
-      "bfcl": 0.0
-    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {},
     "deepseek-r1:70b": {
       "bfcl": 0.0
     }
@@ -577,27 +574,27 @@ const BENCHMARK_DATA = {
     "gemma4:31b-mlx": 11.201452934241221,
     "qwen3.8:27b-mlx +think": 29.844296736409678,
     "qwen3.8:27b": 8.525283421848039,
+    "gemma4:31b": 9.632040175188434,
+    "qwen3.6-128k:latest": 38.99887455148469,
     "qwen3.8:27b-mlx": 31.59921287317513,
     "qwen3.6:35b-mlx +think": 72.22677386616951,
+    "qwen3-coder-next:sovereign-128k": 34.93388476530612,
     "qwen3.6:27b": 12.378708017188966,
     "qwen3.6:27b-mlx": 13.712396175852684,
     "devstral-small-2:latest": 16.309305315571983,
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 10.613198092436456,
     "gemma4:26b-mlx": 63.31692969252951,
     "qwen3.6:35b-mlx": 71.97859396339447,
     "qwen3-32b-nothink:latest": 11.627113403996274,
     "muse-glimmer:30b-mlx +think": 21.593399893793766,
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.705560862423752,
     "qwen3:32b": 11.648418619340017,
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 8.806005066906156,
+    "qwen3-coder:30b-sovereign": 40.893067262676325,
     "gemma4-12b-agentic:latest": 9.109774546731675,
     "gemma4-12b-agentic-mtp:latest": 24.8042166709602,
     "qwen3-coder:latest": 60.27494566202786,
     "nemotron-3-nano:30b": 49.9767339134276,
     "muse-glimmer:30b-mlx": 22.66691690285351,
-    "gemma4:31b": 9.525620445017715,
-    "qwen3.6-128k:latest": 38.62420754756218,
-    "qwen3-coder:30b-sovereign": 40.893067262676325,
-    "qwen3-coder-next:sovereign-128k": 34.93388476530612,
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.705560862423752,
     "qwen2.5-coder:32b": 11.790428227678325,
     "nemotron-cascade-2:latest": 50.370309207242,
     "llama3.1:8b": 20.64599736758945,
@@ -645,6 +642,30 @@ const BENCHMARK_DATA = {
       "humaneval_plus": 100,
       "mbpp_plus": 100
     },
+    "gemma4:31b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 100,
+      "mbpp": 100,
+      "spider": 100,
+      "philosophical": 10,
+      "bfcl": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.6-128k:latest": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 100,
+      "mbpp": 100,
+      "spider": 100,
+      "philosophical": 10,
+      "bfcl": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
     "qwen3.8:27b-mlx": {
       "mmlu": 20,
       "arc": 20,
@@ -658,6 +679,16 @@ const BENCHMARK_DATA = {
       "mbpp_plus": 100
     },
     "qwen3.6:35b-mlx +think": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10,
+      "bfcl": 20
+    },
+    "qwen3-coder-next:sovereign-128k": {
       "mmlu": 20,
       "arc": 20,
       "gsm8k": 25,
@@ -701,6 +732,18 @@ const BENCHMARK_DATA = {
       "philosophical": 10,
       "bfcl": 20
     },
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 100,
+      "mbpp": 100,
+      "spider": 100,
+      "philosophical": 10,
+      "bfcl": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
     "gemma4:26b-mlx": {
       "mmlu": 20,
       "arc": 20,
@@ -741,6 +784,16 @@ const BENCHMARK_DATA = {
       "philosophical": 10,
       "bfcl": 20
     },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10,
+      "bfcl": 20
+    },
     "qwen3:32b": {
       "mmlu": 20,
       "arc": 20,
@@ -751,7 +804,7 @@ const BENCHMARK_DATA = {
       "philosophical": 10,
       "bfcl": 20
     },
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+    "qwen3-coder:30b-sovereign": {
       "mmlu": 20,
       "arc": 20,
       "gsm8k": 25,
@@ -802,56 +855,6 @@ const BENCHMARK_DATA = {
       "bfcl": 20
     },
     "muse-glimmer:30b-mlx": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
-    "gemma4:31b": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
-    "qwen3.6-128k:latest": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
-    "qwen3-coder:30b-sovereign": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
-    "qwen3-coder-next:sovereign-128k": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
       "mmlu": 20,
       "arc": 20,
       "gsm8k": 25,
@@ -921,16 +924,7 @@ const BENCHMARK_DATA = {
       "philosophical": 10,
       "bfcl": 20
     },
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {},
     "deepseek-r1:70b": {
       "bfcl": 20
     }
@@ -982,6 +976,31 @@ const BENCHMARK_DATA = {
       "architecture": "qwen35",
       "vram_estimate": 24.1
     },
+    "gemma4:31b": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "gemma4 31.3B",
+      "context_length": 262144,
+      "size_gb": 18.5,
+      "effective_ctx": 98304,
+      "params": "31.3B",
+      "architecture": "gemma4",
+      "vram_estimate": 137.6
+    },
+    "qwen3.6-128k:latest": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "qwen35moe 36.0B",
+      "context_length": 262144,
+      "size_gb": 22.3,
+      "effective_ctx": 262144,
+      "params": "36.0B",
+      "architecture": "qwen35moe",
+      "experts": 256,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 103.4
+    },
     "qwen3.8:27b-mlx": {
       "host": "MacBook M4",
       "quantization": "nvfp4",
@@ -1004,6 +1023,20 @@ const BENCHMARK_DATA = {
       "architecture": "qwen3_5_moe",
       "sparse": true,
       "think": true
+    },
+    "qwen3-coder-next:sovereign-128k": {
+      "host": "i9 GPU server",
+      "quantization": "IQ4_XS",
+      "official_name": "qwen3next 79.7B",
+      "context_length": 262144,
+      "size_gb": 39.9,
+      "effective_ctx": 131072,
+      "params": "79.7B",
+      "architecture": "qwen3next",
+      "experts": 512,
+      "experts_used": 10,
+      "sparse": true,
+      "vram_estimate": 47.9
     },
     "qwen3.6:27b": {
       "host": "MacBook M4",
@@ -1036,6 +1069,17 @@ const BENCHMARK_DATA = {
       "params": "24.0B",
       "architecture": "mistral3",
       "vram_estimate": 17.9
+    },
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8-27B 27B",
+      "context_length": 262144,
+      "size_gb": 16.8,
+      "effective_ctx": 262144,
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 71.7
     },
     "gemma4:26b-mlx": {
       "host": "MacBook M4",
@@ -1083,6 +1127,20 @@ const BENCHMARK_DATA = {
       "vram_estimate": 23.4,
       "think": true
     },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "host": "i9 GPU server",
+      "quantization": "Q3_K_M",
+      "official_name": "Glm-4.5-Air 128x9.4B",
+      "context_length": 131072,
+      "size_gb": 53.1,
+      "effective_ctx": 8192,
+      "params": "110.5B",
+      "architecture": "glm4moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 56.2
+    },
     "qwen3:32b": {
       "host": "MacBook M4",
       "quantization": "Q4_K_M",
@@ -1094,16 +1152,19 @@ const BENCHMARK_DATA = {
       "architecture": "qwen3",
       "vram_estimate": 24.7
     },
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+    "qwen3-coder:30b-sovereign": {
       "host": "i9 GPU server",
       "quantization": "Q4_K_M",
-      "official_name": "Qwen3.8-27B 27B",
+      "official_name": "Qwen3-Coder 30B-A3B",
       "context_length": 262144,
-      "size_gb": 16.8,
-      "effective_ctx": 262144,
-      "params": "27.3B",
-      "architecture": "qwen35",
-      "vram_estimate": 71.7
+      "size_gb": 17.3,
+      "effective_ctx": 32768,
+      "params": "30.5B",
+      "architecture": "qwen3moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 19.7
     },
     "gemma4-12b-agentic:latest": {
       "host": "MacBook M4",
@@ -1166,73 +1227,6 @@ const BENCHMARK_DATA = {
       "architecture": "muse_glimmer",
       "vram_estimate": 23.4,
       "think": false
-    },
-    "gemma4:31b": {
-      "host": "i9 GPU server",
-      "quantization": "Q4_K_M",
-      "official_name": "gemma4 31.3B",
-      "context_length": 262144,
-      "size_gb": 18.5,
-      "effective_ctx": 98304,
-      "params": "31.3B",
-      "architecture": "gemma4",
-      "vram_estimate": 137.6
-    },
-    "qwen3.6-128k:latest": {
-      "host": "i9 GPU server",
-      "quantization": "Q4_K_M",
-      "official_name": "qwen35moe 36.0B",
-      "context_length": 262144,
-      "size_gb": 22.3,
-      "effective_ctx": 262144,
-      "params": "36.0B",
-      "architecture": "qwen35moe",
-      "experts": 256,
-      "experts_used": 8,
-      "sparse": true,
-      "vram_estimate": 103.4
-    },
-    "qwen3-coder:30b-sovereign": {
-      "host": "i9 GPU server",
-      "quantization": "Q4_K_M",
-      "official_name": "Qwen3-Coder 30B-A3B",
-      "context_length": 262144,
-      "size_gb": 17.3,
-      "effective_ctx": 32768,
-      "params": "30.5B",
-      "architecture": "qwen3moe",
-      "experts": 128,
-      "experts_used": 8,
-      "sparse": true,
-      "vram_estimate": 19.7
-    },
-    "qwen3-coder-next:sovereign-128k": {
-      "host": "i9 GPU server",
-      "quantization": "IQ4_XS",
-      "official_name": "qwen3next 79.7B",
-      "context_length": 262144,
-      "size_gb": 39.9,
-      "effective_ctx": 131072,
-      "params": "79.7B",
-      "architecture": "qwen3next",
-      "experts": 512,
-      "experts_used": 10,
-      "sparse": true,
-      "vram_estimate": 47.9
-    },
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
-      "host": "i9 GPU server",
-      "quantization": "Q3_K_M",
-      "official_name": "Glm-4.5-Air 128x9.4B",
-      "context_length": 131072,
-      "size_gb": 53.1,
-      "effective_ctx": 8192,
-      "params": "110.5B",
-      "architecture": "glm4moe",
-      "experts": 128,
-      "experts_used": 8,
-      "sparse": true,
-      "vram_estimate": 56.2
     },
     "qwen2.5-coder:32b": {
       "host": "MacBook M4",
@@ -1331,27 +1325,27 @@ const BENCHMARK_DATA = {
     "gemma4:31b-mlx": "2026-08-15T09:46:31",
     "qwen3.8:27b-mlx +think": "2026-08-16T19:19:15",
     "qwen3.8:27b": "2026-08-18T07:37:27",
+    "gemma4:31b": "2026-08-19T19:43:16",
+    "qwen3.6-128k:latest": "2026-08-19T17:26:39",
     "qwen3.8:27b-mlx": "2026-08-18T08:49:11",
     "qwen3.6:35b-mlx +think": "2026-08-15T11:30:34",
+    "qwen3-coder-next:sovereign-128k": "2026-08-19T13:30:01",
     "qwen3.6:27b": "2026-08-18T01:34:24",
     "qwen3.6:27b-mlx": "2026-08-18T02:02:31",
     "devstral-small-2:latest": "2026-08-15T09:41:39",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-19T16:28:10",
     "gemma4:26b-mlx": "2026-08-15T09:42:13",
     "qwen3.6:35b-mlx": "2026-08-15T11:27:32",
     "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
     "muse-glimmer:30b-mlx +think": "2026-08-15T11:26:33",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-19T13:20:09",
     "qwen3:32b": "2026-08-15T10:07:48",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-19T13:39:04",
+    "qwen3-coder:30b-sovereign": "2026-08-19T13:34:31",
     "gemma4-12b-agentic:latest": "2026-08-15T09:37:59",
     "gemma4-12b-agentic-mtp:latest": "2026-08-15T09:39:27",
     "qwen3-coder:latest": "2026-08-15T10:15:37",
     "nemotron-3-nano:30b": "2026-08-15T09:43:32",
     "muse-glimmer:30b-mlx": "2026-08-15T11:19:21",
-    "gemma4:31b": "2026-08-19T13:25:11",
-    "qwen3.6-128k:latest": "2026-08-19T13:32:23",
-    "qwen3-coder:30b-sovereign": "2026-08-19T13:34:31",
-    "qwen3-coder-next:sovereign-128k": "2026-08-19T13:30:01",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-19T13:20:09",
     "qwen2.5-coder:32b": "2026-08-15T10:14:32",
     "nemotron-cascade-2:latest": "2026-08-15T10:16:41",
     "llama3.1:8b": "2026-08-15T09:33:29",
@@ -1374,24 +1368,22 @@ const BENCHMARK_DATA = {
     ],
     "qwen3.6:35b-mlx +think": [
       "mbpp"
-    ],
-    "llama4:scout": []
+    ]
   },
   "models": [
-    "llama4:scout",
     "gemma4:31b-mlx",
     "qwen3.8:27b-mlx +think",
     "qwen3.8:27b",
     "gemma4:31b",
-    "qwen3.6-128k:latest",
     "qwen3.8:27b-mlx",
     "qwen3.6:35b-mlx +think",
     "qwen3-coder-next:sovereign-128k",
     "qwen3.6:27b",
     "qwen3.6:27b-mlx",
     "devstral-small-2:latest",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
     "gemma4:26b-mlx",
+    "qwen3.6-128k:latest",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
     "qwen3.6:35b-mlx",
     "qwen3-32b-nothink:latest",
     "muse-glimmer:30b-mlx +think",
@@ -1406,6 +1398,7 @@ const BENCHMARK_DATA = {
     "qwen2.5-coder:32b",
     "nemotron-cascade-2:latest",
     "llama3.1:8b",
+    "llama4:scout",
     "qwen2.5-coder:7b",
     "llama3.2:3b",
     "codestral:22b",
@@ -1457,47 +1450,44 @@ const BENCHMARK_DATA = {
     "qwen3.8:27b-mlx +think",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M"
   ],
-  "total_samples": 8200,
+  "total_samples": 10670,
   "run_id": "merged",
-  "timestamp": "2026-08-19 13:42",
+  "timestamp": "2026-08-20 00:55",
   "merged_from": {
     "llama4:scout": "20260817_014833",
     "gemma4:31b-mlx": "merged",
     "qwen3.8:27b-mlx +think": "merged",
     "qwen3.8:27b": "merged",
+    "gemma4:31b": "20260817_014833",
+    "qwen3.6-128k:latest": "20260817_014833",
     "qwen3.8:27b-mlx": "merged",
     "qwen3.6:35b-mlx +think": "merged",
+    "qwen3-coder-next:sovereign-128k": "20260817_014833",
     "qwen3.6:27b": "merged",
     "qwen3.6:27b-mlx": "merged",
     "devstral-small-2:latest": "merged",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "20260817_014833",
     "gemma4:26b-mlx": "merged",
     "qwen3.6:35b-mlx": "merged",
     "qwen3-32b-nothink:latest": "merged",
     "muse-glimmer:30b-mlx +think": "merged",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "20260817_014833",
     "qwen3:32b": "merged",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "20260817_014833",
+    "qwen3-coder:30b-sovereign": "20260817_014833",
     "gemma4-12b-agentic:latest": "merged",
     "gemma4-12b-agentic-mtp:latest": "merged",
     "qwen3-coder:latest": "merged",
     "nemotron-3-nano:30b": "merged",
     "muse-glimmer:30b-mlx": "merged",
-    "gemma4:31b": "20260817_014833",
-    "qwen3.6-128k:latest": "20260817_014833",
-    "qwen3-coder:30b-sovereign": "20260817_014833",
-    "qwen3-coder-next:sovereign-128k": "20260817_014833",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "20260817_014833",
     "qwen2.5-coder:32b": "merged",
     "nemotron-cascade-2:latest": "merged",
     "llama3.1:8b": "merged",
     "qwen2.5-coder:7b": "merged",
     "llama3.2:3b": "merged",
     "codestral:22b": "merged",
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "20260817_014833",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "merged",
     "deepseek-r1:70b": "merged"
-  },
-  "merge_conflicts": [
-    "llama4:scout: i9 GPU server vs GPU Server (6x P100, unified pool) — replaced whole entry"
-  ]
+  }
 };
 
 // Sample shows all three states: green (run), yellow (previous), gray (pending)

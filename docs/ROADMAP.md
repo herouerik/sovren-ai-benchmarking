@@ -422,6 +422,110 @@ context is what blows the budget, not the weights.
 
 ---
 
+## Exhaustive GPU-server sweep (n=100) — 3 models done, 2 infra bugs found (2026-08-19/20)
+
+Bumped `humaneval`/`mbpp`/`spider`/`bfcl` to n=100 and added EvalPlus
+(`humaneval_plus`/`mbpp_plus`, n=100) for `qwen3.8:27b`, `qwen3.6-128k`, and
+`gemma4:31b` on the GPU server — matching the M4 factorial study's depth so
+these are now fair, high-confidence comparisons rather than the earlier
+n=20 shallow numbers. `muse-glimmer` was in scope too but its results are
+**not** merged — see below.
+
+### Bug 1: Spider was scoring string-match only on the GPU server
+
+Every GPU-server model's `spider` score has been wrong since the first
+sweep — `data/spider/database/` never existed on this machine, so scoring
+silently fell back to normalised string matching instead of real SQL
+execution accuracy. Found while investigating a 57-point spider gap
+between GPU-server qwen3.8 (15.0) and M4 qwen3.8 (72.0) on what should be
+the same benchmark; every other core category matched within noise,
+isolating it to this one data gap.
+
+The original download source (a Google Drive zip ID in
+`prefetch_datasets.py`) is dead — both `gdown` and a direct curl hit a
+404/permission error, not a transient failure. Re-sourced from
+[`prem-research/spider`](https://huggingface.co/datasets/prem-research/spider)
+on HuggingFace, which mirrors the same `database/<db_id>/<db_id>.sqlite`
+layout (169 dbs, full coverage of the 20 validation `db_id`s this
+benchmark needs) via `huggingface_hub` — already a dependency, no new pip
+package. Re-pointing `prefetch_datasets.py` at this mirror instead of the
+dead Google Drive link is still a TODO; for now the data is in place
+(`data/spider/database/`, gitignored) and confirmed working.
+
+All 7 already-benchmarked GPU-server models were re-run on spider (n=20)
+against the restored databases: scores jumped from 0-15% to 35-75%.
+`evalplus/humanevalplus` and `evalplus/mbppplus` were also prefetched
+(previously only cached on the M4).
+
+### Bug 2: Muse Glimmer's GPU-server pull is broken — every score was fake
+
+`hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M`'s scores on the GPU server
+were **0% across mmlu/arc/gsm8k/humaneval/mbpp/bfcl, a fake 10% on spider,
+and a fake 67.2% on philosophical** — every single one generated from a
+completely empty model response (`completion_tokens: 3`, `response: ""`).
+Reproduced live: any prompt to this model, with or without a system
+message, at any context length, returns `eval_count: 3` and empty content,
+`done_reason: "stop"` — not a timeout, not a swap abort, a clean stop that
+happens instantly.
+
+**Root cause:** `ollama show`'s `parameters` for this pull include `stop
+"<|start|>"` and `stop "<|message|>"` as bare stop strings. This model
+uses a Harmony-style multi-channel output format
+(`<|start|>assistant<|channel|>analysis<|message|>...thinking...
+<|channel|>final<|message|>...answer...<|eot|>`), where `<|message|>` is a
+**structural marker that appears multiple times within one well-formed
+response**, not a turn boundary. The moment the model emits its first
+channel header, Ollama's stop-matching kills generation — before any
+content, thinking or otherwise. Confirmed by overriding the stop list in a
+raw `/api/chat` call (`"stop": ["<|start|>user<|message|>", "<|eot|>"]`):
+the model then produces a real, coherent `analysis`-channel stream. Ollama
+also reports this model "does not support thinking" via `/api/show`
+capabilities — almost certainly the same kind of metadata gap already
+documented for qwen3.8's missing `tools` capability, not a real
+limitation, since the Harmony template clearly has a thinking channel.
+
+**Fix path (not yet applied):** re-create this model via a custom
+Modelfile that keeps only genuine turn-boundary stops (e.g.
+`<|start|>user<|message|>`, `<|eot|>`) and drops the bare `<|start|>` /
+`<|message|>` entries, then re-run its whole benchmark set from scratch —
+every existing score for this model, on this machine, is invalid.
+Excluded from the dashboard entirely rather than left showing the fake
+numbers: `results/merged.summary.json` has an empty `scores` entry for
+this model (renders as untested/pending, not as a 0% capability score).
+
+### Bug 3 (harness-side, general): judge doesn't reject empty responses
+
+Found while diagnosing Bug 2's fake philosophical score: `llm_judge()` in
+`harness/judge.py` sent Muse Glimmer's empty response straight to the
+judge model, which invented a plausible-looking 0.64-0.72 score across ten
+questions rather than recognising there was nothing to judge. This isn't
+Muse-Glimmer-specific — **any** model producing an empty or failed
+response on a judge-scored benchmark would get the same silent score
+fabrication instead of a correct near-zero. Fixed: `llm_judge()` now
+short-circuits to a `0.0` score (skipping the judge call entirely) when
+the response is empty or whitespace-only. `llm_judge_ensemble()` calls
+`llm_judge()` per model, so the fix covers both paths with one change.
+
+### Fair GPU-server-vs-M4-MLX comparison, now at matched depth
+
+| model | host | humaneval | mbpp | spider | bfcl | humaneval+ | mbpp+ |
+|---|---|---|---|---|---|---|---|
+| qwen3.8:27b (GGUF) | GPU server | 95.0 | 68.0 | 74.0 | 55.0 | 90.0 | 61.0 |
+| qwen3.6-128k (GGUF) | GPU server | 93.0 | 70.0 | 71.0 | 82.0 | 88.0 | 59.0 |
+| gemma4:31b (GGUF) | GPU server | 95.0 | 71.0 | 75.0 | 85.0 | 91.0 | 65.0 |
+
+All n=100 except spider n=100 (up from n=20), matching the M4 study's
+depth. `muse-glimmer` excluded — see Bug 2. Next: fold these into the
+`overall` ranking (now correctly excluding EvalPlus/BFCL per the earlier
+fix) and compare directly against `qwen3.6:35b-mlx`, `qwen3.8:27b-mlx`,
+`gemma4:31b-mlx` on the M4 side.
+
+**Follow-up, not done yet:** fix Muse Glimmer's Modelfile and re-run its
+full benchmark set; re-point `prefetch_datasets.py` at the working Spider
+mirror.
+
+---
+
 ## Next up — do these in this order (2026-08-18)
 
 State at handover: 33 models / 10 benchmarks / 7215 samples across both hosts,

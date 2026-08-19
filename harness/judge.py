@@ -8,6 +8,16 @@ Respond ONLY with a JSON object like: {"scores": {"criterion": score, ...}, "rea
 
 
 def llm_judge(client: OllamaClient, judge_model: str, question: str, response: str, criteria: list[str]) -> dict:
+    # An empty response has nothing to judge, but a judge model asked to score
+    # it anyway will invent a plausible-looking mid-range answer rather than
+    # refuse — found via Muse Glimmer on the GPU server, where a stop-token
+    # bug (see docs/ROADMAP.md) truncated every response to nothing and the
+    # judge still returned 0.64-0.72 across ten questions, none of them
+    # correlated with any actual content. Score empty input 0 directly and
+    # skip the judge call entirely, rather than trust it to self-police.
+    if not response or not response.strip():
+        return {"scores": {}, "reasoning": "empty response — scored 0 without invoking judge",
+                "mean_score": 0.0, "error": None}
     criteria_str = "\n".join(f"- {c}" for c in criteria)
     prompt = f"""Question asked to the AI:
 {question}
