@@ -451,6 +451,17 @@ function compareModels(a, b, col, dir) {
     const cmp = va < vb ? -1 : va > vb ? 1 : 0;
     return dir === 'asc' ? cmp : -cmp;
   }
+  if (col === 'overall') {
+    // A partial-core average (e.g. 2/7 benchmarks) is not the same statistic
+    // as a full 7/7 one, and a short average can land high by chance — see
+    // llama4:scout at 90.0 on mmlu+arc alone outscoring qwen3.8:27b's genuine
+    // 89.7 across all 7. Full-coverage rows always outrank partial ones on
+    // this column, in EITHER direction, same treatment as a missing value
+    // above; only within a coverage tier does the raw score decide order.
+    const fullA = overallCoverage(a) === CORE_BENCHES.length;
+    const fullB = overallCoverage(b) === CORE_BENCHES.length;
+    if (fullA !== fullB) return fullA ? -1 : 1;
+  }
   return dir === 'asc' ? va - vb : vb - va;
 }
 
