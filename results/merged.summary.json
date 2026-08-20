@@ -20,18 +20,6 @@
       "spider": 0.7,
       "philosophical": 0.9960000000000001
     },
-    "qwen3.8:27b": {
-      "mmlu": 0.9,
-      "arc": 1.0,
-      "gsm8k": 1.0,
-      "philosophical": 0.9960000000000001,
-      "humaneval": 0.96,
-      "mbpp": 0.7,
-      "spider": 0.72,
-      "bfcl": 0.81,
-      "humaneval_plus": 0.91,
-      "mbpp_plus": 0.63
-    },
     "gemma4:31b": {
       "mmlu": 0.85,
       "arc": 1.0,
@@ -45,18 +33,17 @@
       "mbpp_plus": 0.65,
       "bfcl_irrelevance": 0.91
     },
-    "qwen3.8:27b-mlx": {
+    "qwen3.8:27b": {
       "mmlu": 0.9,
       "arc": 1.0,
       "gsm8k": 1.0,
-      "humaneval": 0.93,
-      "mbpp": 0.68,
-      "bfcl": 0.81,
+      "philosophical": 0.9960000000000001,
+      "humaneval": 0.96,
+      "mbpp": 0.7,
       "spider": 0.72,
-      "philosophical": 0.976,
-      "humaneval_plus": 0.9,
-      "mbpp_plus": 0.62,
-      "bfcl_irrelevance": 0.68
+      "bfcl": 0.81,
+      "humaneval_plus": 0.91,
+      "mbpp_plus": 0.63
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 1.0,
@@ -67,29 +54,6 @@
       "spider": 0.65,
       "philosophical": 0.96,
       "bfcl": 0.85
-    },
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
-      "mmlu": 0.9,
-      "arc": 1.0,
-      "gsm8k": 1.0,
-      "humaneval": 0.95,
-      "mbpp": 0.68,
-      "spider": 0.74,
-      "philosophical": 0.944,
-      "bfcl": 0.75,
-      "humaneval_plus": 0.9,
-      "mbpp_plus": 0.61,
-      "bfcl_irrelevance": 0.75
-    },
-    "qwen3-coder-next:sovereign-128k": {
-      "mmlu": 0.75,
-      "arc": 0.95,
-      "gsm8k": 1.0,
-      "humaneval": 0.85,
-      "mbpp": 0.65,
-      "spider": 0.75,
-      "philosophical": 0.9279999999999999,
-      "bfcl": 0.9
     },
     "qwen3.6:27b": {
       "mmlu": 0.9,
@@ -104,6 +68,19 @@
       "mbpp_plus": 0.68,
       "bfcl_irrelevance": 0.86
     },
+    "qwen3-coder-next:sovereign-128k": {
+      "mmlu": 0.75,
+      "arc": 0.95,
+      "gsm8k": 1.0,
+      "humaneval": 0.85,
+      "mbpp": 0.65,
+      "spider": 0.75,
+      "philosophical": 0.9279999999999999,
+      "bfcl": 0.9,
+      "bfcl_irrelevance": 0.84,
+      "humaneval_plus": 0.88,
+      "mbpp_plus": 0.65
+    },
     "qwen3.6:27b-mlx": {
       "mmlu": 0.9,
       "arc": 1.0,
@@ -117,6 +94,42 @@
       "mbpp_plus": 0.66,
       "bfcl_irrelevance": 0.86
     },
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "mmlu": 0.9,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.95,
+      "mbpp": 0.68,
+      "spider": 0.74,
+      "philosophical": 0.944,
+      "bfcl": 0.75,
+      "humaneval_plus": 0.9,
+      "mbpp_plus": 0.61,
+      "bfcl_irrelevance": 0.75
+    },
+    "qwen3.8:27b-mlx": {
+      "mmlu": 0.9,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.93,
+      "mbpp": 0.68,
+      "bfcl": 0.81,
+      "spider": 0.72,
+      "philosophical": 0.976,
+      "humaneval_plus": 0.9,
+      "mbpp_plus": 0.62,
+      "bfcl_irrelevance": 0.68
+    },
+    "devstral-small-2:latest": {
+      "mmlu": 0.7,
+      "arc": 1.0,
+      "gsm8k": 1.0,
+      "humaneval": 0.85,
+      "mbpp": 0.7,
+      "spider": 0.7,
+      "philosophical": 0.9,
+      "bfcl": 0.85
+    },
     "qwen3.6-128k:latest": {
       "mmlu": 0.75,
       "arc": 1.0,
@@ -129,16 +142,6 @@
       "humaneval_plus": 0.88,
       "mbpp_plus": 0.59,
       "bfcl_irrelevance": 0.8
-    },
-    "devstral-small-2:latest": {
-      "mmlu": 0.7,
-      "arc": 1.0,
-      "gsm8k": 1.0,
-      "humaneval": 0.85,
-      "mbpp": 0.7,
-      "spider": 0.7,
-      "philosophical": 0.9,
-      "bfcl": 0.85
     },
     "gemma4:26b-mlx": {
       "mmlu": 0.75,
@@ -188,7 +191,10 @@
       "mbpp": 0.7,
       "spider": 0.75,
       "philosophical": 0.8720000000000001,
-      "bfcl": 0.65
+      "bfcl": 0.65,
+      "bfcl_irrelevance": 0.82,
+      "humaneval_plus": 0.79,
+      "mbpp_plus": 0.57
     },
     "qwen3:32b": {
       "mmlu": 0.85,
@@ -208,7 +214,10 @@
       "mbpp": 0.65,
       "spider": 0.35,
       "philosophical": 0.9279999999999999,
-      "bfcl": 0.85
+      "bfcl": 0.85,
+      "bfcl_irrelevance": 0.84,
+      "humaneval_plus": 0.78,
+      "mbpp_plus": 0.65
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 0.75,
@@ -325,34 +334,34 @@
       "philosophical": 0.8560000000000001,
       "bfcl": 0.0
     },
-    "deepseek-r1:70b": {
-      "bfcl": 0.0
-    },
     "needle2": {
       "bfcl": 0.41,
       "bfcl_irrelevance": 0.74
+    },
+    "deepseek-r1:70b": {
+      "bfcl": 0.0
     }
   },
   "speeds": {
     "gemma4:31b-mlx": 11.201452934241221,
     "qwen3.8:27b-mlx +think": 29.844296736409678,
-    "qwen3.8:27b": 8.525283421848039,
     "gemma4:31b": 9.673151692912725,
-    "qwen3.8:27b-mlx": 27.583411125408357,
+    "qwen3.8:27b": 8.525283421848039,
     "qwen3.6:35b-mlx +think": 72.22677386616951,
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 10.796721839641611,
-    "qwen3-coder-next:sovereign-128k": 34.93388476530612,
     "qwen3.6:27b": 12.102999151062209,
+    "qwen3-coder-next:sovereign-128k": 34.838638927548,
     "qwen3.6:27b-mlx": 13.482459542974537,
-    "qwen3.6-128k:latest": 38.848899772852675,
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 10.796721839641611,
+    "qwen3.8:27b-mlx": 27.583411125408357,
     "devstral-small-2:latest": 16.309305315571983,
+    "qwen3.6-128k:latest": 38.848899772852675,
     "gemma4:26b-mlx": 63.31692969252951,
     "qwen3.6:35b-mlx": 71.97859396339447,
     "qwen3-32b-nothink:latest": 11.627113403996274,
     "muse-glimmer:30b-mlx +think": 21.593399893793766,
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.705560862423752,
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.767425965353855,
     "qwen3:32b": 11.648418619340017,
-    "qwen3-coder:30b-sovereign": 40.893067262676325,
+    "qwen3-coder:30b-sovereign": 32.18326805335121,
     "gemma4-12b-agentic:latest": 9.109774546731675,
     "gemma4-12b-agentic-mtp:latest": 24.8042166709602,
     "qwen3-coder:latest": 60.27494566202786,
@@ -365,9 +374,9 @@
     "qwen2.5-coder:7b": 21.337380925568834,
     "llama3.2:3b": 33.62007832866332,
     "codestral:22b": 0.0,
+    "needle2": 1617.5920333875977,
     "deepseek-r1:70b": 4.63915664115767,
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": 0.0,
-    "needle2": 1617.5920333875977
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": 0.0
   },
   "sample_sizes": {
     "gemma4:31b-mlx": {
@@ -390,6 +399,19 @@
       "spider": 20,
       "philosophical": 10
     },
+    "gemma4:31b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 100,
+      "mbpp": 100,
+      "spider": 100,
+      "philosophical": 10,
+      "bfcl": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
+    },
     "qwen3.8:27b": {
       "mmlu": 20,
       "arc": 20,
@@ -402,7 +424,56 @@
       "humaneval_plus": 100,
       "mbpp_plus": 100
     },
-    "gemma4:31b": {
+    "qwen3.6:35b-mlx +think": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10,
+      "bfcl": 20
+    },
+    "qwen3.6:27b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 100,
+      "mbpp": 100,
+      "spider": 100,
+      "philosophical": 10,
+      "bfcl": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
+    },
+    "qwen3-coder-next:sovereign-128k": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10,
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.6:27b-mlx": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "philosophical": 10,
+      "humaneval": 100,
+      "mbpp": 100,
+      "spider": 100,
+      "bfcl": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
+    },
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
       "mmlu": 20,
       "arc": 20,
       "gsm8k": 25,
@@ -428,7 +499,7 @@
       "mbpp_plus": 100,
       "bfcl_irrelevance": 100
     },
-    "qwen3.6:35b-mlx +think": {
+    "devstral-small-2:latest": {
       "mmlu": 20,
       "arc": 20,
       "gsm8k": 25,
@@ -437,55 +508,6 @@
       "spider": 20,
       "philosophical": 10,
       "bfcl": 20
-    },
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 100,
-      "mbpp": 100,
-      "spider": 100,
-      "philosophical": 10,
-      "bfcl": 100,
-      "humaneval_plus": 100,
-      "mbpp_plus": 100,
-      "bfcl_irrelevance": 100
-    },
-    "qwen3-coder-next:sovereign-128k": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
-    },
-    "qwen3.6:27b": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 100,
-      "mbpp": 100,
-      "spider": 100,
-      "philosophical": 10,
-      "bfcl": 100,
-      "humaneval_plus": 100,
-      "mbpp_plus": 100,
-      "bfcl_irrelevance": 100
-    },
-    "qwen3.6:27b-mlx": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "philosophical": 10,
-      "humaneval": 100,
-      "mbpp": 100,
-      "spider": 100,
-      "bfcl": 100,
-      "humaneval_plus": 100,
-      "mbpp_plus": 100,
-      "bfcl_irrelevance": 100
     },
     "qwen3.6-128k:latest": {
       "mmlu": 20,
@@ -499,16 +521,6 @@
       "humaneval_plus": 100,
       "mbpp_plus": 100,
       "bfcl_irrelevance": 100
-    },
-    "devstral-small-2:latest": {
-      "mmlu": 20,
-      "arc": 20,
-      "gsm8k": 25,
-      "humaneval": 20,
-      "mbpp": 20,
-      "spider": 20,
-      "philosophical": 10,
-      "bfcl": 20
     },
     "gemma4:26b-mlx": {
       "mmlu": 20,
@@ -558,7 +570,10 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "qwen3:32b": {
       "mmlu": 20,
@@ -578,7 +593,10 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "gemma4-12b-agentic:latest": {
       "mmlu": 20,
@@ -695,12 +713,12 @@
       "philosophical": 10,
       "bfcl": 20
     },
-    "deepseek-r1:70b": {
-      "bfcl": 20
-    },
     "needle2": {
       "bfcl": 100,
       "bfcl_irrelevance": 100
+    },
+    "deepseek-r1:70b": {
+      "bfcl": 20
     }
   },
   "model_info": {
@@ -725,17 +743,6 @@
       "architecture": "qwen3_5",
       "think": true
     },
-    "qwen3.8:27b": {
-      "host": "MacBook M4",
-      "quantization": "Q4_K_M",
-      "official_name": "Qwen3.8 27B",
-      "context_length": 262144,
-      "size_gb": 16.5,
-      "effective_ctx": 32768,
-      "params": "27.3B",
-      "architecture": "qwen35",
-      "vram_estimate": 24.1
-    },
     "gemma4:31b": {
       "host": "i9 GPU server",
       "quantization": "Q4_K_M",
@@ -747,15 +754,16 @@
       "architecture": "gemma4",
       "vram_estimate": 137.6
     },
-    "qwen3.8:27b-mlx": {
+    "qwen3.8:27b": {
       "host": "MacBook M4",
-      "quantization": "nvfp4",
-      "official_name": "qwen3_5 27.8B",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8 27B",
       "context_length": 262144,
-      "size_gb": 16.9,
+      "size_gb": 16.5,
       "effective_ctx": 32768,
-      "params": "27.8B",
-      "architecture": "qwen3_5"
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 24.1
     },
     "qwen3.6:35b-mlx +think": {
       "host": "MacBook M4",
@@ -769,16 +777,16 @@
       "sparse": true,
       "think": true
     },
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
-      "host": "i9 GPU server",
+    "qwen3.6:27b": {
+      "host": "MacBook M4",
       "quantization": "Q4_K_M",
-      "official_name": "Qwen3.8-27B 27B",
+      "official_name": "qwen35 27.8B",
       "context_length": 262144,
-      "size_gb": 16.8,
-      "effective_ctx": 262144,
-      "params": "27.3B",
+      "size_gb": 16.2,
+      "effective_ctx": 32768,
+      "params": "27.8B",
       "architecture": "qwen35",
-      "vram_estimate": 71.7
+      "vram_estimate": 56.9
     },
     "qwen3-coder-next:sovereign-128k": {
       "host": "i9 GPU server",
@@ -794,17 +802,6 @@
       "sparse": true,
       "vram_estimate": 47.9
     },
-    "qwen3.6:27b": {
-      "host": "MacBook M4",
-      "quantization": "Q4_K_M",
-      "official_name": "qwen35 27.8B",
-      "context_length": 262144,
-      "size_gb": 16.2,
-      "effective_ctx": 32768,
-      "params": "27.8B",
-      "architecture": "qwen35",
-      "vram_estimate": 56.9
-    },
     "qwen3.6:27b-mlx": {
       "host": "MacBook M4",
       "quantization": "nvfp4",
@@ -814,6 +811,38 @@
       "effective_ctx": 32768,
       "params": "27.4B",
       "architecture": "qwen3_5"
+    },
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8-27B 27B",
+      "context_length": 262144,
+      "size_gb": 16.8,
+      "effective_ctx": 262144,
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 71.7
+    },
+    "qwen3.8:27b-mlx": {
+      "host": "MacBook M4",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5 27.8B",
+      "context_length": 262144,
+      "size_gb": 16.9,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen3_5"
+    },
+    "devstral-small-2:latest": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "mistral3 24.0B",
+      "context_length": 393216,
+      "size_gb": 14.1,
+      "effective_ctx": 16384,
+      "params": "24.0B",
+      "architecture": "mistral3",
+      "vram_estimate": 17.9
     },
     "qwen3.6-128k:latest": {
       "host": "i9 GPU server",
@@ -828,17 +857,6 @@
       "experts_used": 8,
       "sparse": true,
       "vram_estimate": 103.4
-    },
-    "devstral-small-2:latest": {
-      "host": "MacBook M4",
-      "quantization": "Q4_K_M",
-      "official_name": "mistral3 24.0B",
-      "context_length": 393216,
-      "size_gb": 14.1,
-      "effective_ctx": 16384,
-      "params": "24.0B",
-      "architecture": "mistral3",
-      "vram_estimate": 17.9
     },
     "gemma4:26b-mlx": {
       "host": "MacBook M4",
@@ -1070,6 +1088,16 @@
       "architecture": "llama",
       "vram_estimate": 15.8
     },
+    "needle2": {
+      "host": "MacBook M4",
+      "quantization": "CQ2",
+      "official_name": "Needle 2",
+      "context_length": 4096,
+      "size_gb": 0.0137,
+      "effective_ctx": 4096,
+      "params": "45M",
+      "architecture": "needle2"
+    },
     "deepseek-r1:70b": {
       "host": "i9 GPU server",
       "quantization": "Q4_K_M",
@@ -1091,38 +1119,28 @@
       "params": "27.9B",
       "architecture": "muse-glimmer",
       "vram_estimate": 31.2
-    },
-    "needle2": {
-      "host": "MacBook M4",
-      "quantization": "CQ2",
-      "official_name": "Needle 2",
-      "context_length": 4096,
-      "size_gb": 0.0137,
-      "effective_ctx": 4096,
-      "params": "45M",
-      "architecture": "needle2"
     }
   },
   "model_timestamps": {
     "gemma4:31b-mlx": "2026-08-15T09:46:31",
     "qwen3.8:27b-mlx +think": "2026-08-16T19:19:15",
-    "qwen3.8:27b": "2026-08-18T07:37:27",
     "gemma4:31b": "2026-08-20T18:43:33",
-    "qwen3.8:27b-mlx": "2026-08-20T12:56:22",
+    "qwen3.8:27b": "2026-08-18T07:37:27",
     "qwen3.6:35b-mlx +think": "2026-08-15T11:30:34",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T18:04:27",
-    "qwen3-coder-next:sovereign-128k": "2026-08-19T13:30:01",
     "qwen3.6:27b": "2026-08-20T13:27:29",
+    "qwen3-coder-next:sovereign-128k": "2026-08-20T21:35:10",
     "qwen3.6:27b-mlx": "2026-08-20T14:27:03",
-    "qwen3.6-128k:latest": "2026-08-20T18:15:36",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T18:04:27",
+    "qwen3.8:27b-mlx": "2026-08-20T12:56:22",
     "devstral-small-2:latest": "2026-08-15T09:41:39",
+    "qwen3.6-128k:latest": "2026-08-20T18:15:36",
     "gemma4:26b-mlx": "2026-08-15T09:42:13",
     "qwen3.6:35b-mlx": "2026-08-15T11:27:32",
     "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
     "muse-glimmer:30b-mlx +think": "2026-08-15T11:26:33",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-19T13:20:09",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-20T20:50:25",
     "qwen3:32b": "2026-08-15T10:07:48",
-    "qwen3-coder:30b-sovereign": "2026-08-19T13:34:31",
+    "qwen3-coder:30b-sovereign": "2026-08-20T22:12:25",
     "gemma4-12b-agentic:latest": "2026-08-15T09:37:59",
     "gemma4-12b-agentic-mtp:latest": "2026-08-15T09:39:27",
     "qwen3-coder:latest": "2026-08-15T10:15:37",
@@ -1135,9 +1153,9 @@
     "qwen2.5-coder:7b": "2026-08-15T09:34:55",
     "llama3.2:3b": "2026-08-15T09:32:00",
     "codestral:22b": "2026-08-15T09:39:35",
+    "needle2": "2026-08-20T12:41:55",
     "deepseek-r1:70b": "2026-08-15T11:00:46",
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "2026-08-19T13:42:03",
-    "needle2": "2026-08-20T12:41:55"
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "2026-08-19T13:42:03"
   },
   "swap_benches": {
     "qwen3.8:27b-mlx +think": [
@@ -1147,14 +1165,14 @@
       "bfcl",
       "humaneval_plus"
     ],
-    "qwen3.8:27b-mlx": [
-      "mbpp_plus"
-    ],
     "qwen3.6:35b-mlx +think": [
       "mbpp"
     ],
     "qwen3.6:27b": [
       "bfcl_irrelevance"
+    ],
+    "qwen3.8:27b-mlx": [
+      "mbpp_plus"
     ]
   },
   "models": [
@@ -1164,22 +1182,22 @@
     "qwen3.8:27b",
     "qwen3.6:35b-mlx +think",
     "qwen3.6:27b",
-    "qwen3-coder-next:sovereign-128k",
     "qwen3.6:27b-mlx",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
     "qwen3.8:27b-mlx",
     "devstral-small-2:latest",
     "qwen3.6-128k:latest",
     "gemma4:26b-mlx",
+    "qwen3-coder-next:sovereign-128k",
     "qwen3.6:35b-mlx",
     "qwen3-32b-nothink:latest",
     "muse-glimmer:30b-mlx +think",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
     "qwen3:32b",
-    "qwen3-coder:30b-sovereign",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
     "gemma4-12b-agentic:latest",
     "gemma4-12b-agentic-mtp:latest",
     "qwen3-coder:latest",
+    "qwen3-coder:30b-sovereign",
     "nemotron-3-nano:30b",
     "muse-glimmer:30b-mlx",
     "qwen2.5-coder:32b",
@@ -1239,43 +1257,43 @@
     "qwen3.8:27b-mlx +think",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M"
   ],
-  "total_samples": 9170,
+  "total_samples": 10370,
   "run_id": "merged",
-  "timestamp": "2026-08-20 18:43",
+  "timestamp": "2026-08-20 22:23",
   "merged_from": {
-    "gemma4:31b-mlx": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3.8:27b-mlx +think": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3.8:27b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
+    "gemma4:31b-mlx": "merged",
+    "qwen3.8:27b-mlx +think": "merged",
     "gemma4:31b": "20260820_172900",
-    "qwen3.8:27b-mlx": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3.6:35b-mlx +think": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
+    "qwen3.8:27b": "merged",
+    "qwen3.6:35b-mlx +think": "merged",
+    "qwen3.6:27b": "merged",
+    "qwen3-coder-next:sovereign-128k": "20260820_172900",
+    "qwen3.6:27b-mlx": "merged",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "20260820_172900",
-    "qwen3-coder-next:sovereign-128k": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3.6:27b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3.6:27b-mlx": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
+    "qwen3.8:27b-mlx": "merged",
+    "devstral-small-2:latest": "merged",
     "qwen3.6-128k:latest": "20260820_172900",
-    "devstral-small-2:latest": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "gemma4:26b-mlx": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3.6:35b-mlx": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3-32b-nothink:latest": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "muse-glimmer:30b-mlx +think": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3:32b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3-coder:30b-sovereign": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "gemma4-12b-agentic:latest": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "gemma4-12b-agentic-mtp:latest": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen3-coder:latest": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "nemotron-3-nano:30b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "muse-glimmer:30b-mlx": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen2.5-coder:32b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "nemotron-cascade-2:latest": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "llama3.1:8b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "llama4:scout": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "qwen2.5-coder:7b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "llama3.2:3b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "codestral:22b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "deepseek-r1:70b": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
-    "needle2": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327"
+    "gemma4:26b-mlx": "merged",
+    "qwen3.6:35b-mlx": "merged",
+    "qwen3-32b-nothink:latest": "merged",
+    "muse-glimmer:30b-mlx +think": "merged",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "20260820_172900",
+    "qwen3:32b": "merged",
+    "qwen3-coder:30b-sovereign": "20260820_172900",
+    "gemma4-12b-agentic:latest": "merged",
+    "gemma4-12b-agentic-mtp:latest": "merged",
+    "qwen3-coder:latest": "merged",
+    "nemotron-3-nano:30b": "merged",
+    "muse-glimmer:30b-mlx": "merged",
+    "qwen2.5-coder:32b": "merged",
+    "nemotron-cascade-2:latest": "merged",
+    "llama3.1:8b": "merged",
+    "llama4:scout": "merged",
+    "qwen2.5-coder:7b": "merged",
+    "llama3.2:3b": "merged",
+    "codestral:22b": "merged",
+    "needle2": "merged",
+    "deepseek-r1:70b": "merged",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "merged"
   }
 }
