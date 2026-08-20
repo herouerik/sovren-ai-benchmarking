@@ -244,6 +244,57 @@ body::after{
 
 <script>
 const BENCHMARK_DATA = {
+  "run_id": "merged+20260820_121821+20260820_124141+20260820_124218+20260820_124218+20260820_140327",
+  "timestamp": "2026-08-20 14:39",
+  "models": [
+    "gemma4:31b-mlx",
+    "qwen3.8:27b-mlx +think",
+    "qwen3.8:27b",
+    "gemma4:31b",
+    "qwen3.8:27b-mlx",
+    "qwen3.6:35b-mlx +think",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
+    "qwen3-coder-next:sovereign-128k",
+    "qwen3.6:27b",
+    "qwen3.6:27b-mlx",
+    "qwen3.6-128k:latest",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "qwen3.6:35b-mlx",
+    "qwen3-32b-nothink:latest",
+    "muse-glimmer:30b-mlx +think",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
+    "qwen3:32b",
+    "qwen3-coder:30b-sovereign",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "qwen3-coder:latest",
+    "nemotron-3-nano:30b",
+    "muse-glimmer:30b-mlx",
+    "qwen2.5-coder:32b",
+    "nemotron-cascade-2:latest",
+    "llama3.1:8b",
+    "llama4:scout",
+    "qwen2.5-coder:7b",
+    "llama3.2:3b",
+    "codestral:22b",
+    "deepseek-r1:70b",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M",
+    "needle2"
+  ],
+  "benchmarks": [
+    "mmlu",
+    "arc",
+    "gsm8k",
+    "humaneval",
+    "mbpp",
+    "spider",
+    "philosophical",
+    "bfcl",
+    "humaneval_plus",
+    "mbpp_plus",
+    "bfcl_irrelevance"
+  ],
   "scores": {
     "gemma4:31b-mlx": {
       "mmlu": 1.0,
@@ -299,7 +350,8 @@ const BENCHMARK_DATA = {
       "spider": 0.72,
       "philosophical": 0.976,
       "humaneval_plus": 0.9,
-      "mbpp_plus": 0.62
+      "mbpp_plus": 0.62,
+      "bfcl_irrelevance": 0.68
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 1.0,
@@ -331,7 +383,8 @@ const BENCHMARK_DATA = {
       "philosophical": 0.96,
       "bfcl": 0.87,
       "humaneval_plus": 0.8,
-      "mbpp_plus": 0.68
+      "mbpp_plus": 0.68,
+      "bfcl_irrelevance": 0.86
     },
     "qwen3.6:27b-mlx": {
       "mmlu": 0.9,
@@ -343,7 +396,8 @@ const BENCHMARK_DATA = {
       "spider": 0.72,
       "bfcl": 0.87,
       "humaneval_plus": 0.82,
-      "mbpp_plus": 0.66
+      "mbpp_plus": 0.66,
+      "bfcl_irrelevance": 0.86
     },
     "devstral-small-2:latest": {
       "mmlu": 0.7,
@@ -566,6 +620,10 @@ const BENCHMARK_DATA = {
     },
     "deepseek-r1:70b": {
       "bfcl": 0.0
+    },
+    "needle2": {
+      "bfcl": 0.41,
+      "bfcl_irrelevance": 0.74
     }
   },
   "speeds": {
@@ -573,11 +631,11 @@ const BENCHMARK_DATA = {
     "qwen3.8:27b-mlx +think": 29.844296736409678,
     "qwen3.8:27b": 8.525283421848039,
     "gemma4:31b": 9.690412471365839,
-    "qwen3.8:27b-mlx": 31.59921287317513,
+    "qwen3.8:27b-mlx": 27.583411125408357,
     "qwen3.6:35b-mlx +think": 72.22677386616951,
     "qwen3-coder-next:sovereign-128k": 34.93388476530612,
-    "qwen3.6:27b": 12.378708017188966,
-    "qwen3.6:27b-mlx": 13.712396175852684,
+    "qwen3.6:27b": 12.102999151062209,
+    "qwen3.6:27b-mlx": 13.482459542974537,
     "devstral-small-2:latest": 16.309305315571983,
     "gemma4:26b-mlx": 63.31692969252951,
     "qwen3.6-128k:latest": 39.04830368331829,
@@ -601,7 +659,8 @@ const BENCHMARK_DATA = {
     "llama3.2:3b": 33.62007832866332,
     "codestral:22b": 0.0,
     "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": 0.0,
-    "deepseek-r1:70b": 4.63915664115767
+    "deepseek-r1:70b": 4.63915664115767,
+    "needle2": 1617.5920333875977
   },
   "sample_sizes": {
     "gemma4:31b-mlx": {
@@ -658,7 +717,8 @@ const BENCHMARK_DATA = {
       "spider": 100,
       "philosophical": 10,
       "humaneval_plus": 100,
-      "mbpp_plus": 100
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 20,
@@ -690,7 +750,8 @@ const BENCHMARK_DATA = {
       "philosophical": 10,
       "bfcl": 100,
       "humaneval_plus": 100,
-      "mbpp_plus": 100
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
     },
     "qwen3.6:27b-mlx": {
       "mmlu": 20,
@@ -702,7 +763,8 @@ const BENCHMARK_DATA = {
       "spider": 100,
       "bfcl": 100,
       "humaneval_plus": 100,
-      "mbpp_plus": 100
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
     },
     "devstral-small-2:latest": {
       "mmlu": 20,
@@ -925,7 +987,67 @@ const BENCHMARK_DATA = {
     },
     "deepseek-r1:70b": {
       "bfcl": 20
+    },
+    "needle2": {
+      "bfcl": 100,
+      "bfcl_irrelevance": 100
     }
+  },
+  "model_timestamps": {
+    "gemma4:31b-mlx": "2026-08-15T09:46:31",
+    "qwen3.8:27b-mlx +think": "2026-08-16T19:19:15",
+    "qwen3.8:27b": "2026-08-18T07:37:27",
+    "gemma4:31b": "2026-08-20T02:18:49",
+    "qwen3.8:27b-mlx": "2026-08-20T12:56:22",
+    "qwen3.6:35b-mlx +think": "2026-08-15T11:30:34",
+    "qwen3-coder-next:sovereign-128k": "2026-08-19T13:30:01",
+    "qwen3.6:27b": "2026-08-20T13:27:29",
+    "qwen3.6:27b-mlx": "2026-08-20T14:27:03",
+    "devstral-small-2:latest": "2026-08-15T09:41:39",
+    "gemma4:26b-mlx": "2026-08-15T09:42:13",
+    "qwen3.6-128k:latest": "2026-08-20T01:57:25",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T01:45:55",
+    "qwen3.6:35b-mlx": "2026-08-15T11:27:32",
+    "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
+    "muse-glimmer:30b-mlx +think": "2026-08-15T11:26:33",
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-19T13:20:09",
+    "qwen3:32b": "2026-08-15T10:07:48",
+    "qwen3-coder:30b-sovereign": "2026-08-19T13:34:31",
+    "gemma4-12b-agentic:latest": "2026-08-15T09:37:59",
+    "gemma4-12b-agentic-mtp:latest": "2026-08-15T09:39:27",
+    "qwen3-coder:latest": "2026-08-15T10:15:37",
+    "nemotron-3-nano:30b": "2026-08-15T09:43:32",
+    "muse-glimmer:30b-mlx": "2026-08-15T11:19:21",
+    "qwen2.5-coder:32b": "2026-08-15T10:14:32",
+    "nemotron-cascade-2:latest": "2026-08-15T10:16:41",
+    "llama3.1:8b": "2026-08-15T09:33:29",
+    "llama4:scout": "2026-08-18T03:08:46",
+    "qwen2.5-coder:7b": "2026-08-15T09:34:55",
+    "llama3.2:3b": "2026-08-15T09:32:00",
+    "codestral:22b": "2026-08-15T09:39:35",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "2026-08-19T13:42:03",
+    "deepseek-r1:70b": "2026-08-15T11:00:46",
+    "needle2": "2026-08-20T12:41:55"
+  },
+  "swap_benches": {
+    "qwen3.8:27b-mlx +think": [
+      "bfcl"
+    ],
+    "qwen3.8:27b": [
+      "bfcl",
+      "humaneval_plus"
+    ],
+    "qwen3.8:27b-mlx": [
+      "mbpp_plus"
+    ],
+    "qwen3.6:35b-mlx +think": [
+      "mbpp"
+    ],
+    "needle2": [],
+    "qwen3.6:27b": [
+      "bfcl_irrelevance"
+    ],
+    "qwen3.6:27b-mlx": []
   },
   "model_info": {
     "gemma4:31b-mlx": {
@@ -979,8 +1101,7 @@ const BENCHMARK_DATA = {
       "size_gb": 16.9,
       "effective_ctx": 32768,
       "params": "27.8B",
-      "architecture": "qwen3_5",
-      "think": false
+      "architecture": "qwen3_5"
     },
     "qwen3.6:35b-mlx +think": {
       "host": "MacBook M4",
@@ -1316,105 +1437,19 @@ const BENCHMARK_DATA = {
       "params": "70.6B",
       "architecture": "llama",
       "vram_estimate": 51.6
+    },
+    "needle2": {
+      "host": "MacBook M4",
+      "quantization": "CQ2",
+      "official_name": "Needle 2",
+      "context_length": 4096,
+      "size_gb": 0.0137,
+      "effective_ctx": 4096,
+      "params": "45M",
+      "architecture": "needle2"
     }
   },
-  "model_timestamps": {
-    "gemma4:31b-mlx": "2026-08-15T09:46:31",
-    "qwen3.8:27b-mlx +think": "2026-08-16T19:19:15",
-    "qwen3.8:27b": "2026-08-18T07:37:27",
-    "gemma4:31b": "2026-08-20T02:18:49",
-    "qwen3.8:27b-mlx": "2026-08-18T08:49:11",
-    "qwen3.6:35b-mlx +think": "2026-08-15T11:30:34",
-    "qwen3-coder-next:sovereign-128k": "2026-08-19T13:30:01",
-    "qwen3.6:27b": "2026-08-18T01:34:24",
-    "qwen3.6:27b-mlx": "2026-08-18T02:02:31",
-    "devstral-small-2:latest": "2026-08-15T09:41:39",
-    "gemma4:26b-mlx": "2026-08-15T09:42:13",
-    "qwen3.6-128k:latest": "2026-08-20T01:57:25",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T01:45:55",
-    "qwen3.6:35b-mlx": "2026-08-15T11:27:32",
-    "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
-    "muse-glimmer:30b-mlx +think": "2026-08-15T11:26:33",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-19T13:20:09",
-    "qwen3:32b": "2026-08-15T10:07:48",
-    "qwen3-coder:30b-sovereign": "2026-08-19T13:34:31",
-    "gemma4-12b-agentic:latest": "2026-08-15T09:37:59",
-    "gemma4-12b-agentic-mtp:latest": "2026-08-15T09:39:27",
-    "qwen3-coder:latest": "2026-08-15T10:15:37",
-    "nemotron-3-nano:30b": "2026-08-15T09:43:32",
-    "muse-glimmer:30b-mlx": "2026-08-15T11:19:21",
-    "qwen2.5-coder:32b": "2026-08-15T10:14:32",
-    "nemotron-cascade-2:latest": "2026-08-15T10:16:41",
-    "llama3.1:8b": "2026-08-15T09:33:29",
-    "llama4:scout": "2026-08-18T03:08:46",
-    "qwen2.5-coder:7b": "2026-08-15T09:34:55",
-    "llama3.2:3b": "2026-08-15T09:32:00",
-    "codestral:22b": "2026-08-15T09:39:35",
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "2026-08-19T13:42:03",
-    "deepseek-r1:70b": "2026-08-15T11:00:46"
-  },
-  "swap_benches": {
-    "qwen3.8:27b-mlx +think": [
-      "bfcl"
-    ],
-    "qwen3.8:27b": [
-      "bfcl",
-      "humaneval_plus"
-    ],
-    "qwen3.8:27b-mlx": [
-      "mbpp_plus"
-    ],
-    "qwen3.6:35b-mlx +think": [
-      "mbpp"
-    ]
-  },
-  "models": [
-    "gemma4:31b-mlx",
-    "qwen3.8:27b-mlx +think",
-    "qwen3.8:27b",
-    "gemma4:31b",
-    "qwen3.8:27b-mlx",
-    "qwen3.6:35b-mlx +think",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
-    "qwen3-coder-next:sovereign-128k",
-    "qwen3.6:27b",
-    "qwen3.6:27b-mlx",
-    "qwen3.6-128k:latest",
-    "devstral-small-2:latest",
-    "gemma4:26b-mlx",
-    "qwen3.6:35b-mlx",
-    "qwen3-32b-nothink:latest",
-    "muse-glimmer:30b-mlx +think",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
-    "qwen3:32b",
-    "qwen3-coder:30b-sovereign",
-    "gemma4-12b-agentic:latest",
-    "gemma4-12b-agentic-mtp:latest",
-    "qwen3-coder:latest",
-    "nemotron-3-nano:30b",
-    "muse-glimmer:30b-mlx",
-    "qwen2.5-coder:32b",
-    "nemotron-cascade-2:latest",
-    "llama3.1:8b",
-    "llama4:scout",
-    "qwen2.5-coder:7b",
-    "llama3.2:3b",
-    "codestral:22b",
-    "deepseek-r1:70b",
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M"
-  ],
-  "benchmarks": [
-    "mmlu",
-    "arc",
-    "gsm8k",
-    "humaneval",
-    "mbpp",
-    "spider",
-    "philosophical",
-    "bfcl",
-    "humaneval_plus",
-    "mbpp_plus"
-  ],
+  "total_samples": 8870,
   "all_models": [
     "llama3.2:3b",
     "llama3.1:8b",
@@ -1447,45 +1482,7 @@ const BENCHMARK_DATA = {
     "qwen3.8:27b-mlx",
     "qwen3.8:27b-mlx +think",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M"
-  ],
-  "total_samples": 10970,
-  "run_id": "merged",
-  "timestamp": "2026-08-20 02:19",
-  "merged_from": {
-    "gemma4:31b-mlx": "merged",
-    "qwen3.8:27b-mlx +think": "merged",
-    "qwen3.8:27b": "merged",
-    "gemma4:31b": "20260820_011630",
-    "qwen3.8:27b-mlx": "merged",
-    "qwen3.6:35b-mlx +think": "merged",
-    "qwen3-coder-next:sovereign-128k": "merged",
-    "qwen3.6:27b": "merged",
-    "qwen3.6:27b-mlx": "merged",
-    "devstral-small-2:latest": "merged",
-    "gemma4:26b-mlx": "merged",
-    "qwen3.6-128k:latest": "20260820_011630",
-    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "20260820_011630",
-    "qwen3.6:35b-mlx": "merged",
-    "qwen3-32b-nothink:latest": "merged",
-    "muse-glimmer:30b-mlx +think": "merged",
-    "MichelRosselli/GLM-4.5-Air:Q3_K_M": "merged",
-    "qwen3:32b": "merged",
-    "qwen3-coder:30b-sovereign": "merged",
-    "gemma4-12b-agentic:latest": "merged",
-    "gemma4-12b-agentic-mtp:latest": "merged",
-    "qwen3-coder:latest": "merged",
-    "nemotron-3-nano:30b": "merged",
-    "muse-glimmer:30b-mlx": "merged",
-    "qwen2.5-coder:32b": "merged",
-    "nemotron-cascade-2:latest": "merged",
-    "llama3.1:8b": "merged",
-    "llama4:scout": "merged",
-    "qwen2.5-coder:7b": "merged",
-    "llama3.2:3b": "merged",
-    "codestral:22b": "merged",
-    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": "merged",
-    "deepseek-r1:70b": "merged"
-  }
+  ]
 };
 
 // Sample shows all three states: green (run), yellow (previous), gray (pending)

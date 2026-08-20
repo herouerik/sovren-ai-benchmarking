@@ -248,37 +248,72 @@ pass means the model called **nothing**.
 > measured*, not zero. `gemma4:31b`, `qwen3.6-128k` and `Qwen3.8-27B-GGUF`
 > need a run driven from the server before they have an irrelevance number.
 
-| model | host | bfcl (v4 AST) | bfcl_irrelevance |
+| model | build | bfcl (v4 AST) | bfcl_irrelevance |
 |---|---|---|---|
-| qwen3.6:27b (27.8B) | M4 | 87% | **86.0%** |
-| needle2 (45M) | M4 | 41.0% | **74.0%** |
-| qwen3.8:27b-mlx (27.8B) | M4 | 81% | **68.0%** |
+| qwen3.6:27b-mlx (27.8B) | nvfp4 | 87% | **86.0%** |
+| qwen3.6:27b (27.8B) | Q4_K_M | 87% | **86.0%** |
+| needle2 (45M) | CQ2 | 41.0% | **74.0%** |
+| qwen3.8:27b-mlx (27.8B) | nvfp4 | 81% | **68.0%** |
 
-All at n=100, seed 42. One caveat on qwen3.6:27b: `irrelevance_115` was lost
-to a memory-guard abort (decode collapsed 17x, 10 -> 0.6 tok/s, 527 tokens in)
-and scored as a failure with no calls recorded, so its true score is 86-87%.
-The guard fired correctly — qwen3.8:27b-mlx was still resident at ~28GB when
-qwen3.6:27b loaded — but it means one cell is a measurement artefact, not a
-model result.
+All at n=100, seed 42, all on the M4. One caveat on qwen3.6:27b (GGUF):
+`irrelevance_115` was lost to a memory-guard abort (decode collapsed 17x,
+10 -> 0.6 tok/s, 527 tokens in) and scored as a failure with no calls
+recorded — the guard fired correctly, qwen3.8:27b-mlx was still resident at
+~28GB when it loaded. The MLX run of the same model has zero aborts and lands
+on the same 86/100, so the artefact did not move the number.
 
 ### Restraint does not track selection
 
-The `bfcl` and `bfcl_irrelevance` columns rank the three models differently,
-and the spread on restraint (68-86%) is wider than the spread these same
-models show on selection.
+Fisher exact on the pooled pass/fail items, build held constant:
 
-**A 45M model beats a 27.8B one on restraint** — needle2 74% vs
-qwen3.8:27b-mlx 68% — while losing to it 41% vs 81% on selection. And within
-the same family and size, qwen3.6 (86%) beats qwen3.8 (68%) by 18 points,
-having also beaten it on tool selection (0.87 vs 0.81). So qwen3.8 is not
-trading restraint for selection skill; on this evidence it is simply worse at
-both, which is consistent with the earlier finding that the newer release
-regressed on tool use generally.
+| comparison | 3.8 | 3.6 | delta | p |
+|---|---|---|---|---|
+| bfcl_irrelevance, MLX vs MLX | 68/100 | 86/100 | **-18** | **0.004** |
+| bfcl, MLX vs MLX | 81/100 | 87/100 | -6 | 0.335 |
+
+The restraint gap is real and survives a clean build-matched test; the
+selection gap does not reach significance on its own. And the build effect on
+qwen3.6's restraint is exactly zero (86/100 on both nvfp4 and Q4_K_M),
+consistent with the ~1pp build effects in `FINDINGS-qwen-factorial.md`.
+
+Separately, **a 45M model beats a 27.8B one on restraint** — needle2 74% vs
+qwen3.8:27b-mlx 68% — while losing to it 41% vs 81% on selection.
 
 Tool-selection skill and tool-restraint are separable capabilities, and the
 existing `bfcl` column was only ever measuring the first. A model routed into
 an agent loop on the strength of an 80%+ BFCL score can still over-call on a
 third of out-of-scope requests.
+
+### What this does not say about 3.6 vs 3.8 overall
+
+The restraint result is easy to over-read. Held to the same Fisher test across
+the rest of the suite, **3.8 wins coding significantly and the two are
+otherwise indistinguishable** (GGUF build, n=100 each):
+
+| benchmark | 3.8 | 3.6 | delta | p |
+|---|---|---|---|---|
+| humaneval | 96 | 83 | **+13** | **0.005** |
+| humaneval_plus | 91 | 80 | **+11** | **0.043** |
+| mbpp | 70 | 72 | -2 | 0.876 |
+| mbpp_plus | 63 | 68 | -5 | 0.552 |
+| spider | 72 | 75 | -3 | 0.749 |
+| bfcl | 81 | 87 | -6 | 0.335 |
+| **pooled, 600 items** | **473** | **465** | **+1.3** | **0.625** |
+
+MLX build: pooled +1.0, p = 0.731. So "3.6 is better" is wrong as a general
+claim — 3.8's +13 on HumanEval at p = 0.005 is the strongest single
+model-vs-model signal in this whole dataset. The defensible statement is
+narrower: **3.8 is better at writing code, 3.6 is better at knowing when not
+to call a tool, and across the suite as a whole they are indistinguishable.**
+
+Worth noting the *shape* of 3.8's win: it is concentrated entirely in the
+HumanEval family and flat-to-negative on MBPP, MBPP+, Spider and BFCL.
+HumanEval is the most saturated and most likely-contaminated coding benchmark
+in common use (published 2021, in effectively every training corpus), and
+MBPP+/Spider are the harder, less-contaminated tests — which is where the
+improvement is not. That is a pattern consistent with benchmark-specific gains
+rather than broad capability improvement. It is a hypothesis this suite cannot
+settle, not a finding.
 
 ### One shared failure mode: topical adjacency
 
@@ -308,3 +343,33 @@ work: it now rests on two independent measurements rather than one. Even so,
 a 14% over-call rate argues for keeping a validation step between a local
 model and any tool it can actually invoke — and the topical-adjacency failures
 above are exactly the kind a schema check passes and a result check catches.
+
+---
+
+## What this suite cannot tell you
+
+Worth stating plainly, because the numbers above invite over-reading and
+because public claims about these models ("frontier grade on your laptop")
+are about capabilities this harness does not measure.
+
+**Six of eleven benchmarks are saturated.** MMLU, ARC, GSM8K and philosophical
+sit at 0.9-1.0 for every config above ~24B. They cannot separate a strong
+model from a frontier one, so a flat score there is not evidence of parity.
+
+**There is no frontier baseline in the dataset.** Every number here is
+local-vs-local. Any claim of the form "as good as <cloud model>" is not
+confirmed or refuted by this data — the comparison row does not exist. The
+harness already supports it (`judge.provider: openai` proves the
+OpenAI-compatible client path works), so adding a cloud model as a benchmark
+*target* rather than only as a judge is a small change and the single highest
+-value addition available.
+
+**No long-horizon agentic measurement.** `bfcl` is single-shot and
+`bfcl_multi_turn_long_context` is disabled by default at ~450-500s/sample.
+There is no SWE-bench-style task, so "can this model carry a multi-step
+engineering task" is untested — and that is exactly the capability the
+strongest public claims rest on.
+
+**Model identity is not scale identity.** Everything here is a ~27-36B local
+quantisation. A claim about a vendor's flagship is not a claim about the small
+sibling that fits in 48GB, and this table only contains the latter.
