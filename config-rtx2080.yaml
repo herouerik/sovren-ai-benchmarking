@@ -32,6 +32,22 @@ models:
   - model: qwen2.5-coder:14b
     ctx: 8192                 # 9.0GB weights alone; smaller ctx deliberately
 
+  # New candidates (2026-08-21), each bisected the same way — confirmed via
+  # "offloaded N/N layers to GPU" in the server log, not just "loads without
+  # erroring". Same weight class does not mean same KV-cache footprint:
+  # phi4:14b (9.1GB, same size as qwen2.5-coder:14b) only reaches 4096 full
+  # offload before partial CPU fallback (39/41, 38/41 at 6144/8192) — a
+  # real architecture difference, not a bug. gemma3:12b (8.1GB) tops out at
+  # 16384 (partial at 24576: 45/49). qwen3:8b reaches the full 32768 target
+  # cleanly.
+  - model: qwen3:8b
+    ctx: 32768
+  - model: gemma3:12b
+    ctx: 16384
+  - model: phi4:14b
+    ctx: 4096                 # ceiling is between 4096-6144; verified full
+                               # offload only holds at 4096
+
 benchmarks:
   reasoning:
     enabled: true
