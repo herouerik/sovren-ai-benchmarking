@@ -793,3 +793,88 @@ recreates the old name.
   MLX conversions). Could be derived from the MLX config instead.
 - The philosophical judge is a single local model (`llama3.1:8b`). An ensemble
   would reduce single-judge bias; the code path already exists.
+
+---
+
+## §E addendum — BFCL moved to v4, and `irrelevance` added (2026-08-20)
+
+Two corrections to §E as written, both from checking the data rather than the
+version numbers.
+
+**1. `bfcl-eval` is no longer a heavy dependency.** §E rejected it because it
+"pulls in sglang/vllm/cuda-bindings as hard dependencies, several GB". At
+2026.3.23 the wheel is 1.9 MB and `requires_dist` is `requests, tqdm, numpy,
+pandas, huggingface_hub, pydantic, python-dotenv, tree_sitter{,-java,-javascript},
+openai, mistralai, anthropic, cohere` — no CUDA, no serving stack. Still four
+vendor SDKs this harness never calls, so the data is extracted from the wheel
+by `prefetch_datasets.download_bfcl_v4()` rather than taken as a runtime
+dependency; the local AST checker in `benchmarks/bfcl.py` stays.
+
+**2. v4 is not on HuggingFace.** `gorilla-llm/Berkeley-Function-Calling-Leaderboard`
+carries `BFCL_v3_*` and nothing else. The v4 dataset ships only inside the
+`bfcl-eval` wheel. "Switch to v4" is therefore a data-sourcing change, not a
+filename change.
+
+### The v3 -> v4 move cost nothing
+
+ID-aligned diff of every field across the four non-live AST categories
+(1000 items):
+
+| category | items | question diffs | schema diffs | ground-truth diffs |
+|---|---|---|---|---|
+| simple | 400 | 0 | 0 | 1 |
+| multiple | 200 | 0 | 0 | 0 |
+| parallel | 200 | 2 | 0 | 2 |
+| parallel_multiple | 200 | 0 | 0 | 1 |
+
+v4's non-live AST set is v3 with four corrected ground truths, all genuine
+bugs: `simple_363` omitted the `restaurant_search.` namespace, so a model
+calling the function correctly scored wrong; `parallel_multiple_141` expected
+the month `"Febuary"`.
+
+None of the four corrected items fall inside the seed-42 n=100 draw, so **every
+`bfcl` score already in `results/` stands** — verified two ways: the v4 draw is
+byte-identical to the stored v3 draw including order, and re-running needle2
+under v4 reproduced 41.0% exactly.
+
+v4 renamed the Python AST set `simple` -> `simple_python`. The category name is
+kept as `simple` and IDs are canonicalised back (`simple_python_7` ->
+`simple_7`) so stratify buckets, the seeded selection, and per-sample record
+IDs all stay comparable with the existing runs. `_load_category` now also sorts
+by numeric ID: both v3 and v4 ship ascending, but `select_samples` shuffles
+each stratum in arrival order, so an upstream reordering would silently change
+which items every model is scored on.
+
+### New: `bfcl_irrelevance`
+
+240 non-live requests that no available function can satisfy; a pass means the
+model called **nothing**. This closes a real blind spot — nothing else in the
+suite penalises over-calling, so a model that fires a tool at every prompt
+scored identically to one with judgment.
+
+Kept as its own benchmark rather than a fifth category in `bfcl`, because
+folding it in would redefine a metric already published for seven models at
+n=100.
+
+The system prompt spells out the opt-out explicitly ("if none of the available
+functions can satisfy the request, do not call any function"). Without that
+line the item is a trick question and the score measures prompt wording rather
+than judgment.
+
+**Still not v4-comparable.** The published v4 leaderboard figure is a weighted
+aggregate over every category including live and web_search. The honest label
+for this harness remains "BFCL v4 non-live AST" (+ irrelevance, reported
+separately) — not "BFCL v4".
+
+### Remaining v4 categories, ranked
+
+- `simple_java` / `simple_javascript` — cheap items; AST-comparing non-Python
+  literals is what `tree_sitter` is for. Medium value given Python coding is
+  covered elsewhere.
+- `multi_turn_base` / `miss_func` / `miss_param` — a `BENCHMARK_REGISTRY` entry
+  each on the engine `bfcl_multi_turn.py` already implements. Code cost is near
+  zero; the blocker is the measured ~450-500s per sample.
+- `live_*`, `web_search` — skip. Real external services break the
+  temperature-0.0 determinism the rest of the suite is built on. §E's original
+  reasoning holds harder for v4.
+- `memory`, `format_sensitivity` — new in v4, no track record. Defer.

@@ -94,6 +94,41 @@ The judge is configured via `judge.provider` in `config.yaml` — see the [Judge
 
 ---
 
+### 7. BFCL — function calling / tool use
+
+**`bfcl`** — the non-live, single-turn AST categories (`simple`, `multiple`,
+`parallel`, `parallel_multiple`). The model gets a request plus a set of
+function schemas and must emit the right call(s). Scored by BFCL's AST-match
+rule — function name plus every ground-truth parameter drawn from an
+acceptable-value set — reimplemented locally in `benchmarks/bfcl.py`.
+
+**`bfcl_irrelevance`** — the inverse. 240 requests that *no* available function
+can satisfy; a pass means the model called nothing. Without this, a model that
+fires a tool at every prompt scores identically to one with judgment, because
+nothing else in the suite penalises over-calling.
+
+**Tells you:** can this model be trusted inside an agent loop — both to call
+the right tool, and to decline when no tool fits?
+
+**Source:** BFCL **v4**, from the [`bfcl-eval`](https://pypi.org/project/bfcl-eval/)
+wheel. The HuggingFace dataset repo still carries only the v3 files, so
+`prefetch_datasets.py` extracts the v4 JSONs from the wheel into
+`data/bfcl_v4/` rather than taking `bfcl-eval` as a runtime dependency.
+[Gorilla / Berkeley Function Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html).
+
+> **Not leaderboard-comparable.** The published BFCL v4 figure is a weighted
+> aggregate over every category, including the live and web-search sets this
+> harness deliberately skips (real external services would break the
+> temperature-0.0 determinism everything else here relies on). The honest label
+> for these numbers is "BFCL v4 non-live AST", with irrelevance reported
+> separately. See `docs/ROADMAP.md` §E and its addendum.
+
+Multi-turn/agentic categories are a separate benchmark
+(`bfcl_multi_turn_long_context`), disabled by default — one sample runs 4 turns
+and ~28 tool calls, measured at ~450–500s.
+
+---
+
 ## How a run works
 
 ```
@@ -457,6 +492,16 @@ df.groupby("model")[["score", "tok_per_sec"]].mean()
 | Low tok/s + high accuracy | Slow but reliable — fine for batch tasks |
 
 The practical output is a routing map: which models to assign to which task types. High-accuracy coding models for agent loops, strong reasoning models for complex analysis, fast small models for cheap classification or summarisation.
+
+### Written-up findings
+
+Analyses of actual runs, rather than of the scoring machinery:
+
+| Document | Question it answers |
+|---|---|
+| [`docs/FINDINGS-host-comparison.md`](docs/FINDINGS-host-comparison.md) | MacBook M4 vs the 6×P100 server — which host, model and use case wins, and which summaries are safe to read |
+| [`docs/FINDINGS-qwen-factorial.md`](docs/FINDINGS-qwen-factorial.md) | Qwen 3.6 vs 3.8 × MLX vs GGUF, one factor at a time, with Fisher exact tests |
+| [`docs/FINDINGS-qwen-evalplus.md`](docs/FINDINGS-qwen-evalplus.md) | The same factorial on the EvalPlus edge-case variants |
 
 ---
 
