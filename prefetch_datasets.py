@@ -29,6 +29,77 @@ DOWNLOADS = [
     ("evalplus/mbppplus",                dict(split="test")),
 ]
 
+# BFCL v4 ships its dataset only inside the bfcl-eval wheel — the HF dataset
+# repo (gorilla-llm/Berkeley-Function-Calling-Leaderboard) still carries the v3
+# files and nothing else. Rather than take bfcl-eval as a runtime dependency
+# for data alone (it pulls openai/anthropic/mistralai/cohere SDKs we never
+# call), the wheel is downloaded once and its data/ JSONs extracted here, the
+# same way the Spider zip is handled below.
+BFCL_EVAL_VERSION = "2026.3.23"
+BFCL_V4_DIR = Path("data/bfcl_v4")
+# Only the categories benchmarks/bfcl.py actually runs. Live/exec/web_search
+# are deliberately excluded (see docs/ROADMAP.md §E: real external services
+# break the temperature-0.0 determinism the rest of the suite relies on).
+BFCL_V4_FILES = [
+    "BFCL_v4_simple_python.json",
+    "BFCL_v4_multiple.json",
+    "BFCL_v4_parallel.json",
+    "BFCL_v4_parallel_multiple.json",
+    "BFCL_v4_irrelevance.json",
+    "possible_answer/BFCL_v4_simple_python.json",
+    "possible_answer/BFCL_v4_multiple.json",
+    "possible_answer/BFCL_v4_parallel.json",
+    "possible_answer/BFCL_v4_parallel_multiple.json",
+]
+
+
+def download_bfcl_v4() -> bool:
+    """Extract BFCL v4 dataset JSONs from the bfcl-eval wheel into data/bfcl_v4/.
+
+    Returns True if the files are available (extracted or already present).
+    """
+    missing = [f for f in BFCL_V4_FILES if not (BFCL_V4_DIR / f).exists()]
+    if not missing:
+        print(f"  BFCL v4 data already present ({len(BFCL_V4_FILES)} files). Skipping download.")
+        return True
+
+    import subprocess
+    import tempfile
+
+    print(f"  Downloading bfcl-eval=={BFCL_EVAL_VERSION} wheel (~2 MB) for its v4 dataset...")
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "pip", "download", "--no-deps", "-q",
+                 f"bfcl-eval=={BFCL_EVAL_VERSION}", "-d", tmp],
+                check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            print(f"  [!] pip download failed: {e.stderr.strip()[:300]}")
+            return False
+
+        wheels = list(Path(tmp).glob("bfcl_eval-*.whl"))
+        if not wheels:
+            print("  [!] no bfcl_eval wheel found after download")
+            return False
+
+        with zipfile.ZipFile(wheels[0]) as zf:
+            names = zf.namelist()
+            for rel in BFCL_V4_FILES:
+                # The wheel nests data under bfcl_eval/.../data/; match on the
+                # suffix rather than assuming the package's internal layout,
+                # which has moved between releases.
+                hits = [n for n in names if n.endswith("/data/" + rel)]
+                if not hits:
+                    print(f"  [!] {rel} not in wheel")
+                    return False
+                dest = BFCL_V4_DIR / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(zf.read(hits[0]))
+
+    print(f"  Extracted {len(BFCL_V4_FILES)} BFCL v4 files to {BFCL_V4_DIR}/")
+    return True
+
+
 # Spider database Google Drive file ID (full dataset zip ~100MB)
 SPIDER_GDRIVE_ID = "1iRDVHLr4mX2wQKSgA9J8Pire73Jahh0m"
 SPIDER_DB_DIR = Path("data/spider/database")
@@ -151,7 +222,10 @@ def main():
             print(f"FAILED: {e}")
             failed.append(name)
 
-    print(f"\n[{len(DOWNLOADS) + 1}/{len(DOWNLOADS) + 1}] Spider SQLite databases ...")
+    print(f"\n[{len(DOWNLOADS) + 1}/{len(DOWNLOADS) + 2}] BFCL v4 dataset ...")
+    bfcl_ok = download_bfcl_v4()
+
+    print(f"\n[{len(DOWNLOADS) + 2}/{len(DOWNLOADS) + 2}] Spider SQLite databases ...")
     spider_ok = download_spider_databases(local_zip=cli.spider_zip)
 
     print()
@@ -163,6 +237,8 @@ def main():
         sys.exit(1)
     else:
         Path(".datasets_ready").write_text("ok")
+        if not bfcl_ok:
+            print("WARNING: BFCL v4 data unavailable — bfcl/bfcl_irrelevance will fail.")
         if spider_ok:
             print("All datasets cached. Future runs will use local cache + Spider execution scoring.")
         else:

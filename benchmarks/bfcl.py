@@ -1,19 +1,75 @@
 import json
-from huggingface_hub import hf_hub_download
+import re
+from pathlib import Path
+
 from benchmarks.base import BaseBenchmark
 
-# BFCL's own eval package (bfcl-eval) pulls in sglang/vllm/cuda-bindings as
-# hard dependencies just to reach its dataset + checker utilities — several
-# GB for a benchmarking harness that otherwise has no ML runtime deps at all.
-# The dataset itself is plain JSON on HF, and the checker logic (AST-style
-# argument comparison against a possible-answer set) is a few hundred lines
-# we can own directly, the same way benchmarks/sql.py implements its own
-# execution/scoring instead of depending on Spider's reference harness.
-_REPO = "gorilla-llm/Berkeley-Function-Calling-Leaderboard"
+# BFCL v4. Two things worth knowing about where this data comes from:
+#
+# The checker logic (AST-style argument comparison against a possible-answer
+# set) is a few hundred lines we own directly, the same way benchmarks/sql.py
+# implements its own execution/scoring instead of depending on Spider's
+# reference harness. The original reason was that bfcl-eval pulled in
+# sglang/vllm/cuda-bindings — no longer true as of 2026.3.23, whose wheel is
+# 1.9MB with no CUDA, but it still drags in four vendor LLM SDKs this harness
+# never calls, so the local checker stays.
+#
+# The dataset, however, is no longer on HF: that repo still carries only the
+# BFCL_v3_* files, and v4 ships exclusively inside the bfcl-eval wheel. It is
+# extracted to data/bfcl_v4/ by prefetch_datasets.download_bfcl_v4().
+#
+# For the four AST categories below, v4 is v3 with four corrected ground
+# truths and two corrected question texts out of 1000 items — verified by an
+# ID-aligned diff of every field. The fixes are real bugs: simple_363's
+# ground truth omitted the "restaurant_search." namespace, so a model calling
+# the function correctly was scored wrong; parallel_multiple_141 expected the
+# month "Febuary". None of the corrected items fall inside the seed-42 n=100
+# draw, so the v3 -> v4 move leaves every score already in results/ intact.
+_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "bfcl_v4"
+
+# v4 renamed the Python AST set to "simple_python" (it split out simple_java
+# and simple_javascript). The category name is kept as "simple" so the
+# stratify buckets, and therefore the seeded sample selection, are unchanged.
+_CATEGORY_FILES = {
+    "simple": "simple_python",
+    "multiple": "multiple",
+    "parallel": "parallel",
+    "parallel_multiple": "parallel_multiple",
+    "irrelevance": "irrelevance",
+}
 
 # Non-live, single-turn AST categories only (Phase 1 of the ROADMAP.md §E
 # scope). Live/exec/multi-turn categories are separate benchmark classes.
+# `irrelevance` is scored the other way round and lives in its own benchmark
+# (BFCLIrrelevanceBenchmark) rather than being folded in here — mixing it
+# into this score would silently redefine a metric already published for
+# seven models at n=100.
 _CATEGORIES = ["simple", "multiple", "parallel", "parallel_multiple"]
+
+_ID_NUM = re.compile(r"(\d+)$")
+
+
+def _read(rel: str) -> list[dict]:
+    path = _DATA_DIR / rel
+    if not path.exists():
+        raise FileNotFoundError(
+            f"BFCL v4 data missing: {path}. Run `python prefetch_datasets.py` "
+            f"(it extracts the v4 dataset from the bfcl-eval wheel).")
+    with open(path) as f:
+        return [json.loads(l) for l in f if l.strip()]
+
+
+def _sort_key(row: dict) -> int:
+    """Numeric ID order, independent of how the upstream file happens to be laid out.
+
+    The seeded sample selection in BaseBenchmark.select_samples shuffles each
+    stratum in arrival order, so a reordered upstream file silently changes
+    which items every model is scored on. Both v3 and v4 ship ascending
+    already; sorting makes that a guarantee rather than an accident.
+    """
+    m = _ID_NUM.search(row["id"])
+    return int(m.group(1)) if m else 0
+
 
 SYSTEM = ("You are a function-calling assistant. Given a user request and a set of "
           "available functions, call the function(s) needed to satisfy the request. "
@@ -61,18 +117,30 @@ def _to_openai_tool(fn: dict) -> dict:
     }
 
 
+def _canonical_id(raw: str) -> str:
+    """simple_python_7 -> simple_7.
+
+    Keeps per-sample record IDs comparable against the runs already in
+    results/, which were collected under the v3 naming.
+    """
+    return raw.replace("simple_python_", "simple_")
+
+
 def _load_category(category: str) -> list[dict]:
-    q_path = hf_hub_download(_REPO, f"BFCL_v3_{category}.json", repo_type="dataset")
-    a_path = hf_hub_download(_REPO, f"possible_answer/BFCL_v3_{category}.json", repo_type="dataset")
-    with open(q_path) as f:
-        questions = {row["id"]: row for row in (json.loads(l) for l in f if l.strip())}
-    with open(a_path) as f:
-        answers = {row["id"]: row for row in (json.loads(l) for l in f if l.strip())}
+    stem = _CATEGORY_FILES[category]
+    rows = sorted(_read(f"BFCL_v4_{stem}.json"), key=_sort_key)
+    questions = {_canonical_id(r["id"]): r for r in rows}
+    # irrelevance has no possible_answer file: the correct behaviour is to call
+    # nothing, so there is no ground-truth call to compare against.
+    answers = {}
+    if category != "irrelevance":
+        answers = {_canonical_id(r["id"]): r
+                   for r in _read(f"possible_answer/BFCL_v4_{stem}.json")}
 
     samples = []
     for qid, q in questions.items():
         a = answers.get(qid)
-        if a is None:
+        if a is None and category != "irrelevance":
             continue
         # BFCL's schema nests turns for multi-turn reuse; single-turn categories
         # are always one turn with one user message: question[0][0].
@@ -83,7 +151,7 @@ def _load_category(category: str) -> list[dict]:
             "category": category,
             "prompt": user_msg,
             "tools": [_to_openai_tool(fn) for fn in q["function"]],
-            "ground_truth": a["ground_truth"],
+            "ground_truth": a["ground_truth"] if a else [],
         })
     return samples
 
@@ -168,4 +236,57 @@ class BFCLBenchmark(BaseBenchmark):
             "category": sample["category"],
             "predicted_calls": calls,
             "expected_calls": ground_truth,
+        }
+
+
+IRRELEVANCE_SYSTEM = (
+    "You are a function-calling assistant. Given a user request and a set of "
+    "available functions, call the function(s) needed to satisfy the request. "
+    "If none of the available functions can satisfy the request, do not call "
+    "any function — answer in plain text instead."
+)
+
+
+class BFCLIrrelevanceBenchmark(BaseBenchmark):
+    """Non-live irrelevance: 240 requests no available function can satisfy.
+
+    The inverse of every other benchmark in this suite — a pass means the
+    model called *nothing*. Nothing else here penalises over-calling, so a
+    model that fires a tool at every prompt scores identically to one with
+    judgment. Needle 2 is the worked example: asked for a joke about
+    databases with only a weather tool in scope, it emitted a call.
+
+    Kept separate from BFCLBenchmark rather than added as a fifth category:
+    folding it in would change what the published `bfcl` number means for the
+    seven models already measured at n=100.
+    """
+    name = "bfcl_irrelevance"
+
+    def load_samples(self) -> list[dict]:
+        return _load_category("irrelevance")
+
+    def system_prompt(self) -> str:
+        # Deliberately spells out the opt-out. Without it the prompt is a
+        # trick question: a model with only one irrelevant tool in scope has
+        # no way to know that declining is an allowed move, and the score
+        # measures prompt wording rather than judgment.
+        return IRRELEVANCE_SYSTEM
+
+    def format_tools(self, sample: dict) -> list[dict]:
+        return sample["tools"]
+
+    def score(self, sample: dict, response: str, tool_calls: list[dict] | None = None) -> dict:
+        calls = [
+            {"name": tc["function"]["name"], "arguments": tc["function"].get("arguments") or {}}
+            for tc in (tool_calls or [])
+        ]
+        passed = not calls
+        return {
+            "passed": passed,
+            "score": float(passed),
+            "predicted_calls": calls,
+            # No expected_calls key with content: the expectation is the empty
+            # set, and emitting [] here keeps the record shape identical to
+            # BFCLBenchmark's so both render in the same dashboard column.
+            "expected_calls": [],
         }
