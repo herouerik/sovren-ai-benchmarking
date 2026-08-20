@@ -236,7 +236,13 @@ def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[dict]
 # hostnames, no owner, no serial. Keep any new entry to the same shape.
 _KNOWN_HOSTS = {
     "10.0.0.15": "i9 GPU server",
-    "10.0.0.6": "MacBook M4",
+    "10.0.0.6": "MacBook M4",  # stale — kept in case it reconnects here
+    "10.0.0.10": "MacBook M4",  # current, as of 2026-08-21 (was .106,
+    # then 10.0.0.105 per docs/ROADMAP.md:663, now this). Missing this
+    # entry is what actually broke: for a *remote* config (base_url points at
+    # another machine), execution.host_label's override never applies — only
+    # this dict does. Verify with `curl http://<ip>:11434/api/tags` before
+    # trusting an IP here again; it has moved three times now.
 }
 
 
