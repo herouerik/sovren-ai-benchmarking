@@ -37,7 +37,7 @@ from benchmarks.coding import HumanEvalBenchmark, MBPPBenchmark
 from benchmarks.sql import SpiderBenchmark
 from benchmarks.philosophical import PhilosophicalBenchmark
 from benchmarks.speed import SpeedBenchmark
-from benchmarks.bfcl import BFCLBenchmark
+from benchmarks.bfcl import BFCLBenchmark, BFCLIrrelevanceBenchmark
 from benchmarks.evalplus import HumanEvalPlusBenchmark, MBPPPlusBenchmark
 from benchmarks.bfcl_multi_turn import BFCLMultiTurnLongContextBenchmark
 from scoring.report import save_results, print_summary
@@ -55,6 +55,7 @@ BENCHMARK_REGISTRY = {
     "philosophical": PhilosophicalBenchmark,
     "speed":         SpeedBenchmark,
     "bfcl":          BFCLBenchmark,
+    "bfcl_irrelevance": BFCLIrrelevanceBenchmark,
     "humaneval_plus": HumanEvalPlusBenchmark,
     "mbpp_plus":      MBPPPlusBenchmark,
     "bfcl_multi_turn_long_context": BFCLMultiTurnLongContextBenchmark,
@@ -371,7 +372,13 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
             entry["context_length"] = mi.get(ctx_key) if ctx_key else None
 
             total = tags_by_name.get(model_name, 0)
-            entry["size_gb"] = round(total / (1024**3), 1)
+            # One decimal is fine for multi-GB models but rounds anything
+            # under ~50MB to a flat 0.0, which then reads as falsy and made
+            # _classify_params drop the parameter count entirely (Needle 2:
+            # a real 14MB / 45M-param model reported as size 0.0, no params).
+            # Sub-GB models get the precision they need to stay non-zero.
+            gb = total / (1024**3)
+            entry["size_gb"] = round(gb, 1) if gb >= 1 else round(gb, 4)
             entry["effective_ctx"] = effective_ctx
             # Both of these are deliberately omitted rather than guessed when
             # the metadata does not support them — a blank tag is honest, a
