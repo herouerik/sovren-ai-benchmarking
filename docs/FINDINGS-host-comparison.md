@@ -284,6 +284,38 @@ existing `bfcl` column was only ever measuring the first. A model routed into
 an agent loop on the strength of an 80%+ BFCL score can still over-call on a
 third of out-of-scope requests.
 
+### Summary: how to state the 3.6 vs 3.8 difference
+
+> On MLX, 3.8 decodes ~2x faster and is significantly better on **curated**
+> coding benchmarks; 3.6 is significantly better at **not over-calling tools**.
+> Across all 600 pooled coding/tool items they are statistically
+> indistinguishable (+1.3, p = 0.625).
+
+Three things that framing gets right and that shorter versions get wrong:
+
+**The 2x speedup is a build property, not a model property.** MLX: 27.6 vs
+13.5 tok/s = 2.05x. The same two models in GGUF go the other way — 8.5 vs
+12.1 = 0.70x, with 3.8 the *slower* one. 3.8 gains 3.2x going GGUF -> MLX
+where 3.6 gains only 1.1x, so this is 3.8's MLX conversion being good and its
+GGUF conversion being bad. Still a real win in practice, since MLX is the
+right choice on this hardware regardless, but it would reverse on a
+llama.cpp-based setup. Also note throughput here is n=1 per config and these
+figures differ from `FINDINGS-qwen-factorial.md` (27.6 vs 31.3 on the same
+model) because they come from different runs: the ~2x is solid, the second
+digit is not.
+
+**3.8's coding win is on the curated benchmark, not the messy one.** HumanEval
+is the well-specified, curated set; MBPP is the crowd-sourced one with looser
+specs (see `benchmarks/evalplus.py`). 3.8 takes HumanEval +13 (p=0.005) and
+HumanEval+ +11 (p=0.043), and loses MBPP -2 and MBPP+ -5. Getting these round
+the right way carries the whole interpretation: a gain concentrated on the
+most-published, most-likely-contaminated set while vanishing on the harder
+crowd-sourced one is a different claim from a broad coding improvement.
+
+**"Significantly" attaches to restraint only.** bfcl_irrelevance -18 at
+p=0.004 is established. bfcl -6 at p=0.335 favours 3.6 but does not clear
+p<0.05 at n=100 — suggestive, not established.
+
 ### What this does not say about 3.6 vs 3.8 overall
 
 The restraint result is easy to over-read. Held to the same Fisher test across
