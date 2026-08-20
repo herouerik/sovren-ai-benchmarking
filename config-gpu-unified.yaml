@@ -45,13 +45,6 @@ models:
   - model: qwen3.6-128k:latest
     ctx: 262144
 
-  # Meta's Aug 2026 agentic model, purpose-built for cheap long context.
-  # Needed Ollama >=0.32.8 for architecture support (not available pre-upgrade).
-  # Full 53/53 offload at its full native ctx on the FIRST attempt, only
-  # ~6-6.5GiB used per P100 — the most VRAM-efficient model tested this session.
-  - model: hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M
-    ctx: 131072
-
   # Pool-b incumbent for comparison (run on unified pool too, or keep separate)
   - model: qwen3-coder:30b-sovereign
     ctx: 32768
@@ -67,21 +60,6 @@ models:
   # timeout; unsloth's single-blob GGUF for the same model pulled cleanly).
   - model: hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M
     ctx: 262144
-
-  # Ordered last deliberately (2026-08-17), not alphabetically or by ctx like
-  # the others above — this model is dramatically slower than everything else
-  # in the pool (~4.5 tok/s vs 5-15+ for the rest, R1-style verbose reasoning
-  # on every sample) and scored 0% on bfcl, so it's the lowest-value model to
-  # gate the other 8 behind. A prior run got ~65% through this model's 7
-  # benchmarks before being killed to reprioritize the other 8 first — nothing
-  # was lost from that (checkpoints only write after a model's full benchmark
-  # set completes), but re-running it isn't wasted either: mmlu/arc/gsm8k
-  # scored 100%/100%/96% before the kill, worth seeing if that holds.
-  # Compute-graph buffer for deepseek-r1:70b scales ~0.000128 GiB/token and
-  # must fit on a single P100 (16GB) — full 81/81 offload only up to 32768;
-  # 65536 already drops to 44/81, 131072 (this model's native ctx) is 0/81.
-  - model: deepseek-r1:70b
-    ctx: 32768
 
 # Matches config.yaml's (the M4's) benchmark group n_samples exactly, plus
 # sample_seed: 42 already set above — same questions, same sample counts, so
