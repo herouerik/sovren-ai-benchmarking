@@ -131,6 +131,18 @@ benchmarks:
       - "Originality of insight (1-5)"
       - "Clarity of expression (1-5)"
 
+  # Matches config.yaml's groups so a routine run here stays comparable to
+  # the M4 without needing --benchmarks overrides every time. Actual sweeps
+  # so far have used explicit --n-samples 100 to match the M4 study depth;
+  # these defaults are for an incidental/routine run, not the record.
+  bfcl:
+    enabled: true
+    n_samples: 20
+
+  bfcl_irrelevance:
+    enabled: true
+    n_samples: 20
+
 # Same judge as config.yaml — a consistent scorer across both machines is
 # what makes the philosophical column comparable at all.
 judge:
