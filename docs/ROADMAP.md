@@ -510,19 +510,57 @@ the response is empty or whitespace-only. `llm_judge_ensemble()` calls
 
 | model | host | humaneval | mbpp | spider | bfcl | humaneval+ | mbpp+ |
 |---|---|---|---|---|---|---|---|
-| qwen3.8:27b (GGUF) | GPU server | 95.0 | 68.0 | 74.0 | 55.0 | 90.0 | 61.0 |
-| qwen3.6-128k (GGUF) | GPU server | 93.0 | 70.0 | 71.0 | 82.0 | 88.0 | 59.0 |
+| qwen3.8:27b (GGUF) | GPU server | 95.0 | 68.0 | 74.0 | 75.0 | 90.0 | 61.0 |
+| qwen3.6-128k (GGUF) | GPU server | 93.0 | 70.0 | 71.0 | 88.0 | 88.0 | 59.0 |
 | gemma4:31b (GGUF) | GPU server | 95.0 | 71.0 | 75.0 | 85.0 | 91.0 | 65.0 |
 
-All n=100 except spider n=100 (up from n=20), matching the M4 study's
-depth. `muse-glimmer` excluded — see Bug 2. Next: fold these into the
-`overall` ranking (now correctly excluding EvalPlus/BFCL per the earlier
-fix) and compare directly against `qwen3.6:35b-mlx`, `qwen3.8:27b-mlx`,
-`gemma4:31b-mlx` on the M4 side.
+All n=100, matching the M4 study's depth. `muse-glimmer` excluded — see
+Bug 2. `bfcl` numbers reflect Bug 4's fix (below) — the values in this
+table are already corrected, not the ones originally reported.
 
 **Follow-up, not done yet:** fix Muse Glimmer's Modelfile and re-run its
 full benchmark set; re-point `prefetch_datasets.py` at the working Spider
-mirror.
+mirror; fold these into the `overall` ranking (now correctly excluding
+EvalPlus/BFCL per the earlier fix) and compare directly against
+`qwen3.6:35b-mlx`, `qwen3.8:27b-mlx`, `gemma4:31b-mlx` on the M4 side.
+
+### Bug 4: BFCL's "float"/"tuple" types broke tool-call requests
+
+Flagged by the earlier assessment above: qwen3.8's GPU-server `bfcl` was
+55% vs 81% on both M4 builds — a 26-point gap not explained by anything
+already fixed. Root cause: `_bfcl_type_to_json_schema_type()` in
+`benchmarks/bfcl.py` only converted BFCL's `"dict"`→`"object"` and
+`"any"`→`"string"`, leaving `"float"` and `"tuple"` (not valid JSON Schema
+types) to pass through unconverted — affecting ~23% of samples across all
+4 categories. Array-typed properties' `items` sub-schema wasn't converted
+at all, the same gap one level deeper.
+
+**Why only qwen3.8 showed it:** confirmed live that all three models
+(qwen3.8, qwen3.6-128k, gemma4:31b) received the identical malformed
+schema on the identical sample (`multiple_129`, seed-matched across all
+three), but Ollama's qwen3.8/qwen35 backend hard-rejects an unrecognized
+schema type with an HTTP 400, while gemma4 and qwen3.6 tolerate it and
+attempt an answer anyway — sometimes still wrong in a different way
+(qwen3.6-128k passed `annual_rate: "5"` as a string instead of a number
+for that same sample, a related but distinct type-coercion issue the
+schema fix also resolves).
+
+**Why this was invisible instead of a clear error:** `harness/client.py`'s
+`complete_chat` never checked the HTTP status code on the stream response.
+Ollama's 400 error body (`{"error": {...}}`, no `message`/`done` keys) was
+parsed the same as a normal empty chunk, so the call fell through to
+reporting a fabricated `completion_tokens: 1`, `error: None` — an actual
+API rejection silently indistinguishable from "the model just didn't
+answer." All 28 of qwen3.8's "no tool call attempted" bfcl failures had
+`prompt_tokens: 0`, the tell that the request never actually reached the
+model. Fixed: a non-2xx response now raises with the real status and body,
+surfaced through the existing `error` field.
+
+**Result after both fixes, n=100 re-run:** qwen3.8 55%→75% (0 schema
+rejections left, vs 28 before), qwen3.6-128k 82%→88%, gemma4:31b unchanged
+at 85% (it was already working around the bug, just less visibly). The
+qwen3.8-vs-M4 bfcl gap shrank from 26 points to 6 — likely genuine
+model/sampling variance now, not an infra bug.
 
 ---
 
