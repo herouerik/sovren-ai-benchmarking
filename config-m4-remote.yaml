@@ -95,6 +95,13 @@ output:
   save_raw: true
 
 execution:
+  # Declared explicitly, not inferred — without this, collect_model_info()
+  # falls back to the raw IP (192.168.68.110), which doesn't match the
+  # canonical "MacBook M4" label used everywhere else for this machine.
+  # That mismatch triggered a cross-host conflict in the cell-level merge
+  # and silently wiped 6 models' existing core-7/bfcl scores down to just
+  # the new columns before it was caught (see docs/ROADMAP.md).
+  host_label: "MacBook M4"
   parallel_models: false
   max_workers: 2
   # Kept enabled for the timing-based degradation detection (decode rate

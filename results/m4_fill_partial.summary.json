@@ -1,0 +1,365 @@
+{
+  "run_id": "20260820_223726",
+  "timestamp": "2026-08-21 01:25",
+  "total_samples": 1800,
+  "models": [
+    "gemma4-12b-agentic-mtp:latest",
+    "gemma4-12b-agentic:latest",
+    "gemma4:26b-mlx",
+    "gemma4:31b-mlx",
+    "llama3.1:8b",
+    "llama3.2:3b"
+  ],
+  "benchmarks": [
+    "bfcl_irrelevance",
+    "humaneval_plus",
+    "mbpp_plus"
+  ],
+  "scores": {
+    "gemma4-12b-agentic-mtp:latest": {
+      "bfcl_irrelevance": 0.57,
+      "humaneval_plus": 0.81,
+      "mbpp_plus": 0.56
+    },
+    "gemma4-12b-agentic:latest": {
+      "bfcl_irrelevance": 0.57,
+      "humaneval_plus": 0.81,
+      "mbpp_plus": 0.56
+    },
+    "gemma4:26b-mlx": {
+      "bfcl_irrelevance": 0.82,
+      "humaneval_plus": 0.9,
+      "mbpp_plus": 0.59
+    },
+    "gemma4:31b-mlx": {
+      "bfcl_irrelevance": 0.9,
+      "humaneval_plus": 0.93,
+      "mbpp_plus": 0.65
+    },
+    "llama3.1:8b": {
+      "bfcl_irrelevance": 0.46,
+      "humaneval_plus": 0.55,
+      "mbpp_plus": 0.52
+    },
+    "llama3.2:3b": {
+      "bfcl_irrelevance": 0.14,
+      "humaneval_plus": 0.48,
+      "mbpp_plus": 0.49
+    }
+  },
+  "speeds": {
+    "gemma4-12b-agentic-mtp:latest": 21.528272434810233,
+    "gemma4-12b-agentic:latest": 19.000428447888552,
+    "gemma4:26b-mlx": 64.74427734686888,
+    "gemma4:31b-mlx": 11.481201786617602,
+    "llama3.1:8b": 47.53935922478379,
+    "llama3.2:3b": 96.00343703131418
+  },
+  "sample_sizes": {
+    "gemma4-12b-agentic-mtp:latest": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "gemma4-12b-agentic:latest": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "gemma4:26b-mlx": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "gemma4:31b-mlx": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "llama3.1:8b": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "llama3.2:3b": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    }
+  },
+  "model_timestamps": {
+    "gemma4-12b-agentic-mtp:latest": "2026-08-20T23:05:44",
+    "gemma4-12b-agentic:latest": "2026-08-20T23:35:49",
+    "gemma4:26b-mlx": "2026-08-20T23:52:10",
+    "gemma4:31b-mlx": "2026-08-21T00:56:27",
+    "llama3.1:8b": "2026-08-21T01:12:27",
+    "llama3.2:3b": "2026-08-21T01:18:23"
+  },
+  "swap_benches": {
+    "gemma4-12b-agentic-mtp:latest": [],
+    "gemma4-12b-agentic:latest": [],
+    "gemma4:26b-mlx": [],
+    "gemma4:31b-mlx": [],
+    "llama3.1:8b": [],
+    "llama3.2:3b": []
+  },
+  "all_models": [
+    "llama3.2:3b",
+    "llama3.1:8b",
+    "qwen2.5-coder:7b",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "codestral:22b",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "nemotron-3-nano:30b",
+    "gemma4:31b-mlx",
+    "qwen3:32b",
+    "qwen3-32b-nothink:latest",
+    "qwen3-coder:latest",
+    "qwen3.6:27b",
+    "muse-glimmer:30b-mlx",
+    "muse-glimmer:30b-mlx +think",
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think",
+    "qwen3.8:27b-mlx",
+    "qwen3.8:27b-mlx +think",
+    "qwen2.5-coder:32b",
+    "qwen3.8:27b",
+    "qwen3.6:27b-mlx"
+  ],
+  "model_info": {
+    "llama3.1:8b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Meta-Llama-3.1 8B",
+      "context_length": 131072,
+      "size_gb": 4.6,
+      "effective_ctx": 32768,
+      "params": "8.0B",
+      "architecture": "llama",
+      "vram_estimate": 8.8
+    },
+    "llama3.2:3b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Llama-3.2 3B",
+      "context_length": 131072,
+      "size_gb": 1.9,
+      "effective_ctx": 32768,
+      "params": "3.2B",
+      "architecture": "llama",
+      "vram_estimate": 5.5
+    },
+    "muse-glimmer:30b-mlx": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "muse_glimmer 32.3B",
+      "context_length": 131072,
+      "size_gb": 19.8,
+      "effective_ctx": 32768,
+      "params": "32.3B",
+      "architecture": "muse_glimmer",
+      "vram_estimate": 23.4,
+      "think": false
+    },
+    "muse-glimmer:30b-mlx +think": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "muse_glimmer 32.3B",
+      "context_length": 131072,
+      "size_gb": 19.8,
+      "effective_ctx": 32768,
+      "params": "32.3B",
+      "architecture": "muse_glimmer",
+      "vram_estimate": 23.4,
+      "think": true
+    },
+    "nemotron-3-nano:30b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "NVIDIA-Nemotron-3-Nano 30B-A3B",
+      "context_length": 1048576,
+      "size_gb": 22.6,
+      "effective_ctx": 32768,
+      "params": "31.6B",
+      "architecture": "nemotron_h_moe",
+      "experts": 128,
+      "experts_used": 6,
+      "sparse": true,
+      "vram_estimate": 40.8
+    },
+    "nemotron-cascade-2:latest": {
+      "host": "192.168.68.110",
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
+    },
+    "qwen2.5-coder:32b": {
+      "host": "192.168.68.110",
+      "quantization": "?",
+      "context_length": null,
+      "size_gb": 0.0,
+      "effective_ctx": 32768
+    },
+    "qwen2.5-coder:7b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen2.5-Coder 7B",
+      "context_length": 32768,
+      "size_gb": 4.4,
+      "effective_ctx": 32768,
+      "params": "7.6B",
+      "architecture": "qwen2",
+      "vram_estimate": 6.4
+    },
+    "qwen3-32b-nothink:latest": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3 32B",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
+    },
+    "qwen3-coder:latest": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3-Coder 30B-A3B",
+      "context_length": 262144,
+      "size_gb": 17.3,
+      "effective_ctx": 32768,
+      "params": "30.5B",
+      "architecture": "qwen3moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 19.7
+    },
+    "qwen3.6:35b-mlx": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5_moe 35.1B",
+      "context_length": 262144,
+      "size_gb": 20.4,
+      "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "sparse": true,
+      "think": false
+    },
+    "qwen3.6:35b-mlx +think": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5_moe 35.1B",
+      "context_length": 262144,
+      "size_gb": 20.4,
+      "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "sparse": true,
+      "think": true
+    },
+    "qwen3.8:27b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8 27B",
+      "context_length": 262144,
+      "size_gb": 16.5,
+      "effective_ctx": 32768,
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 24.1
+    },
+    "qwen3.8:27b-mlx +think": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5 27.8B",
+      "context_length": 262144,
+      "size_gb": 16.9,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen3_5",
+      "think": true
+    },
+    "qwen3:32b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3 32B",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
+    },
+    "gemma4-12b-agentic-mtp:latest": {
+      "host": "192.168.68.110",
+      "quantization": "Q8_0",
+      "official_name": "gemma4 11.9B",
+      "context_length": 262144,
+      "size_gb": 12.2,
+      "effective_ctx": 16384,
+      "params": "11.9B",
+      "architecture": "gemma4",
+      "vram_estimate": 24.1
+    },
+    "gemma4-12b-agentic:latest": {
+      "host": "192.168.68.110",
+      "quantization": "Q8_0",
+      "official_name": "gemma4 11.9B",
+      "context_length": 262144,
+      "size_gb": 11.8,
+      "effective_ctx": 16384,
+      "params": "11.9B",
+      "architecture": "gemma4",
+      "vram_estimate": 23.6
+    },
+    "gemma4:26b-mlx": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "gemma4 6.3B",
+      "context_length": 262144,
+      "size_gb": 15.5,
+      "effective_ctx": 32768,
+      "params_active": "6.3B",
+      "sparse": true,
+      "architecture": "gemma4"
+    },
+    "gemma4:31b-mlx": {
+      "host": "192.168.68.110",
+      "quantization": "nvfp4",
+      "official_name": "gemma4 31.3B",
+      "context_length": 262144,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "31.3B",
+      "architecture": "gemma4"
+    },
+    "codestral:22b": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_0",
+      "official_name": "llama 22.2B",
+      "context_length": 32768,
+      "size_gb": 11.7,
+      "effective_ctx": 16384,
+      "params": "22.2B",
+      "architecture": "llama",
+      "vram_estimate": 15.8
+    },
+    "devstral-small-2:latest": {
+      "host": "192.168.68.110",
+      "quantization": "Q4_K_M",
+      "official_name": "mistral3 24.0B",
+      "context_length": 393216,
+      "size_gb": 14.1,
+      "effective_ctx": 16384,
+      "params": "24.0B",
+      "architecture": "mistral3",
+      "vram_estimate": 17.9
+    }
+  }
+}
