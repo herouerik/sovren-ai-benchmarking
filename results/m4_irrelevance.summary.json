@@ -1,9 +1,10 @@
 {
   "run_id": "20260820_124218",
-  "timestamp": "2026-08-20 13:02",
-  "total_samples": 100,
+  "timestamp": "2026-08-20 13:28",
+  "total_samples": 200,
   "models": [
-    "qwen3.8:27b-mlx"
+    "qwen3.8:27b-mlx",
+    "qwen3.6:27b"
   ],
   "benchmarks": [
     "bfcl_irrelevance"
@@ -11,21 +12,32 @@
   "scores": {
     "qwen3.8:27b-mlx": {
       "bfcl_irrelevance": 0.68
+    },
+    "qwen3.6:27b": {
+      "bfcl_irrelevance": 0.86
     }
   },
   "speeds": {
-    "qwen3.8:27b-mlx": 27.583411125408357
+    "qwen3.8:27b-mlx": 27.583411125408357,
+    "qwen3.6:27b": 12.102999151062209
   },
   "sample_sizes": {
     "qwen3.8:27b-mlx": {
       "bfcl_irrelevance": 100
+    },
+    "qwen3.6:27b": {
+      "bfcl_irrelevance": 100
     }
   },
   "model_timestamps": {
-    "qwen3.8:27b-mlx": "2026-08-20T12:56:22"
+    "qwen3.8:27b-mlx": "2026-08-20T12:56:22",
+    "qwen3.6:27b": "2026-08-20T13:27:29"
   },
   "swap_benches": {
-    "qwen3.8:27b-mlx": []
+    "qwen3.8:27b-mlx": [],
+    "qwen3.6:27b": [
+      "bfcl_irrelevance"
+    ]
   },
   "all_models": [
     "llama3.2:3b",

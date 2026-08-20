@@ -250,19 +250,35 @@ pass means the model called **nothing**.
 
 | model | host | bfcl (v4 AST) | bfcl_irrelevance |
 |---|---|---|---|
+| qwen3.6:27b (27.8B) | M4 | 87% | **86.0%** |
 | needle2 (45M) | M4 | 41.0% | **74.0%** |
 | qwen3.8:27b-mlx (27.8B) | M4 | 81% | **68.0%** |
 
-Both at n=100, seed 42.
+All at n=100, seed 42. One caveat on qwen3.6:27b: `irrelevance_115` was lost
+to a memory-guard abort (decode collapsed 17x, 10 -> 0.6 tok/s, 527 tokens in)
+and scored as a failure with no calls recorded, so its true score is 86-87%.
+The guard fired correctly — qwen3.8:27b-mlx was still resident at ~28GB when
+qwen3.6:27b loaded — but it means one cell is a measurement artefact, not a
+model result.
 
-### The inversion is the finding
+### Restraint does not track selection
 
-**A 45M model exercises better restraint than a 27.8B one** — 74% vs 68%,
-while losing to it 41% vs 81% on tool *selection*. Tool-selection skill and
-tool-restraint are separable capabilities, and the existing `bfcl` column was
-only ever measuring the first. A model routed into an agent loop on the
-strength of an 80%+ BFCL score can still over-call on a third of out-of-scope
-requests.
+The `bfcl` and `bfcl_irrelevance` columns rank the three models differently,
+and the spread on restraint (68-86%) is wider than the spread these same
+models show on selection.
+
+**A 45M model beats a 27.8B one on restraint** — needle2 74% vs
+qwen3.8:27b-mlx 68% — while losing to it 41% vs 81% on selection. And within
+the same family and size, qwen3.6 (86%) beats qwen3.8 (68%) by 18 points,
+having also beaten it on tool selection (0.87 vs 0.81). So qwen3.8 is not
+trading restraint for selection skill; on this evidence it is simply worse at
+both, which is consistent with the earlier finding that the newer release
+regressed on tool use generally.
+
+Tool-selection skill and tool-restraint are separable capabilities, and the
+existing `bfcl` column was only ever measuring the first. A model routed into
+an agent loop on the strength of an 80%+ BFCL score can still over-call on a
+third of out-of-scope requests.
 
 ### One shared failure mode: topical adjacency
 
@@ -285,7 +301,10 @@ cannot catch and a result check can.
 ### Consequence for the routing map
 
 `bfcl` alone is not sufficient evidence for putting a model in an agent loop.
-Read the two columns together — high selection *and* high restraint. On
-current M4 evidence nothing tested clears both convincingly, which is an
-argument for keeping a validation step between a local model and any tool it
-can actually invoke.
+Read the two columns together — high selection *and* high restraint.
+`qwen3.6:27b` is the only config tested that clears both (87% / 86%), which
+sharpens the earlier recommendation to prefer the qwen3.6 family for agentic
+work: it now rests on two independent measurements rather than one. Even so,
+a 14% over-call rate argues for keeping a validation step between a local
+model and any tool it can actually invoke — and the topical-adjacency failures
+above are exactly the kind a schema check passes and a result check catches.
