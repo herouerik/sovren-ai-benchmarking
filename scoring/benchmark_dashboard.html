@@ -291,7 +291,7 @@ let D    = (typeof BENCHMARK_DATA !== 'undefined') ? BENCHMARK_DATA : SAMPLE_DAT
 let PREV = D.is_sample ? SAMPLE_PREV : null;
 let CONFIG_MODELS = D.all_models ? [...D.all_models] : [];
 
-const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.',bfcl:'BFCL',bfcl_multi_turn_long_context:'BFCL-MT',humaneval_plus:'HumanEval+',mbpp_plus:'MBPP+'};
+const BENCH_LABELS = {mmlu:'MMLU',arc:'ARC',gsm8k:'GSM8K',humaneval:'HumanEval',mbpp:'MBPP',spider:'Spider',philosophical:'Philos.',bfcl:'BFCL',bfcl_multi_turn_long_context:'BFCL-MT',humaneval_plus:'HumanEval+',mbpp_plus:'MBPP+',bfcl_irrelevance:'BFCL-Irr'};
 
 // The 7 benchmarks every full run covers. `overall` is fixed to average only
 // over these — never the optional/harder ones (BFCL, EvalPlus, LiveCodeBench)
@@ -364,6 +364,18 @@ const BENCH_TIPS = {
   bfcl: {
     title: 'Berkeley Function-Calling Leaderboard — Single-Turn',
     body: 'Given a user request and a set of function/tool schemas, the model must call the right function(s) with the right arguments — or correctly call none at all. Covers four categories: simple (one function, no decoys), multiple (right function among distractors), parallel (several calls to the same function in one turn), and parallel-multiple (several calls across different functions). Scored by a local AST-style match against BFCL\'s possible-answer sets — function name plus every parameter value drawn from an acceptable-value set — not exact string match. Tests tool-use correctness directly, the axis none of the other benchmarks here touch.'
+  },
+  bfcl_irrelevance: {
+    title: 'Berkeley Function-Calling Leaderboard — Irrelevance',
+    body: 'The inverse test: 240 requests that none of the offered functions can satisfy. A pass means the model called nothing and answered in plain text instead. Nothing else in this suite penalises over-calling, so without this column a model that fires a tool at every prompt scores identically to one with judgment — and tool selection and tool restraint turn out to be separable skills, ranking models differently. The system prompt states the opt-out explicitly, so this measures judgment rather than whether the model guessed that declining was allowed. The characteristic failure is topical adjacency: reaching for calculate_distance when asked how long a drive takes, or historical_event.get_date when asked a casualty count — a tool that matches the subject but cannot answer the question, which is exactly what a schema check passes and a result check catches.'
+  },
+  humaneval_plus: {
+    title: 'HumanEval+ — Edge-Case Hardened',
+    body: 'The same 164 HumanEval problems with test suites extended roughly 80x by EvalPlus (Liu et al., NeurIPS 2023). The original tests accept solutions that are wrong on empty inputs, boundary values and type surprises, which is why plain HumanEval scores run high and compress at the top — on the 16-model baseline, 6 of 20 items were passed by every model. The prompt is byte-identical to the original: the model is never told it is being graded more strictly. That makes this directly comparable to the HumanEval column, and the gap between the two columns is a clean read on edge-case failure rate.'
+  },
+  mbpp_plus: {
+    title: 'MBPP+ — Edge-Case Hardened',
+    body: 'MBPP with the same EvalPlus treatment — roughly 80x the tests, identical prompts, same subprocess execution scoring. This is consistently the hardest column in the suite and the most discriminating: where HumanEval+ costs models around 4 points against HumanEval, MBPP+ routinely costs 10 or more, because MBPP\'s crowd-sourced problems have looser specs and more room to be accidentally right. If you read only one coding number, read this one.'
   },
   bfcl_multi_turn_long_context: {
     title: 'Berkeley Function-Calling Leaderboard — Multi-Turn, Long Context',
