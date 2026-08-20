@@ -129,6 +129,15 @@ benchmarks:
     enabled: true
     n_samples: 20
 
+  # The inverse test: 240 requests no available function can satisfy, where a
+  # pass means calling nothing. Nothing else in the suite penalises
+  # over-calling, so a model that fires a tool at every prompt is currently
+  # indistinguishable from one with judgment. Separate from `bfcl` on purpose
+  # — folding it in would redefine a metric already published at n=100.
+  bfcl_irrelevance:
+    enabled: true
+    n_samples: 20
+
   # Phase 2 of the BFCL build (docs/ROADMAP.md §E): multi-turn, state-based
   # scoring, Long-Context subcategory only so far. Genuinely expensive per
   # sample — up to 4 turns x up to 20 tool calls each, observed ~450-500s for
