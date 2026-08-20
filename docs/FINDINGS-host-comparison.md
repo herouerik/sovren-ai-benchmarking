@@ -242,25 +242,38 @@ Added 2026-08-20 alongside the BFCL v3 → v4 move (see `docs/ROADMAP.md` §E
 addendum). 240 non-live requests that no available function can satisfy; a
 pass means the model called **nothing**.
 
-> **This column is MacBook M4 only.** The GPU server was not reachable from
-> the machine these runs were driven from (`192.168.68.115` times out; the M4
-> has since moved network per ROADMAP.md:663). Blank server cells mean *not
-> measured*, not zero. `gemma4:31b`, `qwen3.6-128k` and `Qwen3.8-27B-GGUF`
-> need a run driven from the server before they have an irrelevance number.
+> **Update (2026-08-20, run from the GPU server itself):** the M4-only gap
+> below is filled in. Driving the GPU server's Ollama from the M4 was never
+> the only option — running the harness locally on the server against its
+> own instance sidesteps the unreachable-network problem entirely, which is
+> how the three rows below were collected.
 
-| model | build | bfcl (v4 AST) | bfcl_irrelevance |
-|---|---|---|---|
-| qwen3.6:27b-mlx (27.8B) | nvfp4 | 87% | **86.0%** |
-| qwen3.6:27b (27.8B) | Q4_K_M | 87% | **86.0%** |
-| needle2 (45M) | CQ2 | 41.0% | **74.0%** |
-| qwen3.8:27b-mlx (27.8B) | nvfp4 | 81% | **68.0%** |
+| model | build | host | bfcl (v4 AST) | bfcl_irrelevance |
+|---|---|---|---|---|
+| qwen3.6:27b-mlx (27.8B) | nvfp4 | M4 | 87% | **86.0%** |
+| qwen3.6:27b (27.8B) | Q4_K_M | M4 | 87% | **86.0%** |
+| needle2 (45M) | CQ2 | M4 | 41.0% | **74.0%** |
+| qwen3.8:27b-mlx (27.8B) | nvfp4 | M4 | 81% | **68.0%** |
+| gemma4:31b (31.3B) | Q4_K_M | GPU server | 85% | **91.0%** |
+| qwen3.6-128k (36.0B) | Q4_K_M | GPU server | 88% | **80.0%** |
+| Qwen3.8-27B-GGUF (27.3B) | Q4_K_M | GPU server | 75% | **75.0%** |
 
-All at n=100, seed 42, all on the M4. One caveat on qwen3.6:27b (GGUF):
-`irrelevance_115` was lost to a memory-guard abort (decode collapsed 17x,
-10 -> 0.6 tok/s, 527 tokens in) and scored as a failure with no calls
-recorded — the guard fired correctly, qwen3.8:27b-mlx was still resident at
-~28GB when it loaded. The MLX run of the same model has zero aborts and lands
-on the same 86/100, so the artefact did not move the number.
+All at n=100, seed 42. One caveat on qwen3.6:27b (GGUF, M4): `irrelevance_115`
+was lost to a memory-guard abort (decode collapsed 17x, 10 -> 0.6 tok/s, 527
+tokens in) and scored as a failure with no calls recorded — the guard fired
+correctly, qwen3.8:27b-mlx was still resident at ~28GB when it loaded. The
+MLX run of the same model has zero aborts and lands on the same 86/100, so
+the artefact did not move the number.
+
+The GPU-server rows fit the same pattern the rest of this doc already
+established: `gemma4:31b` leads on restraint (91%) the way it led on the
+n=100 composite; `qwen3.6-128k`, despite the best `bfcl` selection score of
+the three (88%), trails on restraint (80%) more than its M4 sibling
+`qwen3.6:27b` does (86%) — a real gap worth noting rather than assuming the
+qwen3.6 family's restraint advantage holds at every build/size. `Qwen3.8-27B-
+GGUF` is the one config where selection and restraint land on the exact same
+number (75%/75%), which is coincidence, not a relationship — nothing here
+ties the two metrics together mechanically.
 
 ### Restraint does not track selection
 

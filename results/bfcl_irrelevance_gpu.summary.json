@@ -1,0 +1,177 @@
+{
+  "run_id": "20260820_172900",
+  "timestamp": "2026-08-20 18:43",
+  "total_samples": 300,
+  "models": [
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
+    "qwen3.6-128k:latest",
+    "gemma4:31b"
+  ],
+  "benchmarks": [
+    "bfcl_irrelevance"
+  ],
+  "scores": {
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "bfcl_irrelevance": 0.75
+    },
+    "qwen3.6-128k:latest": {
+      "bfcl_irrelevance": 0.8
+    },
+    "gemma4:31b": {
+      "bfcl_irrelevance": 0.91
+    }
+  },
+  "speeds": {
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 10.796721839641611,
+    "qwen3.6-128k:latest": 38.848899772852675,
+    "gemma4:31b": 9.673151692912725
+  },
+  "sample_sizes": {
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "bfcl_irrelevance": 100
+    },
+    "qwen3.6-128k:latest": {
+      "bfcl_irrelevance": 100
+    },
+    "gemma4:31b": {
+      "bfcl_irrelevance": 100
+    }
+  },
+  "model_timestamps": {
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T18:04:27",
+    "qwen3.6-128k:latest": "2026-08-20T18:15:36",
+    "gemma4:31b": "2026-08-20T18:43:33"
+  },
+  "swap_benches": {
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": [],
+    "qwen3.6-128k:latest": [],
+    "gemma4:31b": []
+  },
+  "all_models": [
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M",
+    "gemma4:31b",
+    "qwen3-coder-next:sovereign-128k",
+    "llama4:scout",
+    "qwen3.6-128k:latest",
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M",
+    "qwen3-coder:30b-sovereign",
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
+    "deepseek-r1:70b"
+  ],
+  "model_info": {
+    "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8-27B 27B",
+      "context_length": 262144,
+      "size_gb": 16.8,
+      "effective_ctx": 262144,
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 71.7
+    },
+    "qwen3.6-128k:latest": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "qwen35moe 36.0B",
+      "context_length": 262144,
+      "size_gb": 22.3,
+      "effective_ctx": 262144,
+      "params": "36.0B",
+      "architecture": "qwen35moe",
+      "experts": 256,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 103.4
+    },
+    "gemma4:31b": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "gemma4 31.3B",
+      "context_length": 262144,
+      "size_gb": 18.5,
+      "effective_ctx": 98304,
+      "params": "31.3B",
+      "architecture": "gemma4",
+      "vram_estimate": 137.6
+    },
+    "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
+      "host": "i9 GPU server",
+      "quantization": "Q3_K_M",
+      "official_name": "Glm-4.5-Air 128x9.4B",
+      "context_length": 131072,
+      "size_gb": 53.1,
+      "effective_ctx": 8192,
+      "params": "110.5B",
+      "architecture": "glm4moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 56.2
+    },
+    "qwen3-coder-next:sovereign-128k": {
+      "host": "i9 GPU server",
+      "quantization": "IQ4_XS",
+      "official_name": "qwen3next 79.7B",
+      "context_length": 262144,
+      "size_gb": 39.9,
+      "effective_ctx": 131072,
+      "params": "79.7B",
+      "architecture": "qwen3next",
+      "experts": 512,
+      "experts_used": 10,
+      "sparse": true,
+      "vram_estimate": 47.9
+    },
+    "qwen3-coder:30b-sovereign": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3-Coder 30B-A3B",
+      "context_length": 262144,
+      "size_gb": 17.3,
+      "effective_ctx": 32768,
+      "params": "30.5B",
+      "architecture": "qwen3moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 19.7
+    },
+    "hf.co/bartowski/Muse-Glimmer-30B-GGUF:Q4_K_M": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "Muse-Glimmer 30B",
+      "context_length": 131072,
+      "size_gb": 19.7,
+      "effective_ctx": 131072,
+      "params": "27.9B",
+      "architecture": "muse-glimmer",
+      "vram_estimate": 31.2
+    },
+    "llama4:scout": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "llama4 108.6B",
+      "context_length": 10485760,
+      "size_gb": 62.8,
+      "effective_ctx": 131072,
+      "params": "108.6B",
+      "architecture": "llama4",
+      "experts": 16,
+      "experts_used": 1,
+      "sparse": true,
+      "vram_estimate": 89.9
+    },
+    "deepseek-r1:70b": {
+      "host": "i9 GPU server",
+      "quantization": "Q4_K_M",
+      "official_name": "DeepSeek-R1-Distill-Llama 70B",
+      "context_length": 131072,
+      "size_gb": 39.6,
+      "effective_ctx": 32768,
+      "params": "70.6B",
+      "architecture": "llama",
+      "vram_estimate": 51.6
+    }
+  }
+}
