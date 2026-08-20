@@ -318,6 +318,18 @@ session and still only has its earlier bfcl score. Not retried further —
 if either model matters enough to chase, it needs sudo/dmesg access to check
 PCIe AER counters during a live run, which wasn't available here.
 
+**Update (2026-08-21): `deepseek-r1:70b` and `hf.co/bartowski/Muse-Glimmer-
+30B-GGUF:Q4_K_M` are dropped from the GPU-server fleet entirely** — removed
+from `config-gpu-unified.yaml`'s model list and from `merged.summary.json` /
+`report_final.html` (not just cleared, fully deleted from the dashboard).
+Decision, not an oversight: both have cost disproportionate debugging time
+for what they deliver here. `deepseek-r1:70b` never had more than a 0% bfcl
+score and ~4.5 tok/s to show for it. Muse Glimmer's entire score history
+turned out to be fabricated by a stop-token bug (see the exhaustive-sweep
+section below) and needs a Modelfile rebuild before it's worth anything —
+not planned. `llama4:scout` is **not** part of this decision and keeps its
+partial coverage; its crash pattern is still an open question, not closed.
+
 ---
 
 ## qwen3.8:27b — GPU server vs M4, capability assessment (2026-08-19)
@@ -518,9 +530,8 @@ All n=100, matching the M4 study's depth. `muse-glimmer` excluded — see
 Bug 2. `bfcl` numbers reflect Bug 4's fix (below) — the values in this
 table are already corrected, not the ones originally reported.
 
-**Follow-up, not done yet:** fix Muse Glimmer's Modelfile and re-run its
-full benchmark set; re-point `prefetch_datasets.py` at the working Spider
-mirror; fold these into the `overall` ranking (now correctly excluding
+**Follow-up, not done yet:** re-point `prefetch_datasets.py` at the working
+Spider mirror; fold these into the `overall` ranking (now correctly excluding
 EvalPlus/BFCL per the earlier fix) and compare directly against
 `qwen3.6:35b-mlx`, `qwen3.8:27b-mlx`, `gemma4:31b-mlx` on the M4 side.
 
