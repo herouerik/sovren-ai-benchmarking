@@ -1,0 +1,64 @@
+{
+  "run_id": "20260820_124141",
+  "timestamp": "2026-08-20 13:02",
+  "total_samples": 100,
+  "models": [
+    "needle2"
+  ],
+  "benchmarks": [
+    "bfcl_irrelevance"
+  ],
+  "scores": {
+    "needle2": {
+      "bfcl_irrelevance": 0.74
+    }
+  },
+  "speeds": {
+    "needle2": 1617.5920333875977
+  },
+  "sample_sizes": {
+    "needle2": {
+      "bfcl_irrelevance": 100
+    }
+  },
+  "model_timestamps": {
+    "needle2": "2026-08-20T12:41:55"
+  },
+  "swap_benches": {
+    "needle2": []
+  },
+  "all_models": [
+    "llama3.2:3b",
+    "llama3.1:8b",
+    "qwen2.5-coder:7b",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "codestral:22b",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "nemotron-3-nano:30b",
+    "gemma4:31b-mlx",
+    "qwen3:32b",
+    "qwen3-32b-nothink:latest",
+    "qwen3-coder:latest",
+    "qwen3.6:27b",
+    "muse-glimmer:30b-mlx",
+    "muse-glimmer:30b-mlx +think",
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think",
+    "qwen3.8:27b-mlx",
+    "qwen3.8:27b-mlx +think"
+  ],
+  "model_info": {
+    "needle2": {
+      "host": "MacBook M4",
+      "quantization": "CQ2",
+      "official_name": "Needle 2",
+      "context_length": 4096,
+      "size_gb": 0.0137,
+      "effective_ctx": 4096,
+      "params": "45M",
+      "architecture": "needle2"
+    }
+  }
+}
