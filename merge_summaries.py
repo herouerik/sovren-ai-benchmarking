@@ -64,6 +64,30 @@ def _merge_speeds(speeds_list):
     return merged
 
 
+def _merge_speed_basis(basis_list):
+    """speed_basis[model] -> benchmark name the headline tok/s came from.
+
+    Carried through the merge so a merged payload can still say which
+    generation profile each model's speed was measured on. Absent for models
+    from summaries generated before speeds became per-benchmark; those show as
+    "legacy-pooled" rather than silently inheriting a basis they never had.
+    """
+    merged = {}
+    for basis in basis_list:
+        for model, b in (basis or {}).items():
+            merged[model] = b
+    return merged
+
+
+def _merge_speeds_by_benchmark(sbb_list):
+    """speeds_by_benchmark[model][bench] -> tok/s. Later file wins per cell."""
+    merged = {}
+    for sbb in sbb_list:
+        for model, benches in (sbb or {}).items():
+            merged.setdefault(model, {}).update(benches or {})
+    return merged
+
+
 def _merge_timestamps(ts_list):
     """model_timestamps[model] -> iso ts. Max wins (latest completed)."""
     merged = {}
@@ -107,6 +131,10 @@ def merge_summaries(summaries: list[dict]) -> dict:
         "benchmarks": _union(*(s.get("benchmarks", []) for s in summaries)),
         "scores": _merge_scores([s.get("scores", {}) for s in summaries]),
         "speeds": _merge_speeds([s.get("speeds", {}) for s in summaries]),
+        "speeds_by_benchmark": _merge_speeds_by_benchmark(
+            [s.get("speeds_by_benchmark", {}) for s in summaries]),
+        "speed_basis": _merge_speed_basis(
+            [s.get("speed_basis", {}) for s in summaries]),
         "sample_sizes": _merge_sample_sizes([s.get("sample_sizes", {}) for s in summaries]),
         "model_timestamps": _merge_timestamps([s.get("model_timestamps", {}) for s in summaries]),
         "swap_benches": _merge_swap_benches([s.get("swap_benches", {}) for s in summaries]),
