@@ -1,6 +1,6 @@
 {
-  "run_id": "merged+20260821_183029",
-  "timestamp": "2026-08-21 18:42",
+  "run_id": "merged+20260821_183029+20260821_115640",
+  "timestamp": "2026-08-21 21:58",
   "models": [
     "qwen3.8:27b-mlx +think",
     "gemma4:31b",
@@ -62,7 +62,10 @@
       "mbpp": 0.6,
       "bfcl": 0.75,
       "spider": 0.7,
-      "philosophical": 0.9960000000000001
+      "philosophical": 0.9960000000000001,
+      "bfcl_irrelevance": 0.82,
+      "humaneval_plus": 0.85,
+      "mbpp_plus": 0.6
     },
     "gemma4:31b": {
       "mmlu": 0.85,
@@ -97,7 +100,10 @@
       "mbpp": 0.5,
       "spider": 0.65,
       "philosophical": 0.96,
-      "bfcl": 0.85
+      "bfcl": 0.85,
+      "bfcl_irrelevance": 0.81,
+      "humaneval_plus": 0.8,
+      "mbpp_plus": 0.5
     },
     "qwen3.6:27b": {
       "mmlu": 0.9,
@@ -159,7 +165,10 @@
       "mbpp": 0.7,
       "spider": 0.7,
       "philosophical": 0.9,
-      "bfcl": 0.85
+      "bfcl": 0.85,
+      "bfcl_irrelevance": 0.87,
+      "humaneval_plus": 0.75,
+      "mbpp_plus": 0.65
     },
     "qwen3.6-128k:latest": {
       "mmlu": 0.75,
@@ -208,7 +217,10 @@
       "mbpp": 0.6,
       "spider": 0.65,
       "philosophical": 0.884,
-      "bfcl": 0.75
+      "bfcl": 0.75,
+      "bfcl_irrelevance": 0.74,
+      "humaneval_plus": 0.87,
+      "mbpp_plus": 0.64
     },
     "qwen3-32b-nothink:latest": {
       "mmlu": 0.85,
@@ -264,7 +276,10 @@
       "mbpp": 0.65,
       "spider": 0.35,
       "philosophical": 0.924,
-      "bfcl": 0.85
+      "bfcl": 0.85,
+      "bfcl_irrelevance": 0.84,
+      "humaneval_plus": 0.78,
+      "mbpp_plus": 0.64
     },
     "qwen3-coder:30b-sovereign": {
       "mmlu": 1.0,
@@ -476,24 +491,24 @@
     }
   },
   "speeds": {
-    "qwen3.8:27b-mlx +think": 29.844296736409678,
+    "qwen3.8:27b-mlx +think": 31.118659544135966,
     "gemma4:31b": 9.673151692912725,
     "qwen3.8:27b": 8.525283421848039,
-    "qwen3.6:35b-mlx +think": 72.22677386616951,
+    "qwen3.6:35b-mlx +think": 67.23383896988916,
     "qwen3.6:27b": 12.102999151062209,
     "qwen3.6:27b-mlx": 13.482459542974537,
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 10.796721839641611,
     "qwen3.8:27b-mlx": 27.583411125408357,
-    "devstral-small-2:latest": 16.309305315571983,
+    "devstral-small-2:latest": 16.33156652585655,
     "qwen3.6-128k:latest": 38.848899772852675,
     "qwen3-coder-next:sovereign-128k": 34.838638927548,
     "gemma4:31b-mlx": 11.481201786617602,
-    "qwen3.6:35b-mlx": 71.97859396339447,
+    "qwen3.6:35b-mlx": 70.08375140854457,
     "qwen3-32b-nothink:latest": 11.627113403996274,
     "muse-glimmer:30b-mlx +think": 22.414025484549366,
     "qwen3:32b": 11.648418619340017,
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.767425965353855,
-    "qwen3-coder:latest": 60.27494566202786,
+    "qwen3-coder:latest": 70.18144885638988,
     "qwen3-coder:30b-sovereign": 32.18326805335121,
     "qwen3:8b": 90.60115330620596,
     "nemotron-3-nano:30b": 50.94118340095015,
@@ -521,10 +536,40 @@
       "mbpp": 45.08674258892152,
       "spider": 45.437830395986694,
       "philosophical": 46.01323113644138
+    },
+    "qwen3.6:35b-mlx": {
+      "bfcl_irrelevance": 68.67024654665852,
+      "humaneval_plus": 70.08375140854457,
+      "mbpp_plus": 68.42542285947498
+    },
+    "qwen3.6:35b-mlx +think": {
+      "bfcl_irrelevance": 68.07584646312283,
+      "humaneval_plus": 67.23383896988916,
+      "mbpp_plus": 69.42487597096286
+    },
+    "qwen3-coder:latest": {
+      "bfcl_irrelevance": 73.66155993471199,
+      "humaneval_plus": 70.18144885638988,
+      "mbpp_plus": 71.28293652406408
+    },
+    "qwen3.8:27b-mlx +think": {
+      "bfcl_irrelevance": 28.7114385508395,
+      "humaneval_plus": 31.118659544135966,
+      "mbpp_plus": 29.73990335458026
+    },
+    "devstral-small-2:latest": {
+      "bfcl_irrelevance": 16.453341715717723,
+      "humaneval_plus": 16.33156652585655,
+      "mbpp_plus": 16.539568666250585
     }
   },
   "speed_basis": {
-    "phi4:14b": "humaneval"
+    "phi4:14b": "humaneval",
+    "qwen3.6:35b-mlx": "humaneval_plus",
+    "qwen3.6:35b-mlx +think": "humaneval_plus",
+    "qwen3-coder:latest": "humaneval_plus",
+    "qwen3.8:27b-mlx +think": "humaneval_plus",
+    "devstral-small-2:latest": "humaneval_plus"
   },
   "sample_sizes": {
     "qwen3.8:27b-mlx +think": {
@@ -535,7 +580,10 @@
       "mbpp": 20,
       "bfcl": 20,
       "spider": 20,
-      "philosophical": 10
+      "philosophical": 10,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "gemma4:31b": {
       "mmlu": 20,
@@ -570,7 +618,10 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "qwen3.6:27b": {
       "mmlu": 20,
@@ -632,7 +683,10 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "qwen3.6-128k:latest": {
       "mmlu": 20,
@@ -681,7 +735,10 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "qwen3-32b-nothink:latest": {
       "mmlu": 20,
@@ -737,7 +794,10 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "qwen3-coder:30b-sovereign": {
       "mmlu": 20,
@@ -949,24 +1009,24 @@
     }
   },
   "model_timestamps": {
-    "qwen3.8:27b-mlx +think": "2026-08-16T19:19:15",
+    "qwen3.8:27b-mlx +think": "2026-08-21T21:12:35",
     "gemma4:31b": "2026-08-20T18:43:33",
     "qwen3.8:27b": "2026-08-18T07:37:27",
-    "qwen3.6:35b-mlx +think": "2026-08-15T11:30:34",
+    "qwen3.6:35b-mlx +think": "2026-08-21T18:47:42",
     "qwen3.6:27b": "2026-08-20T13:27:29",
     "qwen3.6:27b-mlx": "2026-08-20T14:27:03",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T18:04:27",
     "qwen3.8:27b-mlx": "2026-08-20T12:56:22",
-    "devstral-small-2:latest": "2026-08-15T09:41:39",
+    "devstral-small-2:latest": "2026-08-21T21:47:51",
     "qwen3.6-128k:latest": "2026-08-20T18:15:36",
     "qwen3-coder-next:sovereign-128k": "2026-08-20T21:35:10",
     "gemma4:31b-mlx": "2026-08-21T00:56:27",
-    "qwen3.6:35b-mlx": "2026-08-15T11:27:32",
+    "qwen3.6:35b-mlx": "2026-08-21T12:19:02",
     "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
     "muse-glimmer:30b-mlx +think": "2026-08-21T07:22:02",
     "qwen3:32b": "2026-08-15T10:07:48",
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-20T20:50:25",
-    "qwen3-coder:latest": "2026-08-15T10:15:37",
+    "qwen3-coder:latest": "2026-08-21T19:05:05",
     "qwen3-coder:30b-sovereign": "2026-08-20T22:12:25",
     "qwen3:8b": "2026-08-21T01:03:24",
     "nemotron-3-nano:30b": "2026-08-21T07:33:51",
@@ -989,14 +1049,16 @@
   },
   "swap_benches": {
     "qwen3.8:27b-mlx +think": [
-      "bfcl"
+      "bfcl",
+      "bfcl_irrelevance"
     ],
     "qwen3.8:27b": [
       "bfcl",
       "humaneval_plus"
     ],
     "qwen3.6:35b-mlx +think": [
-      "mbpp"
+      "mbpp",
+      "mbpp_plus"
     ],
     "qwen3.6:27b": [
       "bfcl_irrelevance"
@@ -1016,7 +1078,10 @@
     "nemotron-cascade-2:latest": [],
     "qwen2.5-coder:32b": [],
     "qwen2.5-coder:7b": [],
-    "phi4:14b": []
+    "phi4:14b": [],
+    "qwen3.6:35b-mlx": [],
+    "qwen3-coder:latest": [],
+    "devstral-small-2:latest": []
   },
   "model_info": {
     "qwen3.8:27b-mlx +think": {
@@ -1451,7 +1516,7 @@
       "vram_estimate": 9.6
     }
   },
-  "total_samples": 13875,
+  "total_samples": 15375,
   "all_models": [
     "llama3.2:3b",
     "llama3.1:8b",
