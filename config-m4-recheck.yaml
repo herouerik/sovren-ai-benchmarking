@@ -1,0 +1,54 @@
+# Re-measure one cell that was contaminated rather than empty.
+#
+# qwen3.6:27b / bfcl_irrelevance scored 86/100 on 2026-08-20 with one sample
+# (irrelevance_115) lost to a memory-guard abort — decode collapsed 17x, 10 ->
+# 0.6 tok/s, and it scored as a failure with no calls recorded. Root cause was
+# not the model: a separate opencode session was holding qwen3.8:27b-mlx
+# resident (~17-22GB) for the whole run, so loading qwen3.6:27b's 16.2GB on top
+# put a 48GB machine into swap. With that session stopped the machine is clean,
+# so the cell can be measured properly and the caveat dropped from
+# docs/FINDINGS-host-comparison.md.
+#
+# Expect 86 or 87. qwen3.6:27b-mlx independently scored 86/100 with zero
+# aborts, so a materially different number here would point at something else.
+
+ollama:
+  base_url: "http://localhost:11434/v1"
+  api_key: "ollama"
+  timeout: 600
+  max_tokens: 4096
+  think_max_tokens: 16384
+  default_ctx: 32768
+  sample_seed: 42
+
+models:
+  - model: qwen3.6:27b
+    ctx: 32768
+
+benchmarks:
+  bfcl_irrelevance:
+    enabled: true
+    n_samples: 100
+
+output:
+  dir: "results"
+  save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 1
+  host_label: "MacBook M4"
+  cooldown_seconds: 120
+  memory_guard:
+    enabled: true
+    poll_interval: 1.0
+    ttft_ceiling_seconds: 300
+    token_stall_seconds: 20
+    decode_degradation_factor: 10
+    baseline_window_seconds: 5
+    baseline_tokens: 16
+    window_seconds: 5
+    swap_bytes_per_sec: 33554432
+    swap_sustain_seconds: 5
+    min_decode_tps: 0.0
+    min_decode_tps_after_tokens: 32

@@ -1,0 +1,57 @@
+# codestral:22b only, EvalPlus categories only.
+#
+# Split out of config-m4-fill.yaml because codestral declares no `tools`
+# capability (`/api/show` caps: completion, insert) — which is why its recorded
+# bfcl is 0.0 rather than a real score. run_benchmark applies every enabled
+# benchmark to every model in a config, so including it there would have
+# produced a 0.00 bfcl_irrelevance that looks like "calls a tool every time"
+# when the truth is "cannot be asked to call a tool at all". Same class of
+# silent artefact as the 0.0 bfcl already in the record.
+
+ollama:
+  base_url: "http://localhost:11434/v1"
+  api_key: "ollama"
+  timeout: 600
+  max_tokens: 4096
+  default_ctx: 32768
+  sample_seed: 42
+
+models:
+  - model: codestral:22b
+    ctx: 16384
+
+benchmarks:
+  humaneval_plus:
+    enabled: true
+    n_samples: 100
+  mbpp_plus:
+    enabled: true
+    n_samples: 100
+
+output:
+  dir: "results"
+  save_raw: true
+
+execution:
+  parallel_models: false
+  max_workers: 1
+  # Idle this long between every test (model x benchmark) so the M4 sheds heat
+  # instead of sitting at sustained load for the whole fill. Sustained thermal
+  # throttling would leave the accuracy scores intact but quietly depress the
+  # tok/s column part-way through the run, making speed non-comparable against
+  # the rows the GPU server already filled.
+  cooldown_seconds: 120
+  host_label: "MacBook M4"
+  memory_guard:
+    enabled: true
+    poll_interval: 1.0
+    ttft_ceiling_seconds: 300
+    token_stall_seconds: 20
+    decode_degradation_factor: 10
+    baseline_window_seconds: 5
+    baseline_tokens: 16
+    window_seconds: 5
+    swap_bytes_per_sec: 33554432
+    swap_sustain_seconds: 5
+    min_decode_tps: 0.0
+    min_decode_tps_after_tokens: 32
