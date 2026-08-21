@@ -596,6 +596,13 @@ def main():
     sample_counts: dict[tuple[str, str], int] = {}
     _sc_lock = __import__("threading").Lock()
 
+    # Seconds to idle between tests (model x benchmark). 0 disables. A dict
+    # rather than an int so the nested _run_model can mutate the count without
+    # a nonlocal declaration; only meaningful when parallel_models is false,
+    # since concurrent workers would each cool down on their own schedule.
+    cooldown = float(exec_cfg.get("cooldown_seconds", 0) or 0)
+    _tests_run = {"n": 0}
+
     def _run_model(label: str) -> list[dict]:
         """Run all selected benchmarks for one model variant.
 
@@ -623,6 +630,22 @@ def main():
             bench = bench_class(client=client, config=bcfg)
 
             n_samples = args.n_samples or bcfg.get("n_samples", 20)
+
+            # Thermal cooldown between tests. A long sequential fill keeps a
+            # fanless/low-airflow machine at sustained load for hours, and once
+            # it throttles the tok/s figures stop describing the model and start
+            # describing the chassis — the accuracy scores survive but the speed
+            # column silently degrades across the run. Sleeping between tests
+            # rather than between models because a single n=100 EvalPlus test is
+            # already a long thermal load on its own.
+            #
+            # Deliberately not applied before the first test, so the wait is
+            # (tests - 1) x cooldown rather than an idle pause at launch.
+            if cooldown and _tests_run["n"]:
+                console.print(f"  [dim]cooling down {cooldown}s before {bench_name}...[/dim]")
+                time.sleep(cooldown)
+            _tests_run["n"] += 1
+
             console.print(f"  [yellow]Running {bench_name}[/yellow] ({n_samples} samples)...")
 
             def _on_sample(i, total, r):
@@ -682,6 +705,13 @@ def main():
             except Exception as e:
                 console.print(f"  [red]✗ {bench_name} failed: {e}[/red]")
         return model_results
+
+    # Pre-flight: clear anything a previous process left resident, so the first
+    # model of this run does not load on top of it. See client.evict_all().
+    _leftover = client.evict_all()
+    if _leftover:
+        console.print(f"[dim]evicted leftover resident model(s) before starting: "
+                      f"{', '.join(_leftover)}[/dim]")
 
     if parallel_models:
         console.print(f"[bold]Parallel model execution ({max_workers} workers)[/bold]")

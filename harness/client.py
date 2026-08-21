@@ -61,6 +61,13 @@ class OllamaClient:
         which is what drove the machine into swap during earlier runs. This is
         client-side and portable — unlike OLLAMA_MAX_LOADED_MODELS, which is a
         server-side env var and silently does nothing when set on the client.
+
+        /api/generate with no prompt is Ollama's documented unload idiom. An
+        /api/chat variant was tried while chasing a model that would not evict
+        and measured no difference (both released llama3.2:3b immediately) —
+        the model was being held resident by a separate application holding a
+        connection to Ollama, which no client-side unload can override. Kept on
+        the documented endpoint rather than the experiment.
         """
         import httpx
         try:
@@ -69,6 +76,46 @@ class OllamaClient:
             return True
         except Exception:
             return False
+
+    def resident_models(self) -> list[str]:
+        """Models Ollama currently holds in memory."""
+        import httpx
+        try:
+            r = httpx.get(f"{self.native_url}/api/ps", timeout=10)
+            return [m["name"] for m in (r.json().get("models") or [])]
+        except Exception:
+            return []
+
+    def evict_all(self) -> list[str]:
+        """Evict every resident model and return what was evicted.
+
+        The between-models unload only covers models *this* run loaded. A model
+        left resident by an earlier process (an interrupted run, a manual
+        query) is invisible to it, so the first model of a new run loads on top
+        of that leftover. On a 48GB machine two ~20GB models plus overhead is
+        instant swap death: observed at 0.2 tok/s with request timeouts, which
+        scores as a total failure for a model that benchmarks at 72 tok/s when
+        it has the machine to itself.
+
+        Note the limit: this evicts models nothing else is using. A model held
+        by another live client (an editor session pointed at the same Ollama)
+        comes straight back, and the poll below will simply time out. When that
+        happens the fix is outside this process — the returned list is there so
+        the caller can at least name what it found.
+        """
+        resident = self.resident_models()
+        for m in resident:
+            self.unload(m)
+        # Unload marks the model expired; Ollama reaps shortly after. Poll so a
+        # fast reap costs nothing and a slow one is still waited out before this
+        # run loads its own weights on top. Never re-issues unload inside the
+        # loop: a retry that goes through a loading endpoint would resurrect
+        # the very model it is waiting on.
+        for _ in range(24):                 # ~2 min at 5s
+            if not self.resident_models():
+                break
+            time.sleep(5)
+        return resident
 
     def complete_native(self, model: str, prompt: str, system: str = None,
                         max_tokens: int = 2048, temperature: float = 0.0,
