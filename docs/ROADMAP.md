@@ -889,3 +889,114 @@ separately) — not "BFCL v4".
   temperature-0.0 determinism the rest of the suite is built on. §E's original
   reasoning holds harder for v4.
 - `memory`, `format_sensitivity` — new in v4, no track record. Defer.
+
+---
+
+## RTX 2080 Ti (GPU0) — a third host, stood up 2026-08-20/21
+
+Previously excluded from the unified 6xP100 pool (repeated OOM at high
+context when part of that pool) and otherwise idle. Now a standalone
+benchmarking target: `config-rtx2080.yaml`, own `host_label: "RTX 2080 Ti
+(GPU0)"` so it never conflates with the P100 pool's "i9 GPU server", served
+by a plain `ollama serve` background process (not a systemd unit — this
+session has no root) on port 11437, `OLLAMA_MODELS=/home/erik/.ollama-gpu0/
+models` (a separate writable store, symlinked to the shared read-only one
+at `/usr/share/ollama/.ollama/models` so existing pulls stay visible without
+needing write access there).
+
+### Two infra bugs found before any model data could be trusted
+
+**1. Ollama's Vulkan backend bypasses `CUDA_VISIBLE_DEVICES` entirely.**
+This build (0.32.9) has `OLLAMA_VULKAN` on by default, and Vulkan enumerates
+every GPU on the box independently of the CUDA runtime restriction. Every
+model load on the first GPU0 instance was actually spreading across all 7
+GPUs (this card + all 6 P100s), silently competing with the production pool
+for VRAM the whole time. Confirmed via `nvidia-smi`'s PCI bus mapping and the
+server's own "inference compute" log lines (`library=Vulkan`, `name=Vulkan0`
+through `Vulkan6`). Worse: `ollama-unified.service` — the actual production
+pool, correctly configured with `CUDA_VISIBLE_DEVICES=1,2,3,4,5,6` — did the
+identical thing on 2026-08-21 06:50 (its own log: `library=Vulkan
+name=Vulkan0 description="RTX 2080 Ti"` for a "single GPU" placement). This
+is very likely the real mechanism behind the earlier "leftover
+qwen2.5-coder:7b on GPU0" finding — not a dead service restarting, but this
+bypass reachable from the production pool itself. **`/etc/ollama/
+unified.env` does not have `OLLAMA_VULKAN=0` and the pool's GPU0 exclusion
+has not been reliably enforced.** Not fixed there — editing and restarting a
+live production service is a bigger, more sensitive change than this session
+should make unilaterally. Fix for the GPU0 test instance: `OLLAMA_VULKAN=0`,
+confirmed via "inference compute" showing only `CUDA0` and full-layer
+offload on a fresh load.
+
+Also found and killed an orphaned `llama-server` child left behind by a
+`kill -9` on just the parent `ollama serve` — SIGKILL on the parent doesn't
+propagate to the worker subprocess, which kept holding ~7GB on GPU0
+independently. Prefer `kill` (SIGTERM) on the parent when stopping a plain
+background instance; it shuts down its children cleanly.
+
+**2. `_KNOWN_HOSTS` in `run_benchmark.py` is a live liability, not a one-time
+fix.** The M4's IP has now moved three times (192.168.68.106 → 172.30.185.105
+→ .110). Every time the table falls behind, `collect_model_info()` infers the
+raw IP as the host label instead of "MacBook M4", which the cell-level merge
+reads as a cross-host conflict and does a whole-entry replacement — silently
+wiping a model's entire existing score history down to just whatever new
+categories the current run added. Caught twice in one session by the
+conflict-printing fix from `7da5bf5` before it went unnoticed; both times
+recovered by restoring from the last git commit and re-merging with the
+correct label. `execution.host_label` does **not** help here — its override
+only applies when `base_url` points at the *local* machine, so a remote
+config (base_url pointing at another host) always falls through to
+`_KNOWN_HOSTS` regardless of what `host_label` says. Verify with `curl
+http://<ip>:11434/api/tags` before trusting a stored IP again.
+
+### Model results (n=20 core + bfcl/bfcl_irrelevance, full offload verified)
+
+| model | ctx (verified ceiling) | overall notes |
+|---|---|---|
+| `qwen2.5-coder:7b` | 16384 | bfcl 0%, bfcl_irrelevance 100% — never emits a tool call at all despite Ollama listing "tools" as supported; corroborated independently by the M4's own copy of this model |
+| `llama3.1:8b` | 16384 | normal tool-use behavior (bfcl 75%, irrelevance 50%) — used as the cross-host bridge model |
+| `qwen2.5-coder:14b` | 8192 | same never-calls-tools signature as the 7b |
+| `qwen3:8b` | 32768 (reaches the full target cleanly) | 7 core categories done; bfcl/bfcl_irrelevance lost to the crash below, not yet re-run |
+| `gemma3:12b` | **broken on this GPU, not a context problem** | see below |
+| `phi4:14b` | 4096 only — same weight class as `qwen2.5-coder:14b` (9.1GB) but a real, verified-lower context ceiling (partial offload at 6144: 39/41 layers) |
+
+Renamed `qwen2.5-coder:7b` → `qwen2.5-coder:7b (RTX2080)` and `llama3.1:8b` →
+`llama3.1:8b (RTX2080)` before merging — both tags already exist under the
+M4's host in `merged.summary.json`, and merging under the identical name
+would hit the same cross-host conflict path as bug 2 above.
+
+### `gemma3:12b` — reproducible CUDA crash, not context-related, not retried further
+
+Crashed identically twice (once in the original benchmark run, once in a
+direct manual retry) with the exact same signature: `CUDA error: an illegal
+memory access was encountered`, in `ggml_cuda_kernel_can_use_pdl`
+(`ggml-cuda/common.cuh:1630`), during model **warmup** — right after load,
+before any real generation, not something that develops over many samples.
+PDL (Programmatic Dependent Launch) is a Hopper-generation (compute
+capability 9.0+) CUDA feature; this card is Turing (compute capability 7.5),
+which doesn't support PDL at all. This looks like a genuine `llama.cpp`/ggml
+CUDA backend bug that queries PDL support incorrectly on older hardware —
+software incompatibility, not a thermal or hardware fault, and not something
+retrying will fix. The second crash took down the entire `ollama serve`
+parent process, not just the worker (port 11437 stopped responding
+entirely), which is worse than the first occurrence, not better — evidence
+against "transient glitch."
+
+No ECC diagnostics available (consumer card has no ECC), no dmesg/XID access
+(no root this session). **Not retried a third time — documented as a known
+incompatibility for `gemma3` on this specific GPU generation.** Worth
+revisiting only with a newer `llama.cpp`/ollama build that gates the PDL
+check on compute capability, or if root access allows checking driver-level
+XID error logs for corroboration.
+
+### Follow-up, not done yet
+
+- `qwen3:8b` needs `bfcl`/`bfcl_irrelevance` re-run (lost to the same
+  background-process-killed-simultaneously pattern noted elsewhere this
+  session, unrelated to the GPU0-specific bugs above).
+- Consider `gemma3:4b` or another architecture in the same size class as a
+  `gemma3:12b` replacement, now that this specific model is a documented dead
+  end here.
+- If root/sudo becomes available: check `nvidia-smi -q -d XID` equivalent via
+  dmesg for the crash, and consider fixing `/etc/ollama/unified.env` (add
+  `OLLAMA_VULKAN=0`) and restarting `ollama-unified.service` to actually
+  enforce the pool's GPU0 exclusion — flagged above, not done.
