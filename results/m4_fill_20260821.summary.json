@@ -1,0 +1,225 @@
+{
+  "run_id": "20260821_115640",
+  "timestamp": "2026-08-21 21:58",
+  "total_samples": 1500,
+  "models": [
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think",
+    "qwen3-coder:latest",
+    "qwen3.8:27b-mlx +think",
+    "devstral-small-2:latest"
+  ],
+  "benchmarks": [
+    "bfcl_irrelevance",
+    "humaneval_plus",
+    "mbpp_plus"
+  ],
+  "scores": {
+    "qwen3.6:35b-mlx": {
+      "bfcl_irrelevance": 0.74,
+      "humaneval_plus": 0.87,
+      "mbpp_plus": 0.64
+    },
+    "qwen3.6:35b-mlx +think": {
+      "bfcl_irrelevance": 0.81,
+      "humaneval_plus": 0.8,
+      "mbpp_plus": 0.5
+    },
+    "qwen3-coder:latest": {
+      "bfcl_irrelevance": 0.84,
+      "humaneval_plus": 0.78,
+      "mbpp_plus": 0.64
+    },
+    "qwen3.8:27b-mlx +think": {
+      "bfcl_irrelevance": 0.82,
+      "humaneval_plus": 0.85,
+      "mbpp_plus": 0.6
+    },
+    "devstral-small-2:latest": {
+      "bfcl_irrelevance": 0.87,
+      "humaneval_plus": 0.75,
+      "mbpp_plus": 0.65
+    }
+  },
+  "speeds": {
+    "qwen3.6:35b-mlx": 70.08375140854457,
+    "qwen3.6:35b-mlx +think": 67.23383896988916,
+    "qwen3-coder:latest": 70.18144885638988,
+    "qwen3.8:27b-mlx +think": 31.118659544135966,
+    "devstral-small-2:latest": 16.33156652585655
+  },
+  "speeds_by_benchmark": {
+    "qwen3.6:35b-mlx": {
+      "bfcl_irrelevance": 68.67024654665852,
+      "humaneval_plus": 70.08375140854457,
+      "mbpp_plus": 68.42542285947498
+    },
+    "qwen3.6:35b-mlx +think": {
+      "bfcl_irrelevance": 68.07584646312283,
+      "humaneval_plus": 67.23383896988916,
+      "mbpp_plus": 69.42487597096286
+    },
+    "qwen3-coder:latest": {
+      "bfcl_irrelevance": 73.66155993471199,
+      "humaneval_plus": 70.18144885638988,
+      "mbpp_plus": 71.28293652406408
+    },
+    "qwen3.8:27b-mlx +think": {
+      "bfcl_irrelevance": 28.7114385508395,
+      "humaneval_plus": 31.118659544135966,
+      "mbpp_plus": 29.73990335458026
+    },
+    "devstral-small-2:latest": {
+      "bfcl_irrelevance": 16.453341715717723,
+      "humaneval_plus": 16.33156652585655,
+      "mbpp_plus": 16.539568666250585
+    }
+  },
+  "speed_basis": {
+    "qwen3.6:35b-mlx": "humaneval_plus",
+    "qwen3.6:35b-mlx +think": "humaneval_plus",
+    "qwen3-coder:latest": "humaneval_plus",
+    "qwen3.8:27b-mlx +think": "humaneval_plus",
+    "devstral-small-2:latest": "humaneval_plus"
+  },
+  "sample_sizes": {
+    "qwen3.6:35b-mlx": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.6:35b-mlx +think": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3-coder:latest": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "qwen3.8:27b-mlx +think": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    },
+    "devstral-small-2:latest": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
+    }
+  },
+  "model_timestamps": {
+    "qwen3.6:35b-mlx": "2026-08-21T12:19:02",
+    "qwen3.6:35b-mlx +think": "2026-08-21T18:47:42",
+    "qwen3-coder:latest": "2026-08-21T19:05:05",
+    "qwen3.8:27b-mlx +think": "2026-08-21T21:12:35",
+    "devstral-small-2:latest": "2026-08-21T21:47:51"
+  },
+  "swap_benches": {
+    "qwen3.6:35b-mlx": [],
+    "qwen3.6:35b-mlx +think": [
+      "mbpp_plus"
+    ],
+    "qwen3-coder:latest": [],
+    "qwen3.8:27b-mlx +think": [
+      "bfcl_irrelevance"
+    ],
+    "devstral-small-2:latest": []
+  },
+  "model_info": {
+    "qwen3.6:35b-mlx": {
+      "host": "MacBook M4",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5_moe 35.1B",
+      "context_length": 262144,
+      "size_gb": 20.4,
+      "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "sparse": true,
+      "think": false
+    },
+    "qwen3.6:35b-mlx +think": {
+      "host": "MacBook M4",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5_moe 35.1B",
+      "context_length": 262144,
+      "size_gb": 20.4,
+      "effective_ctx": 32768,
+      "params": "35.1B",
+      "architecture": "qwen3_5_moe",
+      "sparse": true,
+      "think": true
+    },
+    "qwen3-coder:latest": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3-Coder 30B-A3B",
+      "context_length": 262144,
+      "size_gb": 17.3,
+      "effective_ctx": 32768,
+      "params": "30.5B",
+      "architecture": "qwen3moe",
+      "experts": 128,
+      "experts_used": 8,
+      "sparse": true,
+      "vram_estimate": 19.7
+    },
+    "qwen3.8:27b-mlx +think": {
+      "host": "MacBook M4",
+      "quantization": "nvfp4",
+      "official_name": "qwen3_5 27.8B",
+      "context_length": 262144,
+      "size_gb": 16.9,
+      "effective_ctx": 32768,
+      "params": "27.8B",
+      "architecture": "qwen3_5",
+      "think": true
+    },
+    "devstral-small-2:latest": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "mistral3 24.0B",
+      "context_length": 393216,
+      "size_gb": 14.1,
+      "effective_ctx": 16384,
+      "params": "24.0B",
+      "architecture": "mistral3",
+      "vram_estimate": 17.9
+    },
+    "qwen3:32b": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3 32B",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
+    },
+    "qwen3-32b-nothink:latest": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3 32B",
+      "context_length": 40960,
+      "size_gb": 18.8,
+      "effective_ctx": 32768,
+      "params": "32.8B",
+      "architecture": "qwen3",
+      "vram_estimate": 24.7
+    },
+    "qwen3.8:27b": {
+      "host": "MacBook M4",
+      "quantization": "Q4_K_M",
+      "official_name": "Qwen3.8 27B",
+      "context_length": 262144,
+      "size_gb": 16.5,
+      "effective_ctx": 32768,
+      "params": "27.3B",
+      "architecture": "qwen35",
+      "vram_estimate": 24.1
+    }
+  }
+}
