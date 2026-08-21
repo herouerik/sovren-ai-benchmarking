@@ -4,12 +4,21 @@ ollama:
   # drive benchmarks against the M4's model fleet remotely, the same pattern
   # config-gpu-unified.yaml already uses in the other direction.
   #
-  # IP changes when the M4 changes network — it moved from 192.168.68.106 to
-  # 172.30.185.105 once already (docs/ROADMAP.md:663) and is now on
-  # 192.168.68.110, found by scanning the LAN for an open 11434 since neither
-  # previous address answered. Verify with `curl http://<ip>:11434/api/tags`
-  # before trusting this value again.
-  base_url: "http://192.168.68.110:11434/v1"
+  # IP changes when the M4 changes network — 192.168.68.106 -> 172.30.185.105
+  # -> 192.168.68.110 -> 192.168.68.109 (verified 2026-08-21 via
+  # `ipconfig getifaddr en0` on the M4 itself, and curl'd on :11434). Four
+  # addresses in a week: treat this value as stale by default and re-check with
+  # `curl http://<ip>:11434/api/tags` before every remote run.
+  #
+  # NOTE for whoever drives this file: prefer running M4 models FROM the M4
+  # (config-m4-fill.yaml uses localhost) whenever the laptop is available.
+  # Inference happens on the M4 either way, so driving remotely buys no speed,
+  # and it costs two things: pressure.py::_is_local() falls back to timing-only
+  # swap detection instead of reading the M4's real vm_stat counters, and the
+  # EvalPlus sandbox executes on the driving host rather than the one under
+  # test. Remote is for when the laptop cannot be sat in front of, not the
+  # default.
+  base_url: "http://192.168.68.109:11434/v1"
   api_key: "ollama"
   timeout: 600
   max_tokens: 4096
