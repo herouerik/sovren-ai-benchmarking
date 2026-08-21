@@ -284,8 +284,17 @@ Fisher exact on the pooled pass/fail items, build held constant:
 | bfcl_irrelevance, MLX vs MLX | 68/100 | 86/100 | **-18** | **0.004** |
 | bfcl, MLX vs MLX | 81/100 | 87/100 | -6 | 0.335 |
 
-The restraint gap is real and survives a clean build-matched test; the
-selection gap does not reach significance on its own. And the build effect on
+> **Superseded in part — read the thinking-mode section below.** Both rows
+> above have thinking OFF for both models, which was a fair like-for-like.
+> But qwen3.8:27b-mlx scores **82/100** on bfcl_irrelevance with thinking ON,
+> against qwen3.6's 86 (p = 0.563). The 18-point gap is therefore a
+> **default-configuration** gap, not an inherent property of the model: it
+> closes almost entirely when thinking is enabled, at a measured cost in
+> coding accuracy. The defensible claim is narrower than this table on its own
+> implies — see below.
+
+The restraint gap is real at default settings and survives a clean
+build-matched test; the selection gap does not reach significance on its own. And the build effect on
 qwen3.6's restraint is exactly zero (86/100 on both nvfp4 and Q4_K_M),
 consistent with the ~1pp build effects in `FINDINGS-qwen-factorial.md`.
 
@@ -418,3 +427,71 @@ strongest public claims rest on.
 **Model identity is not scale identity.** Everything here is a ~27-36B local
 quantisation. A claim about a vendor's flagship is not a claim about the small
 sibling that fits in 48GB, and this table only contains the latter.
+
+---
+
+## Thinking mode trades coding accuracy for tool restraint
+
+Two complete think-on/think-off pairs, n=100 per cell, all on the M4, every
+other factor held constant (same weights, same build, same ctx, same seed-42
+item set). The `+think` rows come from the 2026-08-21 M4 fill.
+
+| model | benchmark | off | on | delta | p |
+|---|---|---|---|---|---|
+| qwen3.6:35b-mlx (MoE 35.1B) | bfcl_irrelevance | 74 | 81 | +7 | 0.310 |
+| | humaneval_plus | 87 | 80 | -7 | 0.253 |
+| | mbpp_plus | 64 | 50 | -14 | 0.063 |
+| qwen3.8:27b-mlx (dense 27.8B) | bfcl_irrelevance | 68 | 82 | **+14** | **0.033** |
+| | humaneval_plus | 90 | 85 | -5 | 0.393 |
+| | mbpp_plus | 62 | 60 | -2 | 0.885 |
+
+Pooled across both models:
+
+| effect | off | on | delta | p |
+|---|---|---|---|---|
+| **restraint** (bfcl_irrelevance) | 142/200 | 163/200 | **+21** | **0.0185** |
+| **coding** (humaneval_plus + mbpp_plus) | 303/400 | 275/400 | **-28** | **0.0329** |
+
+Both directions clear significance when pooled, and the pooling is legitimate
+here in a way an earlier attempt was not: each arm is one condition on one
+model across benchmarks, not two different configurations merged into one arm.
+
+**Thinking is not a free variant.** The suite has been sweeping `+think` as
+though it were a strictly-more-capable setting. It is a trade: about 7 points
+of restraint bought for about 7 points of coding accuracy. Which side wins
+depends entirely on the task, so `+think` belongs in the routing map as a
+per-use-case switch rather than a global default.
+
+### The cost is not evenly distributed
+
+| model | coding off | coding on | delta | p |
+|---|---|---|---|---|
+| qwen3.6:35b-mlx (MoE) | 151/200 | 130/200 | **-21** | **0.0285** |
+| qwen3.8:27b-mlx (dense) | 152/200 | 145/200 | -7 | 0.493 |
+
+The MoE pays three times the coding penalty the dense model does, and only its
+loss is individually significant. `mbpp_plus` 50/100 puts a 35B model level
+with `llama3.2:3b` (0.49), the smallest thing in the fleet. Two models is not
+enough to call this an architecture effect — but if you enable thinking
+anywhere, enable it on the dense model, where the measured cost is
+indistinguishable from noise while the restraint gain is the larger of the two
+(+14, p = 0.033).
+
+This also matches the ROADMAP's own note that thinking "can turn a wrong answer
+right, or burn the entire token budget."
+
+### Consequence for the 3.6-vs-3.8 comparison
+
+The restraint section above reports 3.6 beating 3.8 by 18 points at p = 0.004,
+with thinking off for both. With thinking on, 3.8 reaches 82 against 3.6's 86
+(p = 0.563) — indistinguishable. So:
+
+- **At default settings**, 3.6 has materially better tool restraint.
+- **With thinking enabled**, the two are indistinguishable on restraint, and
+  3.8 keeps its significant coding advantage (humaneval +13, p = 0.005).
+
+Stated as one sentence: *3.8's restraint deficit is a default-configuration
+deficit that thinking recovers, and on the dense model it recovers it for a
+coding cost too small to measure.* That is a materially different
+recommendation from the one the restraint table alone supports, which is why
+that table now carries a pointer here.
