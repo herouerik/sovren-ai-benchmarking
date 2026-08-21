@@ -280,10 +280,7 @@
       "mbpp": 0.7,
       "spider": 0.75,
       "philosophical": 0.8680000000000001,
-      "bfcl": 0.0,
-      "bfcl_irrelevance": 0.0,
-      "humaneval_plus": 0.0,
-      "mbpp_plus": 0.0
+      "bfcl": 0.0
     },
     "nemotron-cascade-2:latest": {
       "mmlu": 0.65,
@@ -293,10 +290,7 @@
       "mbpp": 0.6,
       "spider": 0.6,
       "philosophical": 0.9480000000000001,
-      "bfcl": 0.4,
-      "bfcl_irrelevance": 0.0,
-      "humaneval_plus": 0.0,
-      "mbpp_plus": 0.0
+      "bfcl": 0.4
     },
     "qwen2.5-coder:14b": {
       "mmlu": 0.7,
@@ -440,8 +434,6 @@
     "nemotron-3-nano:30b": 50.94118340095015,
     "muse-glimmer:30b-mlx": 23.71292265960158,
     "gemma4:26b-mlx": 64.74427734686888,
-    "qwen2.5-coder:32b": 0.0,
-    "nemotron-cascade-2:latest": 0.0,
     "qwen2.5-coder:14b": 26.35942916387365,
     "llama3.1:8b (RTX2080)": 82.53337633442642,
     "qwen2.5-coder:7b (RTX2080)": 87.56854389115277,
@@ -735,10 +727,7 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20,
-      "bfcl_irrelevance": 100,
-      "humaneval_plus": 100,
-      "mbpp_plus": 100
+      "bfcl": 20
     },
     "nemotron-cascade-2:latest": {
       "mmlu": 20,
@@ -748,10 +737,7 @@
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20,
-      "bfcl_irrelevance": 100,
-      "humaneval_plus": 100,
-      "mbpp_plus": 100
+      "bfcl": 20
     },
     "qwen2.5-coder:14b": {
       "mmlu": 20,
