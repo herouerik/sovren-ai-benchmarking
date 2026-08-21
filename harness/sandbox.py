@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import tempfile
 import os
 import textwrap
@@ -14,7 +15,16 @@ def execute_python(code: str, test_code: str, timeout: int = 10) -> dict:
 
     try:
         result = subprocess.run(
-            ["python3", tmp_path],
+            # sys.executable, not "python3": the bare name resolves through
+            # PATH, so it only picks up the venv when the venv happens to be
+            # activated. Invoked as `.venv/bin/python run_benchmark.py` — no
+            # activation — it landed on the system interpreter instead, which
+            # has no numpy. EvalPlus's test suites import numpy, so 97 of 100
+            # humaneval_plus samples failed with ModuleNotFoundError while the
+            # model's own code was correct, scoring a capable model 0.00.
+            # sys.executable is whichever Python is running the harness, which
+            # is by definition the one with its dependencies installed.
+            [sys.executable, tmp_path],
             capture_output=True,
             text=True,
             timeout=timeout,
