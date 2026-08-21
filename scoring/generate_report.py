@@ -70,6 +70,18 @@ def _is_recovered_timing(r: dict) -> bool:
 MIN_TOKENS_FOR_SPEED = 8
 
 
+# Preference order for the headline tok/s. Long-generation coding benchmarks
+# first: they run closest to the true decode rate and are the most widely
+# covered across the fleet. Short-output benchmarks (bfcl*, mmlu, arc) are
+# deliberately last — their rate is dominated by per-request overhead, so a
+# model measured on those looks slower than the same model measured on code.
+SPEED_BASIS_ORDER = [
+    "humaneval_plus", "humaneval", "mbpp_plus", "mbpp",
+    "spider", "gsm8k", "philosophical",
+    "bfcl", "bfcl_irrelevance", "mmlu", "arc",
+]
+
+
 def _speed_of(r: dict) -> float:
     """Generation rate for a row, or 0.0 if the row can't support one.
 
@@ -95,6 +107,8 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None,
 
     scores: dict[str, dict[str, float]] = {}
     speeds: dict[str, float] = {}
+    speeds_by_benchmark: dict[str, dict[str, float]] = {}
+    speed_basis: dict[str, str] = {}
     sample_sizes: dict[str, dict[str, int]] = {}
     swap_benches: dict[str, list[str]] = {}
 
@@ -113,8 +127,39 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None,
                     swap_benches[model].append(bench)
                 n = sample_counts.get((model, bench), len(brows)) if sample_counts else len(brows)
                 sample_sizes[model][bench] = n
-        toks = [s for s in (_speed_of(r) for r in mrows) if s > 0]
-        speeds[model] = sum(toks) / len(toks) if toks else 0.0
+        # Speed per benchmark, not pooled across them. Output length dominates
+        # the measured rate: on one model in one session, medians were 62.0
+        # tok/s on humaneval_plus, 54.0 on mbpp_plus and 43.0 on
+        # bfcl_irrelevance — a 44% spread from generation profile alone, since
+        # short tool-call replies are dominated by fixed per-request overhead
+        # while long code generations approach the true decode rate. Pooling
+        # therefore made the headline number depend on which benchmarks a model
+        # happened to have run, so adding a category to a model's record moved
+        # its "speed" for reasons unrelated to the model, and two models with
+        # different coverage were never comparable.
+        by_bench: dict[str, float] = {}
+        for bench in benchmarks:
+            bt = [s for s in (_speed_of(r) for r in mrows
+                              if r["benchmark"] == bench) if s > 0]
+            if bt:
+                by_bench[bench] = sum(bt) / len(bt)
+        speeds_by_benchmark[model] = by_bench
+
+        # Headline number: the first SPEED_BASIS_ORDER benchmark this model
+        # actually ran, so every model that ran it is compared on the same
+        # generation profile. speed_basis records which one it was — a number
+        # whose basis differs is not comparable, and that has to be visible
+        # rather than implied. Falls back to a pooled mean, marked "mixed", so
+        # a model that ran none of the reference benchmarks still reports
+        # something rather than a bare 0.0.
+        basis = next((b for b in SPEED_BASIS_ORDER if b in by_bench), None)
+        if basis:
+            speeds[model] = by_bench[basis]
+            speed_basis[model] = basis
+        else:
+            toks = [s for s in (_speed_of(r) for r in mrows) if s > 0]
+            speeds[model] = sum(toks) / len(toks) if toks else 0.0
+            speed_basis[model] = "mixed" if toks else "none"
         # Latest sample timestamp = when this model's evaluation completed
         ts_vals = [r["ts"] for r in mrows if r.get("ts")]
         if ts_vals:
@@ -130,6 +175,8 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None,
         "benchmarks": benchmarks,
         "scores": scores,
         "speeds": speeds,
+        "speeds_by_benchmark": speeds_by_benchmark,
+        "speed_basis": speed_basis,
         "sample_sizes": sample_sizes,
         "model_timestamps": model_timestamps,
         "swap_benches": swap_benches,
