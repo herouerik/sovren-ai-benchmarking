@@ -11,6 +11,8 @@
   --text:    #dcd9d4;
   --accent:  #c8681e;
   --accentA: rgba(200,104,30,.11);
+  --offscale: #cf3a2a;
+  --offscaleDk: #7a2118;
   --mono: 'Menlo','Monaco','Courier New',monospace;
   --serif: Georgia,'Times New Roman',serif;
 }
@@ -82,7 +84,14 @@ body::after{
 .model-name{font-size:11px;color:var(--text);white-space:nowrap}
 .model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
 .model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
-.model-raw-tag{font-size:9px;color:var(--dim);white-space:nowrap;font-family:var(--mono);margin-top:1px;opacity:.75}
+/* Same size and colour as .model-name — this is the identifier you'd actually
+   `ollama pull`, so it reads as a peer of the official name rather than a
+   footnote. Kept in the mono face and bracketed to mark it as a code
+   identifier; the brackets are pseudo-element content so they are not part
+   of the text a copy-paste picks up. */
+.model-raw-tag{font-size:11px;color:var(--text);white-space:nowrap;font-family:var(--mono);margin-top:1px}
+.model-raw-tag::before{content:'['}
+.model-raw-tag::after{content:']'}
 .model-host{font-size:8px;letter-spacing:.03em;border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;margin-right:4px;border-radius:2px}
 .td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
 .overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
@@ -111,6 +120,18 @@ body::after{
 .speed-model{font-size:9px;color:var(--dim);flex:0 0 115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .speed-track{flex:1;height:2px;background:var(--border)}
 .speed-fill{height:100%;transition:width .5s cubic-bezier(.16,1,.3,1)}
+/* Off-scale throughput. One model can be so much faster than the fleet that
+   including it in the linear scale squashes everyone else into the first few
+   percent of the track (Needle 2 at 1617 tok/s against a fleet max of ~90,
+   which left every other bar under 6% wide). Switching the whole chart to log
+   would fix the outlier at the cost of resolution across the tight ~8-90 band
+   where the real comparisons actually happen. So the outlier is taken out of
+   the scale and drawn full-width, thick and striped — reading as 'off the
+   chart' rather than as a bar to compare against. The value column still shows
+   the true measurement. */
+.speed-row.is-offscale .speed-track{height:6px}
+.speed-fill.is-offscale{background:repeating-linear-gradient(115deg,var(--offscale) 0 4px,var(--offscaleDk) 4px 8px)}
+.speed-row.is-offscale .speed-val{color:var(--offscale)}
 .speed-val{font-size:9px;color:var(--text);font-variant-numeric:tabular-nums;flex:0 0 40px;text-align:right}
 
 /* DROPZONE */
@@ -795,16 +816,32 @@ function renderSpeed() {
   const wrap = document.getElementById('speed-bars');
   wrap.innerHTML = '';
   const models = allModels();
-  const max    = Math.max(...models.map(m => getSpeed(m)||0), 1);
+  // A model counts as off-scale when it beats OFFSCALE_FACTOR x the fleet median.
+  // Median rather than mean so one 1617 tok/s outlier cannot drag the threshold
+  // up past itself, and a factor rather than a fixed ceiling so this keeps
+  // working as the fleet gets faster. See .speed-fill.is-offscale for why the
+  // outlier is excluded from the scale instead of log-scaling the whole chart.
+  const OFFSCALE_FACTOR = 5;
+  const sorted  = models.map(m => getSpeed(m)||0).filter(v => v > 0).sort((a,b) => a-b);
+  const median  = sorted.length ? sorted[Math.floor(sorted.length/2)] : 0;
+  const cut     = median * OFFSCALE_FACTOR;
+  const isOff   = spd => !!spd && cut > 0 && spd > cut;
+  // Scale across the in-scale models only, so the tight band uses the full track.
+  const max = Math.max(...models.map(m => { const s = getSpeed(m)||0; return isOff(s) ? 0 : s; }), 1);
   models.forEach((m, i) => {
     const spd = getSpeed(m);
+    const off = isOff(spd);
     const pct = spd ? (spd/max*100).toFixed(1) : 0;
     const row = document.createElement('div');
-    row.className    = `speed-row s-${modelStatus(m)}`;
+    row.className    = `speed-row s-${modelStatus(m)}${off ? ' is-offscale' : ''}`;
     row.dataset.model = m;
+    if (off) row.title = `${spd.toFixed(1)} tok/s — off the chart. More than ${OFFSCALE_FACTOR}x the fleet median (${median.toFixed(1)}), so it is excluded from the bar scale to keep the other models readable. The number is the real measurement.`;
     row.innerHTML =
       `<span class="speed-model">${m}</span>` +
-      `<div class="speed-track"><div class="speed-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div>` +
+      `<div class="speed-track">` +
+        (off ? `<div class="speed-fill is-offscale"></div>`
+             : `<div class="speed-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div>`) +
+      `</div>` +
       `<span class="speed-val">${spd ? spd.toFixed(1) : '—'}</span>`;
     wrap.appendChild(row);
   });
