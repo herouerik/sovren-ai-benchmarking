@@ -258,12 +258,12 @@ pass means the model called **nothing**.
 | qwen3.6-128k (36.0B) | Q4_K_M | GPU server | 88% | **80.0%** |
 | Qwen3.8-27B-GGUF (27.3B) | Q4_K_M | GPU server | 75% | **75.0%** |
 
-All at n=100, seed 42. One caveat on qwen3.6:27b (GGUF, M4): `irrelevance_115`
-was lost to a memory-guard abort (decode collapsed 17x, 10 -> 0.6 tok/s, 527
-tokens in) and scored as a failure with no calls recorded — the guard fired
-correctly, qwen3.8:27b-mlx was still resident at ~28GB when it loaded. The
-MLX run of the same model has zero aborts and lands on the same 86/100, so
-the artefact did not move the number.
+All at n=100, seed 42. qwen3.6:27b (GGUF, M4) originally scored 86/100 with one
+sample (`irrelevance_115`) lost to a memory-guard abort — caused by an
+unrelated editor session holding a second large model resident, not by the
+model. It was **re-measured on a clean machine and returned 86/100 again**,
+identical to both the contaminated run and its MLX sibling's abort-free
+86/100. The artefact never moved the number; the caveat is retired.
 
 The GPU-server rows fit the same pattern the rest of this doc already
 established: `gemma4:31b` leads on restraint (91%) the way it led on the
@@ -279,19 +279,29 @@ ties the two metrics together mechanically.
 
 Fisher exact on the pooled pass/fail items, build held constant:
 
-| comparison | 3.8 | 3.6 | delta | p |
-|---|---|---|---|---|
-| bfcl_irrelevance, MLX vs MLX | 68/100 | 86/100 | **-18** | **0.004** |
-| bfcl, MLX vs MLX | 81/100 | 87/100 | -6 | 0.335 |
+Restraint, thinking off, **both builds of both models** (n=100 each, M4):
 
-> **Superseded in part — read the thinking-mode section below.** Both rows
-> above have thinking OFF for both models, which was a fair like-for-like.
-> But qwen3.8:27b-mlx scores **82/100** on bfcl_irrelevance with thinking ON,
-> against qwen3.6's 86 (p = 0.563). The 18-point gap is therefore a
-> **default-configuration** gap, not an inherent property of the model: it
-> closes almost entirely when thinking is enabled, at a measured cost in
-> coding accuracy. The defensible claim is narrower than this table on its own
-> implies — see below.
+| model | Q4_K_M | nvfp4 | build effect |
+|---|---|---|---|
+| qwen3.6:27b | 86 | 86 | p = 1.000 |
+| qwen3.8:27b | **60** | 68 | p = 0.302 |
+
+| comparison | 3.6 | 3.8 | delta | p |
+|---|---|---|---|---|
+| **bfcl_irrelevance, pooled over both builds** | **172/200** | **128/200** | **-44** | **5e-07** |
+| bfcl, MLX vs MLX | 87/100 | 81/100 | -6 | 0.335 |
+
+The restraint gap replicates across two independent quantisations of each
+model, and neither within-model build effect is significant — so the
+difference travels with the model, not the build. That supersedes the single
+MLX-vs-MLX pair this section originally reported (-18, p = 0.004) with a
+result an order of magnitude stronger.
+
+> **But it is a default-configuration gap, not an inherent one.** With
+> thinking enabled, qwen3.8:27b-mlx reaches **82/100** against qwen3.6's 86
+> (p = 0.563) — indistinguishable. Thinking recovers almost the whole deficit,
+> at a coding cost that is significant on the MoE and unmeasurable on the
+> dense model. See the thinking-mode section below.
 
 The restraint gap is real at default settings and survives a clean
 build-matched test; the selection gap does not reach significance on its own. And the build effect on
