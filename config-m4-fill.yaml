@@ -47,7 +47,13 @@ models:
   - model: devstral-small-2:latest   # 16.3 t/s
     ctx: 16384
   - qwen3:32b                   # 11.6 t/s
-  - qwen3-32b-nothink:latest    # 11.6 t/s
+  # qwen3-32b-nothink:latest — CUT 2026-08-21. Not a distinct configuration in
+  # this harness: _effective_system() appends /no_think to any model whose name
+  # contains "qwen3", so the bare `qwen3:32b` entry above already runs without
+  # thinking. The two tags have byte-identical scores across all seven existing
+  # benchmarks (0.85/0.95/1.00/0.85/0.60/0.60/0.88), consistent with that.
+  # Running it would have reproduced qwen3:32b's three cells rather than adding
+  # information, at ~3h on an 11.6 tok/s model.
   - model: qwen3.8:27b          # 8.5 t/s — slowest, last
     ctx: 32768
 
