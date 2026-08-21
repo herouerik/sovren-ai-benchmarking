@@ -1,0 +1,89 @@
+{
+  "run_id": "20260821_183029",
+  "timestamp": "2026-08-21 18:42",
+  "total_samples": 175,
+  "models": [
+    "phi4:14b"
+  ],
+  "benchmarks": [
+    "mmlu",
+    "arc",
+    "gsm8k",
+    "humaneval",
+    "mbpp",
+    "spider",
+    "philosophical",
+    "bfcl",
+    "bfcl_irrelevance"
+  ],
+  "scores": {
+    "phi4:14b": {
+      "mmlu": 0.6,
+      "arc": 0.85,
+      "gsm8k": 0.96,
+      "humaneval": 0.75,
+      "mbpp": 0.55,
+      "spider": 0.65,
+      "philosophical": 0.924,
+      "bfcl": 0.0,
+      "bfcl_irrelevance": 0.0
+    }
+  },
+  "speeds": {
+    "phi4:14b": 42.89762868113672
+  },
+  "speeds_by_benchmark": {
+    "phi4:14b": {
+      "mmlu": 52.2147476979189,
+      "arc": 57.01006552993061,
+      "gsm8k": 43.76202986790346,
+      "humaneval": 42.89762868113672,
+      "mbpp": 45.08674258892152,
+      "spider": 45.437830395986694,
+      "philosophical": 46.01323113644138
+    }
+  },
+  "speed_basis": {
+    "phi4:14b": "humaneval"
+  },
+  "sample_sizes": {
+    "phi4:14b": {
+      "mmlu": 20,
+      "arc": 20,
+      "gsm8k": 25,
+      "humaneval": 20,
+      "mbpp": 20,
+      "spider": 20,
+      "philosophical": 10,
+      "bfcl": 20,
+      "bfcl_irrelevance": 20
+    }
+  },
+  "model_timestamps": {
+    "phi4:14b": "2026-08-21T18:41:36"
+  },
+  "swap_benches": {
+    "phi4:14b": []
+  },
+  "all_models": [
+    "qwen2.5-coder:7b",
+    "llama3.1:8b",
+    "qwen2.5-coder:14b",
+    "qwen3:8b",
+    "gemma3:12b",
+    "phi4:14b"
+  ],
+  "model_info": {
+    "phi4:14b": {
+      "host": "RTX 2080 Ti (GPU0)",
+      "quantization": "Q4_K_M",
+      "official_name": "phi 15B",
+      "context_length": 16384,
+      "size_gb": 8.4,
+      "effective_ctx": 4096,
+      "params": "14.7B",
+      "architecture": "phi3",
+      "vram_estimate": 9.6
+    }
+  }
+}
