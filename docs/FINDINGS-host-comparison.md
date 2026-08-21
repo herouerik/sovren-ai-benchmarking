@@ -390,13 +390,32 @@ cannot catch and a result check can.
 ### Consequence for the routing map
 
 `bfcl` alone is not sufficient evidence for putting a model in an agent loop.
-Read the two columns together — high selection *and* high restraint.
-`qwen3.6:27b` is the only config tested that clears both (87% / 86%), which
-sharpens the earlier recommendation to prefer the qwen3.6 family for agentic
-work: it now rests on two independent measurements rather than one. Even so,
-a 14% over-call rate argues for keeping a validation step between a local
-model and any tool it can actually invoke — and the topical-adjacency failures
-above are exactly the kind a schema check passes and a result check catches.
+Read the two columns together — high selection *and* high restraint. On M4
+evidence at n=100:
+
+| model | params | selection (bfcl) | restraint (bfcl_irr) | coding (he+/mbpp+) |
+|---|---|---|---|---|
+| **devstral-small-2:latest** | 24.0B | 0.85 | **0.87** | 75 / 65 |
+| **qwen3.6:27b** | 27.8B | **0.87** | 0.86 | 80 / 68 |
+| qwen3-coder:latest | 30.5B | 0.80 | 0.84 | 78 / 64 |
+| qwen3.8:27b-mlx +think | 27.8B | 0.81 | 0.82 | 85 / 60 |
+| qwen3.6:35b-mlx | 35.1B | 0.75 | 0.74 | 87 / 64 |
+| qwen3.8:27b-mlx | 27.8B | 0.81 | 0.68 | **90** / 62 |
+
+Two configs clear both tool columns: `devstral-small-2` and `qwen3.6:27b`.
+Devstral is the more interesting of the two — it leads on restraint while
+being the smallest model in that table, which is the benchmark agreeing with
+Mistral's stated design intent for it rather than a surprise.
+
+The table also shows why one column is not enough. `qwen3.8:27b-mlx` is the
+best coder in the set (90) and the worst at restraint (68); devstral is the
+inverse. Neither is "better" — they are aimed at different jobs, and a routing
+map that reads only `bfcl` would rank them almost identically (0.81 vs 0.85).
+
+Even the best restraint score here is 13% over-calling, which argues for
+keeping a validation step between a local model and any tool it can actually
+invoke — and the topical-adjacency failures above are exactly the kind a
+schema check passes and a result check catches.
 
 ---
 
