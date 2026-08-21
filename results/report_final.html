@@ -265,8 +265,8 @@ body::after{
 
 <script>
 const BENCHMARK_DATA = {
-  "run_id": "merged+20260821_183029+20260821_115640",
-  "timestamp": "2026-08-21 21:58",
+  "run_id": "merged+20260821_183029+20260821_115640+20260821_115640+20260821_222909+20260822_002917+20260822_005208",
+  "timestamp": "2026-08-22 01:18",
   "models": [
     "qwen3.8:27b-mlx +think",
     "gemma4:31b",
@@ -355,8 +355,9 @@ const BENCHMARK_DATA = {
       "mbpp": 0.7,
       "spider": 0.72,
       "bfcl": 0.81,
-      "humaneval_plus": 0.91,
-      "mbpp_plus": 0.63
+      "humaneval_plus": 0.92,
+      "mbpp_plus": 0.63,
+      "bfcl_irrelevance": 0.6
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 1.0,
@@ -519,7 +520,10 @@ const BENCHMARK_DATA = {
       "mbpp": 0.6,
       "spider": 0.6,
       "philosophical": 0.8800000000000001,
-      "bfcl": 0.8
+      "bfcl": 0.8,
+      "bfcl_irrelevance": 0.81,
+      "humaneval_plus": 0.83,
+      "mbpp_plus": 0.65
     },
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
       "mmlu": 0.8,
@@ -712,7 +716,9 @@ const BENCHMARK_DATA = {
       "mbpp": 0.6,
       "spider": 0.65,
       "philosophical": 0.8560000000000001,
-      "bfcl": 0.0
+      "bfcl": 0.0,
+      "humaneval_plus": 0.52,
+      "mbpp_plus": 0.59
     },
     "needle2": {
       "bfcl": 0.41,
@@ -759,9 +765,9 @@ const BENCHMARK_DATA = {
   "speeds": {
     "qwen3.8:27b-mlx +think": 31.118659544135966,
     "gemma4:31b": 9.673151692912725,
-    "qwen3.8:27b": 8.525283421848039,
+    "qwen3.8:27b": 9.05311842791617,
     "qwen3.6:35b-mlx +think": 67.23383896988916,
-    "qwen3.6:27b": 12.102999151062209,
+    "qwen3.6:27b": 12.386494521650087,
     "qwen3.6:27b-mlx": 13.482459542974537,
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": 10.796721839641611,
     "qwen3.8:27b-mlx": 27.583411125408357,
@@ -772,7 +778,7 @@ const BENCHMARK_DATA = {
     "qwen3.6:35b-mlx": 70.08375140854457,
     "qwen3-32b-nothink:latest": 11.627113403996274,
     "muse-glimmer:30b-mlx +think": 22.414025484549366,
-    "qwen3:32b": 11.648418619340017,
+    "qwen3:32b": 11.627705327351496,
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": 17.767425965353855,
     "qwen3-coder:latest": 70.18144885638988,
     "qwen3-coder:30b-sovereign": 32.18326805335121,
@@ -787,7 +793,7 @@ const BENCHMARK_DATA = {
     "gemma4-12b-agentic:latest": 19.000428447888552,
     "gemma4-12b-agentic-mtp:latest": 21.528272434810233,
     "qwen2.5-coder:7b": 49.46457027586124,
-    "codestral:22b": 0.0,
+    "codestral:22b": 18.92849791782333,
     "needle2": 1617.5920333875977,
     "llama3.1:8b": 47.53935922478379,
     "llama3.2:3b": 96.00343703131418,
@@ -827,6 +833,23 @@ const BENCHMARK_DATA = {
       "bfcl_irrelevance": 16.453341715717723,
       "humaneval_plus": 16.33156652585655,
       "mbpp_plus": 16.539568666250585
+    },
+    "qwen3:32b": {
+      "bfcl_irrelevance": 11.762713377975771,
+      "humaneval_plus": 11.627705327351496,
+      "mbpp_plus": 11.75707562723093
+    },
+    "qwen3.8:27b": {
+      "bfcl_irrelevance": 7.322920171873263,
+      "humaneval_plus": 9.05311842791617,
+      "mbpp_plus": 8.478124105159534
+    },
+    "codestral:22b": {
+      "humaneval_plus": 18.92849791782333,
+      "mbpp_plus": 19.08488230209613
+    },
+    "qwen3.6:27b": {
+      "bfcl_irrelevance": 12.386494521650087
     }
   },
   "speed_basis": {
@@ -835,7 +858,11 @@ const BENCHMARK_DATA = {
     "qwen3.6:35b-mlx +think": "humaneval_plus",
     "qwen3-coder:latest": "humaneval_plus",
     "qwen3.8:27b-mlx +think": "humaneval_plus",
-    "devstral-small-2:latest": "humaneval_plus"
+    "devstral-small-2:latest": "humaneval_plus",
+    "qwen3:32b": "humaneval_plus",
+    "qwen3.8:27b": "humaneval_plus",
+    "codestral:22b": "humaneval_plus",
+    "qwen3.6:27b": "bfcl_irrelevance"
   },
   "sample_sizes": {
     "qwen3.8:27b-mlx +think": {
@@ -874,7 +901,8 @@ const BENCHMARK_DATA = {
       "spider": 100,
       "bfcl": 100,
       "humaneval_plus": 100,
-      "mbpp_plus": 100
+      "mbpp_plus": 100,
+      "bfcl_irrelevance": 100
     },
     "qwen3.6:35b-mlx +think": {
       "mmlu": 20,
@@ -1037,7 +1065,10 @@ const BENCHMARK_DATA = {
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": {
       "mmlu": 20,
@@ -1230,7 +1261,9 @@ const BENCHMARK_DATA = {
       "mbpp": 20,
       "spider": 20,
       "philosophical": 10,
-      "bfcl": 20
+      "bfcl": 20,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     },
     "needle2": {
       "bfcl": 100,
@@ -1277,9 +1310,9 @@ const BENCHMARK_DATA = {
   "model_timestamps": {
     "qwen3.8:27b-mlx +think": "2026-08-21T21:12:35",
     "gemma4:31b": "2026-08-20T18:43:33",
-    "qwen3.8:27b": "2026-08-18T07:37:27",
+    "qwen3.8:27b": "2026-08-22T00:29:16",
     "qwen3.6:35b-mlx +think": "2026-08-21T18:47:42",
-    "qwen3.6:27b": "2026-08-20T13:27:29",
+    "qwen3.6:27b": "2026-08-22T01:17:26",
     "qwen3.6:27b-mlx": "2026-08-20T14:27:03",
     "hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M": "2026-08-20T18:04:27",
     "qwen3.8:27b-mlx": "2026-08-20T12:56:22",
@@ -1290,7 +1323,7 @@ const BENCHMARK_DATA = {
     "qwen3.6:35b-mlx": "2026-08-21T12:19:02",
     "qwen3-32b-nothink:latest": "2026-08-15T10:11:10",
     "muse-glimmer:30b-mlx +think": "2026-08-21T07:22:02",
-    "qwen3:32b": "2026-08-15T10:07:48",
+    "qwen3:32b": "2026-08-21T22:28:53",
     "MichelRosselli/GLM-4.5-Air:Q3_K_M": "2026-08-20T20:50:25",
     "qwen3-coder:latest": "2026-08-21T19:05:05",
     "qwen3-coder:30b-sovereign": "2026-08-20T22:12:25",
@@ -1307,7 +1340,7 @@ const BENCHMARK_DATA = {
     "gemma4-12b-agentic:latest": "2026-08-20T23:35:49",
     "gemma4-12b-agentic-mtp:latest": "2026-08-20T23:05:44",
     "qwen2.5-coder:7b": "2026-08-21T07:43:28",
-    "codestral:22b": "2026-08-15T09:39:35",
+    "codestral:22b": "2026-08-22T00:52:06",
     "needle2": "2026-08-20T12:41:55",
     "llama3.1:8b": "2026-08-21T01:12:27",
     "llama3.2:3b": "2026-08-21T01:18:23",
@@ -1320,7 +1353,8 @@ const BENCHMARK_DATA = {
     ],
     "qwen3.8:27b": [
       "bfcl",
-      "humaneval_plus"
+      "humaneval_plus",
+      "bfcl_irrelevance"
     ],
     "qwen3.6:35b-mlx +think": [
       "mbpp",
@@ -1347,7 +1381,9 @@ const BENCHMARK_DATA = {
     "phi4:14b": [],
     "qwen3.6:35b-mlx": [],
     "qwen3-coder:latest": [],
-    "devstral-small-2:latest": []
+    "devstral-small-2:latest": [],
+    "qwen3:32b": [],
+    "codestral:22b": []
   },
   "model_info": {
     "qwen3.8:27b-mlx +think": {
@@ -1782,7 +1818,7 @@ const BENCHMARK_DATA = {
       "vram_estimate": 9.6
     }
   },
-  "total_samples": 15375,
+  "total_samples": 15975,
   "all_models": [
     "llama3.2:3b",
     "llama3.1:8b",

@@ -1,13 +1,14 @@
 {
   "run_id": "20260821_115640",
-  "timestamp": "2026-08-21 21:58",
-  "total_samples": 1500,
+  "timestamp": "2026-08-22 01:18",
+  "total_samples": 1800,
   "models": [
     "qwen3.6:35b-mlx",
     "qwen3.6:35b-mlx +think",
     "qwen3-coder:latest",
     "qwen3.8:27b-mlx +think",
-    "devstral-small-2:latest"
+    "devstral-small-2:latest",
+    "qwen3:32b"
   ],
   "benchmarks": [
     "bfcl_irrelevance",
@@ -39,6 +40,11 @@
       "bfcl_irrelevance": 0.87,
       "humaneval_plus": 0.75,
       "mbpp_plus": 0.65
+    },
+    "qwen3:32b": {
+      "bfcl_irrelevance": 0.81,
+      "humaneval_plus": 0.83,
+      "mbpp_plus": 0.65
     }
   },
   "speeds": {
@@ -46,7 +52,8 @@
     "qwen3.6:35b-mlx +think": 67.23383896988916,
     "qwen3-coder:latest": 70.18144885638988,
     "qwen3.8:27b-mlx +think": 31.118659544135966,
-    "devstral-small-2:latest": 16.33156652585655
+    "devstral-small-2:latest": 16.33156652585655,
+    "qwen3:32b": 11.627705327351496
   },
   "speeds_by_benchmark": {
     "qwen3.6:35b-mlx": {
@@ -73,6 +80,11 @@
       "bfcl_irrelevance": 16.453341715717723,
       "humaneval_plus": 16.33156652585655,
       "mbpp_plus": 16.539568666250585
+    },
+    "qwen3:32b": {
+      "bfcl_irrelevance": 11.762713377975771,
+      "humaneval_plus": 11.627705327351496,
+      "mbpp_plus": 11.75707562723093
     }
   },
   "speed_basis": {
@@ -80,7 +92,8 @@
     "qwen3.6:35b-mlx +think": "humaneval_plus",
     "qwen3-coder:latest": "humaneval_plus",
     "qwen3.8:27b-mlx +think": "humaneval_plus",
-    "devstral-small-2:latest": "humaneval_plus"
+    "devstral-small-2:latest": "humaneval_plus",
+    "qwen3:32b": "humaneval_plus"
   },
   "sample_sizes": {
     "qwen3.6:35b-mlx": {
@@ -107,6 +120,11 @@
       "bfcl_irrelevance": 100,
       "humaneval_plus": 100,
       "mbpp_plus": 100
+    },
+    "qwen3:32b": {
+      "bfcl_irrelevance": 100,
+      "humaneval_plus": 100,
+      "mbpp_plus": 100
     }
   },
   "model_timestamps": {
@@ -114,7 +132,8 @@
     "qwen3.6:35b-mlx +think": "2026-08-21T18:47:42",
     "qwen3-coder:latest": "2026-08-21T19:05:05",
     "qwen3.8:27b-mlx +think": "2026-08-21T21:12:35",
-    "devstral-small-2:latest": "2026-08-21T21:47:51"
+    "devstral-small-2:latest": "2026-08-21T21:47:51",
+    "qwen3:32b": "2026-08-21T22:28:53"
   },
   "swap_benches": {
     "qwen3.6:35b-mlx": [],
@@ -125,8 +144,31 @@
     "qwen3.8:27b-mlx +think": [
       "bfcl_irrelevance"
     ],
-    "devstral-small-2:latest": []
+    "devstral-small-2:latest": [],
+    "qwen3:32b": []
   },
+  "all_models": [
+    "llama3.2:3b",
+    "llama3.1:8b",
+    "qwen2.5-coder:7b",
+    "gemma4-12b-agentic:latest",
+    "gemma4-12b-agentic-mtp:latest",
+    "codestral:22b",
+    "devstral-small-2:latest",
+    "gemma4:26b-mlx",
+    "nemotron-3-nano:30b",
+    "gemma4:31b-mlx",
+    "qwen3:32b",
+    "qwen3-32b-nothink:latest",
+    "qwen3-coder:latest",
+    "qwen3.6:27b",
+    "muse-glimmer:30b-mlx",
+    "muse-glimmer:30b-mlx +think",
+    "qwen3.6:35b-mlx",
+    "qwen3.6:35b-mlx +think",
+    "qwen3.8:27b-mlx",
+    "qwen3.8:27b-mlx +think"
+  ],
   "model_info": {
     "qwen3.6:35b-mlx": {
       "host": "MacBook M4",
