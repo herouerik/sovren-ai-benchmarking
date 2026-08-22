@@ -524,3 +524,105 @@ deficit that thinking recovers, and on the dense model it recovers it for a
 coding cost too small to measure.* That is a materially different
 recommendation from the one the restraint table alone supports, which is why
 that table now carries a pointer here.
+
+---
+
+## Dataset-wide analysis (37 models, 15,975 samples, 4 hosts)
+
+Run after the M4 fill completed. Everything here is across the whole merged
+payload rather than one host.
+
+### The tool benchmarks are the most informative in the suite
+
+Ranked by across-model standard deviation — how much a benchmark actually
+separates models:
+
+| benchmark | stdev | n models | median | range |
+|---|---|---|---|---|
+| **bfcl** | **0.320** | 36 | 0.78 | 0.00–0.90 |
+| **bfcl_irrelevance** | **0.223** | 31 | 0.81 | 0.00–1.00 |
+| mmlu | 0.141 | 36 | 0.80 | 0.50–1.00 |
+| humaneval_plus | 0.117 | 27 | 0.82 | 0.48–0.93 |
+| humaneval | 0.115 | 35 | 0.85 | 0.45–0.96 |
+| spider | 0.098 | 35 | 0.65 | 0.35–0.75 |
+| arc | 0.093 | 36 | 0.97 | 0.75–1.00 |
+| gsm8k | 0.092 | 35 | 1.00 | 0.68–1.00 |
+| mbpp | 0.071 | 35 | 0.65 | 0.45–0.75 |
+| mbpp_plus | 0.049 | 27 | 0.61 | 0.49–0.68 |
+| philosophical | 0.042 | 34 | 0.92 | 0.85–1.00 |
+
+The two tool benchmarks separate models 2-3x better than anything else, and
+they were the last two added. `arc`, `gsm8k` and `philosophical` sit at
+medians of 0.97-1.00 with the narrowest spreads — they are measuring almost
+nothing at this point and should come out of routine runs.
+
+### mbpp_plus is a ceiling, not a ranking — correcting an earlier claim
+
+An earlier version of the dashboard tooltip called `mbpp_plus` "the most
+discriminating" column and said it costs models "10 points or more" against
+plain MBPP. Both are wrong, and the data above is why:
+
+- It has the **lowest** across-model spread of any coding benchmark
+  (stdev 0.049, range 0.49-0.68). It compresses 27 models into a 0.19-wide
+  band. That makes it a hard ceiling this whole class of local model runs
+  into, not a discriminator.
+- The plain-to-plus drop averages **-2.8pp** on MBPP and **-3.3pp** on
+  HumanEval across 27 models — not double digits.
+
+The double-digit falls are individual models, and *that* is the useful signal:
+`codestral:22b` loses 18pp on HumanEval+ and `GLM-4.5-Air:Q3_K_M` loses 13pp
+on MBPP+. An outlier drop flags a model whose code is unusually fragile at the
+edges; the average drop flags nothing.
+
+### Over-calling is common, and "agentic" in the name does not predict it
+
+Restraint across the 27 models measured at n>=100, median 0.81:
+
+| band | count | models |
+|---|---|---|
+| excellent (>=0.85) | 6 | qwen2.5-coder:7b, gemma4:31b, gemma4:31b-mlx, devstral-small-2, qwen3.6:27b, qwen3.6:27b-mlx |
+| usable (0.70-0.85) | 15 | qwen3-coder family, qwen3.6/3.8 +think variants, GLM-4.5-Air, gemma4:26b-mlx, qwen3:32b, muse-glimmer, needle2, nemotron-3-nano |
+| **poor (<0.70)** | **6** | qwen3.8:27b-mlx, qwen3.8:27b, gemma4-12b-agentic, gemma4-12b-agentic-mtp, llama3.1:8b, llama3.2:3b |
+
+Nearly a quarter of the fleet over-calls on more than 30% of requests no
+available function can satisfy. Two observations worth acting on:
+
+- **`gemma4-12b-agentic` scores 0.57** on restraint — the second-worst
+  measured — despite "agentic" in its name and a respectable 0.80 on tool
+  selection. The name describes intent, not measured behaviour.
+- **`devstral-small-2` is the only model whose agentic branding survives
+  contact with both columns** (0.85 selection / 0.87 restraint).
+
+### The qwen2.5-coder family never calls tools at all
+
+`qwen2.5-coder` at 7b, 14b and 32b all score **bfcl 0.00** and (where
+measured) **bfcl_irrelevance 1.00**. That is not a broken row: a model that
+never emits a tool call fails every selection item and passes every
+irrelevance item. The 1.00 looks like perfect judgement and is actually a
+total absence of the capability.
+
+This is the strongest argument in the dataset for never reading
+`bfcl_irrelevance` alone. Read against `bfcl` it is unambiguous; read by
+itself it ranks a model that cannot use tools above every model that can.
+The GPU-server session reached the same conclusion independently when it
+decided to keep `qwen2.5-coder:32b`'s `bfcl: 0.0` while removing its other
+false zeros.
+
+### Full-coverage leaderboard
+
+Seven models have all four discriminating benchmarks at n>=100:
+
+| mean | model | host | he+ | mbpp+ | bfcl | bfcl_irr |
+|---|---|---|---|---|---|---|
+| **83.0%** | gemma4:31b | GPU server | 0.91 | 0.65 | 0.85 | 0.91 |
+| 80.2% | qwen3.6:27b | M4 | 0.80 | 0.68 | 0.87 | 0.86 |
+| 80.2% | qwen3.6:27b-mlx | M4 | 0.82 | 0.66 | 0.87 | 0.86 |
+| 78.8% | qwen3.6-128k:latest | GPU server | 0.88 | 0.59 | 0.88 | 0.80 |
+| 75.2% | qwen3.8:27b-mlx | M4 | 0.90 | 0.62 | 0.81 | 0.68 |
+| 75.2% | Qwen3.8-27B-GGUF | GPU server | 0.90 | 0.61 | 0.75 | 0.75 |
+| 74.0% | qwen3.8:27b | M4 | 0.92 | 0.63 | 0.81 | 0.60 |
+
+`gemma4:31b` leads, and does so by being the only model strong on both axes
+at once (0.91 coding, 0.91 restraint). The three qwen3.8 rows occupy the
+bottom three places despite holding the top three `humaneval_plus` scores —
+which is the two-axis argument in one table.
