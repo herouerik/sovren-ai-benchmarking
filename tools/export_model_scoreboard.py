@@ -10,12 +10,10 @@ This reads the same merged summary the HTML report itself renders from,
 so it stays in sync with whatever the dashboard shows without needing to
 scrape rendered markup.
 
-Erik, 2026-08-15: "possibly we can make that service deliver a far better
-interface... but it is a start to test the idea." This is that start —
-a real, versioned, regenerable export, not a one-off scrape. A proper
-HTTP endpoint or a report_final.html <link rel> to a JSON sibling file
-would be the next step if this proves useful across more than one
-consuming project.
+This is a deliberately small first step: a real, versioned, regenerable
+export rather than a one-off scrape. A proper HTTP endpoint, or a
+<link rel> from the report to a JSON sibling file, would be the next step
+if it proves useful across more than one consuming project.
 
 Usage:
     python3 tools/export_model_scoreboard.py [--out PATH]
