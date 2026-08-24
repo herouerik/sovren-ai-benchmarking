@@ -12,9 +12,9 @@ Built to work fully offline once datasets are cached.
 ## Structure
 
 ```
-local-llm-benchmark/
+sovren-ai-benchmark/
 ├── run_benchmark.py        ← single entry point for everything
-├── config.yaml             ← what to run and against which models
+├── config.example.yaml     ← copy to config.yaml; what to run, against which models
 ├── benchmarks/             ← one file per category
 ├── harness/                ← shared infrastructure
 ├── scoring/                ← result display and analysis
@@ -121,7 +121,7 @@ wheel. The HuggingFace dataset repo still carries only the v3 files, so
 > harness deliberately skips (real external services would break the
 > temperature-0.0 determinism everything else here relies on). The honest label
 > for these numbers is "BFCL v4 non-live AST", with irrelevance reported
-> separately. See `docs/ROADMAP.md` §E and its addendum.
+> separately.
 
 Multi-turn/agentic categories are a separate benchmark
 (`bfcl_multi_turn_long_context`), disabled by default — one sample runs 4 turns
@@ -493,153 +493,21 @@ df.groupby("model")[["score", "tok_per_sec"]].mean()
 
 The practical output is a routing map: which models to assign to which task types. High-accuracy coding models for agent loops, strong reasoning models for complex analysis, fast small models for cheap classification or summarisation.
 
-### Written-up findings
+## Versioning
 
-Analyses of actual runs, rather than of the scoring machinery:
+`v0.2` changed how several benchmarks are extracted, prompted and timed, so
+**v0.1 results are not comparable to v0.2 results** — re-run rather than merge.
+The behavioural changes, in brief:
 
-| Document | Question it answers |
-|---|---|
-| [**`docs/LESSONS.md`**](docs/LESSONS.md) | **Start here.** What we learned running local models for real work: which models are worth it, the setup that avoids the failure modes, what discriminates and what's saturated, and the measurement mistakes that cost the most time |
-| [`docs/FINDINGS-host-comparison.md`](docs/FINDINGS-host-comparison.md) | MacBook M4 vs the 6×P100 server — which host, model and use case wins, and which summaries are safe to read |
-| [`docs/FINDINGS-qwen-factorial.md`](docs/FINDINGS-qwen-factorial.md) | Qwen 3.6 vs 3.8 × MLX vs GGUF, one factor at a time, with Fisher exact tests |
-| [`docs/FINDINGS-qwen-evalplus.md`](docs/FINDINGS-qwen-evalplus.md) | The same factorial on the EvalPlus edge-case variants |
-
----
-
-## Release notes
-
-### v0.1 — initial release
-
-The original harness: one entry point (`run_benchmark.py`), config-driven model
-and benchmark selection, six benchmark categories (MMLU, ARC, GSM8K,
-HumanEval + MBPP, Spider, philosophical LLM-as-judge), sandboxed code execution
-for the coding benchmarks, an HTML dashboard generated from a results JSON, and
-`--baseline` incremental patching so a new model could be added without
-re-running everything. Inference went through Ollama's OpenAI-compatible `/v1`
-endpoint. A wall-clock "memory guard" aborted models that looked like they were
-swapping.
-
-### v0.2 — measurement, scoring, and model-support overhaul
-
-Everything below changes what the numbers mean. **v0.1 results are not
-comparable to v0.2 results** — re-run rather than merge.
-
-The scale of the correction, measured on the same models and hardware:
-
-| what was wrong | before | after |
-|---|---|---|
-| MCQ answers extracted from the first `[ABCD]` in the text | `gemma4:26b-mlx` MMLU **0/5** | **5/5** |
-| Spider prompt omitted the database schema | `llama3.2:3b` **0%** | **50%** |
-| Spider, whole fleet (schema + representative sampling) | 0–20% | **35–80%** |
-| `think` sent to models that do not support it | 4 models scored **1.00/5** on empty answers | **4.26–4.46/5** |
-| Read timeout fired during prefill | `muse-glimmer:30b-mlx` **79.4** overall | **83.7** |
-| Speed charged prompt processing to generation | `llama3.2:3b` **19.0** tok/s | **98.0** tok/s |
-
-The v0.2 baseline is 20 model variants × 7 benchmarks × 2700 samples with
-**1 errored sample** total. Under v0.1 measurement the same fleet produced
-13 models with at least one aborted benchmark, nearly all of which turned out
-to be measurement artefacts rather than real limits.
-
-**Methodology**
-
-- **Representative sampling.** Benchmarks took the *first* N samples, so every
-  run measured a fixed head-slice of each dataset — and MMLU, configured with
-  five subjects, drew all 20 samples from `abstract_algebra` alone because
-  subjects were concatenated rather than interleaved. Sampling is now seeded
-  (`sample_seed`), shuffled, and stratified: n=20 means 4 questions from each
-  of 5 subjects, balanced at any n.
-- **Decode speed separated from latency.** `tok_per_sec` divided completion
-  tokens by *total* elapsed time, so prompt processing was charged to
-  generation. Multiple-choice benchmarks emit a single token, making the figure
-  meaningless. Results now carry `ttft`, `decode_tps`, `prompt_tokens`, and
-  `completion_tokens`; `decode_tps` comes from the server's own timings and is
-  the number comparable to published tok/s.
-- **Realistic budgets.** `max_tokens` was 2048, which truncated reasoning
-  models mid-answer — scoring zero on questions they were still working
-  through. Now 4096, with `think_max_tokens` (16384) applied when thinking is
-  on.
-- **Sample counts raised** so a single question no longer moves a score 20
-  points. Spider illustrates the risk: models scoring 100% at n=5 scored 55% at
-  n=20.
-
-**Bug fixes**
-
-- **Multiple-choice answers were extracted with the *first* `[ABCD]` match in
-  the response.** Any model that reasoned before answering had the letter taken
-  from its restatement of the options, scoring correct answers as wrong. The
-  extractor now prefers an explicit declaration (`the answer is C`, `**C**`,
-  `\boxed{D}`) and otherwise takes the *last* standalone letter. Terse answers
-  extract identically, so previously-scored terse responses are unaffected.
-- **Fabricated timings polluted the dashboard.** Rows reconstructed by log
-  recovery carried placeholder constants (`elapsed=5.0`, `tok_per_sec=10.0`)
-  and were averaged into the speed column, understating fast models by 4–6×.
-  They are now excluded, as are rows too short to measure throughput.
-- **A run without `--baseline` silently overwrote the aggregated dashboard**
-  with just that run's models. It now diverts to `report_<run_id>.html`.
-- **`--output` was parsed and ignored.** It now works.
-- **Results were only written at the very end**, so a run that died lost every
-  completed model. It now checkpoints after each one.
-
-**Model support**
-
-- **Thinking is a first-class, recorded dimension.** Newer Ollama enables
-  extended reasoning by default for models that declare the capability, which
-  changes accuracy substantially — and `/v1` silently ignores the `think`
-  parameter. Benchmark inference now uses Ollama's native `/api/chat`, where
-  `think` is honoured, defaults per benchmark, can be overridden per model, and
-  is stored on every result alongside the reasoning length.
-- **Model variants.** The same model can be benchmarked under different
-  settings and appear as separate dashboard rows (`model +think`) instead of
-  overwriting each other — previously the second run silently replaced the
-  first, since results merge on `(model, benchmark)`.
-- **Speculative decoding is measured correctly** rather than aborted (see the
-  guard notes below).
-
-**Memory guard — rewritten**
-
-- Aborts **mid-call** rather than classifying a sample after it has already
-  cost the time.
-- Detection is **timing-primary and burst-immune**: rates are averaged over
-  wall-clock windows, not per-token gaps. Per-token gaps produced nonsense
-  baselines (20000+ tok/s) whenever tokens arrived batched — which is *always*
-  under speculative decoding, so the old approach systematically killed exactly
-  the models it should have measured.
-- **A long TTFT is no longer a fault.** Cold model load and extended thinking
-  are legitimate; thinking tokens count as liveness.
-- **OS pressure sensing**, portable across macOS (`vm_stat`) and Linux
-  (`/proc/vmstat`), grades a trip as *hard* (model doesn't fit — skip it) or
-  *soft* (one bad sample — continue).
-- **"Too slow to benchmark" is now separate from "thrashing"**, reported as
-  `too_slow` via a `min_decode_tps` floor.
-- The absolute `max_baseline_seconds` / `spike_threshold` / `calibration_samples`
-  settings are gone; the same config now works on GPU and CPU.
-
-**Dashboard**
-
-- **Architecture is shown**: dense vs MoE, expert topology (`MoE 128×8`), and
-  active parameter counts. A sparse model reports only its *active* parameters,
-  which is why a "larger" model can be several times faster and score
-  differently — previously invisible.
-- **Unreliable figures are left blank rather than guessed.** Parameter counts
-  are cross-checked against file size; VRAM estimates are omitted when model
-  metadata lacks the attention shape needed for the KV-cache term, instead of
-  silently falling back to a weights-only number that understated usage by
-  several GB.
-- **The score heatmap actually separates scores.** It was three hard bands with
-  only opacity varying inside each, so a whole band read as one colour (75% and
-  100% were indistinguishable) while 74% vs 75% jumped a hue. It is now an
-  11-step ramp across the same three sovren hues, with luminance rising
-  monotonically — so the ordering survives greyscale and red-green colour
-  blindness — spanning 30–100% rather than 0–100% because scores cluster near
-  the top, and fanning out hardest over the last four steps.
-- **Contrast fixed throughout.** Every step carries the ink that clears WCAG AA
-  on it (worst pair 4.55:1), and the ramp steps across the luminance band where
-  neither light nor dark ink would pass. Swap-marker text inherits its cell's
-  ink rather than a fixed amber that measured **1.42:1** on the bright green
-  steps. Column headers and rank-strip labels moved off `--muted`, which was
-  2.6:1 on the near-black ground — below AA even for large text.
-- Models are unloaded between runs, so two large models are never resident at
-  once.
+- Multiple-choice answers are parsed from an explicit answer position rather
+  than the first A/B/C/D character in the response.
+- The Spider prompt includes the database schema, and scoring executes both the
+  predicted and reference queries when the SQLite databases are present.
+- Thinking mode is only requested from models that declare the capability.
+- Read timeouts are sized to cover prefill, not just inter-token gaps.
+- Speed comes from the server's own decode timings, so prompt processing is no
+  longer charged to generation.
+- Sampling is seeded and stratified rather than taking the first N items.
 
 ---
 

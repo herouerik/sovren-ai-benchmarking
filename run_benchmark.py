@@ -230,19 +230,28 @@ def _multi_model_models(raw: list, default_ctx: int | None = None) -> list[dict]
 # FROM one machine to drive inference on ANOTHER (e.g. config-m4-remote.yaml
 # runs on the GPU server but serves from the M4), so the script's own host is
 # not the inference host and must never be used to label results.
-# Deliberately generic: these labels are published in the dashboard and the
-# summaries, which live in a public repo. They identify the *class* of machine
-# (which is what makes a speed number interpretable) and nothing more — no
-# hostnames, no owner, no serial. Keep any new entry to the same shape.
+# Optional map of inference-host address -> display label, for the case where
+# a config drives a remote machine. Populate it via the BENCH_KNOWN_HOSTS env
+# var (comma-separated "addr=label" pairs) rather than editing this file, so
+# local network layout stays out of version control:
+#
+#     BENCH_KNOWN_HOSTS="10.0.0.5=GPU server,10.0.0.6=laptop"
+#
+# Labels should identify the *class* of machine — that is what makes a speed
+# number interpretable — and nothing more: no hostnames, no owner, no serial.
+#
+# For a remote config (base_url pointing at another machine),
+# execution.host_label does NOT apply; only this map does. Prefer setting
+# execution.host_label on local configs and this map for remote ones. A DHCP
+# lease that moves will silently turn every row a machine produces into an
+# "unregistered host" and stop it merging with that machine's earlier rows, so
+# verify the address before relying on it.
 _KNOWN_HOSTS = {
-    "192.168.68.115": "i9 GPU server",
-    "192.168.68.106": "MacBook M4",  # stale — kept in case it reconnects here
-    "192.168.68.110": "MacBook M4",  # current, as of 2026-08-21 (was .106,
-    # then 172.30.185.105 per docs/ROADMAP.md:663, now this). Missing this
-    # entry is what actually broke: for a *remote* config (base_url points at
-    # another machine), execution.host_label's override never applies — only
-    # this dict does. Verify with `curl http://<ip>:11434/api/tags` before
-    # trusting an IP here again; it has moved three times now.
+    k.strip(): v.strip()
+    for k, _, v in (
+        pair.partition("=") for pair in os.environ.get("BENCH_KNOWN_HOSTS", "").split(",")
+    )
+    if k.strip() and v.strip()
 }
 
 
@@ -267,10 +276,9 @@ def _own_lan_ip() -> str | None:
 
 # Set from config (execution.host_label) or the BENCH_HOST_LABEL env var. A
 # machine declaring its own identity is far more robust than inferring it from
-# an IP: this laptop moved from 192.168.68.106 to 172.30.185.105 simply by
-# changing network, which silently turned every row it produced into an
-# "unregistered host" and made the merge refuse to combine them with its own
-# earlier rows.
+# an IP: a DHCP lease that changes silently turns every row that machine
+# produces into an "unregistered host" and makes the merge refuse to combine
+# them with its own earlier rows.
 _HOST_LABEL_OVERRIDE: str | None = None
 
 
@@ -328,8 +336,8 @@ def collect_model_info(model_entries: list[str | dict], default_ctx: int | None 
     # Disk size straight from the Ollama API rather than reconstructing its
     # on-disk manifest/blob path ourselves — that path assumed Ollama's models
     # live under this process's $HOME (~/.ollama/models/manifests/...), which
-    # is only true for a per-user Ollama install. This box (and any systemd-
-    # managed install) runs Ollama as a system service storing everything
+    # is only true for a per-user Ollama install. A systemd-
+    # managed install runs Ollama as a system service storing everything
     # under a different user's directory (e.g. /usr/share/ollama/.ollama),
     # so that lookup always missed, size_gb silently stayed 0, and the
     # resulting "vram_estimate" was just the KV-cache term with no weights
