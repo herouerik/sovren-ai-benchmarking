@@ -499,6 +499,7 @@ Analyses of actual runs, rather than of the scoring machinery:
 
 | Document | Question it answers |
 |---|---|
+| [**`docs/LESSONS.md`**](docs/LESSONS.md) | **Start here.** What we learned running local models for real work: which models are worth it, the setup that avoids the failure modes, what discriminates and what's saturated, and the measurement mistakes that cost the most time |
 | [`docs/FINDINGS-host-comparison.md`](docs/FINDINGS-host-comparison.md) | MacBook M4 vs the 6×P100 server — which host, model and use case wins, and which summaries are safe to read |
 | [`docs/FINDINGS-qwen-factorial.md`](docs/FINDINGS-qwen-factorial.md) | Qwen 3.6 vs 3.8 × MLX vs GGUF, one factor at a time, with Fisher exact tests |
 | [`docs/FINDINGS-qwen-evalplus.md`](docs/FINDINGS-qwen-evalplus.md) | The same factorial on the EvalPlus edge-case variants |
