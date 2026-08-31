@@ -208,7 +208,7 @@ def load_context_perf(path: Path | None) -> dict | None:
 
 
 def load_external(path: Path | None) -> dict | None:
-    """Published third-party figures from data/external_reference.yaml.
+    """Published third-party figures: definitions + machine-generated scores.
 
     Injected under its own key and rendered in its own panel. Never merged into a model row,
     never averaged into OVERALL, never used for ranking — a 500-sample leaderboard result and
@@ -222,10 +222,30 @@ def load_external(path: Path | None) -> dict | None:
         print("  note: pyyaml not installed — external reference panel skipped")
         return None
     try:
-        return yaml.safe_load(path.read_text())
+        doc = yaml.safe_load(path.read_text()) or {}
     except Exception as e:
         print(f"  warning: could not read {path}: {e}")
         return None
+
+    # Definitions and figures are separate files so a code-only refresh can rewrite the
+    # figures wholesale without touching hand-written prose. Merge them back here: the
+    # dashboard wants one object per benchmark.
+    scores_name = (doc.get("_meta") or {}).get("scores_file", "external_scores.yaml")
+    scores_path = path.parent / scores_name
+    if scores_path.exists():
+        try:
+            sdoc = yaml.safe_load(scores_path.read_text()) or {}
+        except Exception as e:
+            print(f"  warning: could not read {scores_path}: {e}")
+            sdoc = {}
+        for key, vals in (sdoc.get("benchmarks") or {}).items():
+            if key in (doc.get("benchmarks") or {}):
+                doc["benchmarks"][key].update(vals)
+            else:
+                print(f"  note: {scores_name} has scores for unknown benchmark {key!r}")
+    else:
+        print(f"  note: {scores_name} not found — run tools/fetch_external_reference.py")
+    return doc
 
 
 def find_template() -> Path:

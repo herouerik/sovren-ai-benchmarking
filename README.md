@@ -351,13 +351,42 @@ column.
 Currently pulled: SWE-bench Verified, LiveCodeBench, Terminal-Bench 2.0. Available upstream
 without code changes by adding a `slug`: `osWorldVerified`, `browseComp`, `arcAgi2`, `hle`.
 
+**Two files, deliberately:**
+
+| file | written by | contains |
+|---|---|---|
+| `data/external_reference.yaml` | hand | which benchmarks to carry, labels, notes, `column` flags |
+| `data/external_scores.yaml` | the refresher | the figures, providers, licences, retrieval date |
+
 ```sh
 python3 tools/fetch_external_reference.py --dry-run   # show what would change
-python3 tools/fetch_external_reference.py             # rewrite the scores blocks
+python3 tools/fetch_external_reference.py             # rewrite the scores file only
 ```
+
+The refresher rewrites the scores file **wholesale** and never opens the definitions file.
+That split is what makes the refresh safe to run unattended: a single-file design would
+have to re-dump the whole YAML and would silently destroy every comment and note in it.
+So the ingest is fully code-only — no hand-editing, and nothing to restore afterwards.
 
 Committed rather than fetched at report time on purpose: a benchmark run must not depend on
 the network, and a published number that moves should move in a reviewable diff.
+
+### Where the external figures appear
+
+**Its own tab.** The tables are long enough to fill a small screen by themselves, so they
+live behind an `EXTERNAL REFERENCE` tab beside `LOCAL BENCHMARKS` rather than below the
+grid. The tab hides itself entirely when no external data is loaded.
+
+**Optionally as an inline column.** Set `column: true` on a benchmark and it also renders
+as a column in the main table, immediately left of `OVERALL` — adjacent for comparison, but
+outside the measured block and drawn unmistakably differently: no heatmap fill, dashed
+rules, an italic figure and an `EXT` tag. It sorts like any other column; the default sort
+stays `OVERALL`.
+
+A flagged column renders **only if at least one benchmarked model matches** a row in that
+benchmark. An all-empty column is dead width, which is the opposite of the point on a
+narrow screen — so a benchmark can be flagged today and simply appear later, when a model
+you run enters its published list.
 
 **The overlap is partial, and which part matters.** SWE-bench Verified evaluates frontier
 hosted models only — read it as a reference *band*, not a comparison. LiveCodeBench carries
