@@ -56,11 +56,40 @@ _meta:
   scores_file: external_scores.yaml
   refresh: "python3 tools/fetch_external_reference.py --dry-run"
 
+# Hugging Face model cards to harvest, most-trusted first. A vendor publishing an
+# open-weight model reports its own benchmark numbers, usually in a table that also names
+# competitors — so one card can yield SWE-bench Verified for several models a laptop can
+# actually run, which no top-N leaderboard view will ever contain.
+#
+# Scores are tagged self_reported (the card's own model) or third_party (a competitor
+# graded on someone else's card), and self-reported wins for the same model+benchmark.
+# Neither is independent verification; both are published claims.
+#
+# Before adding a card, see what it offers:
+#     python3 tools/hf_model_cards.py <org>/<model> --all
+sources:
+  hf_cards:
+    - Qwen/Qwen3.6-27B
+    - Qwen/Qwen3.6-35B-A3B
+    - Qwen/Qwen3.8-27B
+    - mistralai/Devstral-Small-2-24B-Instruct-2512
+    - zai-org/GLM-4.5-Air
+    - google/gemma-4-31B-it
+    - google/gemma-4-26B-A4B-it
+    - meta-models/Muse-Glimmer-30B
+    - Qwen/Qwen3-Coder-30B-A3B-Instruct
+    - nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16
+
 benchmarks:
 
   swe_bench_verified:
     label: "SWE-bench Verified"
-    slug: sweVerified
+    slug: sweVerified          # leaderboard mirror (frontier models)
+    aliases:                   # how model cards spell it (case-insensitive, exact match)
+      - SWE-bench Verified
+      - SWE Bench Verified
+      - SWEbench Verified
+      - SWE-Bench Verified
     scale: fraction_resolved
     n: 500
     column: true
@@ -80,6 +109,9 @@ benchmarks:
   live_code_bench:
     label: "LiveCodeBench"
     slug: liveCodeBench
+    aliases:
+      - LiveCodeBench
+      - LiveCodeBench v6
     scale: fraction_resolved
     column: true
     # The one benchmark with real local overlap today, so the inline-column feature is
@@ -95,6 +127,9 @@ benchmarks:
   terminal_bench_2:
     label: "Terminal-Bench 2.0"
     slug: terminalBench2
+    aliases:
+      - Terminal-Bench 2.0
+      - Terminal Bench 2
     scale: fraction_resolved
     relevance: >
       agentic — multi-step work in a real terminal, the closest published proxy for
@@ -103,5 +138,27 @@ benchmarks:
     source_url: "https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md"
     attribution: "Mirrored from benchlm.ai via leoncuhk/awesome-llm-bench (top 10 view)"
 
-  # Further upstream slugs available with no code change, only a block here:
+  # Card-only benchmarks: no slug, because the leaderboard mirror does not carry them.
+  # They exist here because open-weight vendors DO report them, which is the whole point.
+
+  swe_bench_pro:
+    label: "SWE-bench Pro"
+    scale: fraction_resolved
+    relevance: "coding — harder, newer SWE-bench variant; NOT comparable to Verified"
+    aliases:
+      - SWE-bench Pro
+      - SWE Bench Pro
+    note: >
+      A different and harder benchmark than SWE-bench Verified, not a restatement of it.
+      Never compare a Pro number against a Verified one.
+
+  swe_bench_multilingual:
+    label: "SWE-bench Multilingual"
+    scale: fraction_resolved
+    relevance: "coding — the same task shape beyond Python"
+    aliases:
+      - SWE-bench Multilingual
+      - SWE Bench Multilingual
+
+  # Further leaderboard slugs available with no code change, only a block here:
   # osWorldVerified, browseComp, arcAgi2, hle.

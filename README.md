@@ -371,6 +371,60 @@ So the ingest is fully code-only — no hand-editing, and nothing to restore aft
 Committed rather than fetched at report time on purpose: a benchmark run must not depend on
 the network, and a published number that moves should move in a reviewable diff.
 
+### Getting figures for models you can actually run
+
+A leaderboard mirror publishes a top-N view, and for coding benchmarks that view is
+entirely frontier hosted models — so it calibrates a local fleet only in the abstract.
+**Hugging Face model cards are where open-weight numbers live.** A vendor publishing an
+open model reports its own benchmarks, usually in a table naming several competitors, so
+one card can yield SWE-bench Verified for three or four models a laptop can run.
+
+`sources.hf_cards` in the definitions file lists cards to harvest, most-trusted first.
+`tools/hf_model_cards.py` reads them. Before adding one, see what it offers:
+
+```sh
+python3 tools/hf_model_cards.py <org>/<model> --all     # every benchmark label on the card
+python3 tools/hf_model_cards.py <org>/<model>           # only the ones we have aliases for
+```
+
+**Cards have no common format.** Observed across cards for one small fleet: HTML table
+with benchmarks as rows; HTML table with capability and name in nested `<div>`s; markdown
+table *transposed* with models as rows and `%` on the scores; markdown tables with no
+benchmarks at all; and no table whatsoever. Parsing is therefore **shape-based, not
+markup-based** — pull every table, strip cells to text, then decide orientation by testing
+which axis matches a known benchmark alias. An earlier attempt keyed on a CSS class and
+worked on exactly one card.
+
+This is why `aliases` on a benchmark is not cosmetic: it is the anchor orientation
+detection uses, so **a benchmark with no aliases is invisible to the card harvester** even
+when the card reports it.
+
+**Three provenance tiers, and the reader is told which.** Vendors grade their competitors,
+and those numbers are not neutral — the vendor picks the configuration, the scaffold and
+the baseline:
+
+| tag | meaning |
+|---|---|
+| `SELF` | the card belongs to this model — the vendor's own claim |
+| `3RD` | a competitor's card reported it — treat with care |
+| `EXT` | from the leaderboard mirror |
+
+A self-reported score always supersedes a third-party one for the same model and
+benchmark. None of the three is independent verification; they are published claims, and
+the tag says whose. Rows are deduplicated by model *family*, because cards disagree on
+punctuation for the same weights (`Qwen3.6-35B-A3B` on one card, `Qwen3.6-35BA3B` on its
+own) and without that the same model appears twice with different provenance.
+
+**Family matching has a guard.** A generic local tag can be a prefix of a much larger
+product — `qwen3-coder:latest` against `Qwen 3 Coder Plus` — so when one normalised name
+contains the other, the leftover is checked against a tier/size list (`plus`, `max`,
+`mini`, `<n>b`, …) and the match is rejected if that is all it is. Silently inheriting a
+bigger model's score would flatter the local row badly.
+
+**Benchmark versions are not interchangeable.** SWE-bench Verified, SWE-bench Pro and
+SWE-bench Multilingual are separate keys with separate columns. Pro is harder and newer;
+never read a Pro number as a Verified one.
+
 ### Where the external figures appear
 
 **Its own tab.** The tables are long enough to fill a small screen by themselves, so they
@@ -382,6 +436,9 @@ as a column in the main table, immediately left of `OVERALL` — adjacent for co
 outside the measured block and drawn unmistakably differently: no heatmap fill, dashed
 rules, an italic figure and an `EXT` tag. It sorts like any other column; the default sort
 stays `OVERALL`.
+
+External columns are ordered so the **first** benchmark declared in the definitions file
+sits immediately left of `OVERALL`, with any others stacking outward from there.
 
 A flagged column renders **only if at least one benchmarked model matches** a row in that
 benchmark. An all-empty column is dead width, which is the opposite of the point on a

@@ -21,6 +21,25 @@ benchmarks:
       GPT-5.3 Codex: 0.85
       Ornith-1.0-397B: 0.824
       Claude Opus 4.5: 0.809
+      Qwen3.5-27B: 0.75
+      Qwen3.5-397B-A17B: 0.762
+      Gemma4-31B: 0.52
+      Claude 4.5 Opus: 0.809
+      Qwen3.6-27B: 0.772
+      Qwen3.5-35BA3B: 0.7
+      Gemma4-26BA4B: 0.174
+      Qwen3.6-35BA3B: 0.734
+      Devstral 2: 0.722
+      Devstral Small 2: 0.68
+      GLM 4.6: 0.68
+      Qwen 3 Coder Plus: 0.696
+      MiniMax M2: 0.694
+      Kimi K2 Thinking: 0.713
+      DeepSeek v3.2: 0.731
+      GPT 5.1 Codex High: 0.737
+      GPT 5.1 Codex Max: 0.779
+      Gemini 3 Pro: 0.762
+      Claude Sonnet 4.5: 0.772
     providers:
       Claude Opus 5: Anthropic
       Claude Mythos 5: Anthropic
@@ -43,7 +62,48 @@ benchmarks:
       GPT-5.3 Codex: Closed
       Ornith-1.0-397B: Open
       Claude Opus 4.5: Closed
+    sources:
+      Qwen3.5-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-397B-A17B: Qwen/Qwen3.6-27B
+      Gemma4-31B: Qwen/Qwen3.6-27B
+      Claude 4.5 Opus: Qwen/Qwen3.6-27B
+      Qwen3.6-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Gemma4-26BA4B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.6-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Devstral 2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Devstral Small 2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      GLM 4.6: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Qwen 3 Coder Plus: mistralai/Devstral-Small-2-24B-Instruct-2512
+      MiniMax M2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Kimi K2 Thinking: mistralai/Devstral-Small-2-24B-Instruct-2512
+      DeepSeek v3.2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      GPT 5.1 Codex High: mistralai/Devstral-Small-2-24B-Instruct-2512
+      GPT 5.1 Codex Max: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Gemini 3 Pro: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Claude Sonnet 4.5: mistralai/Devstral-Small-2-24B-Instruct-2512
+    self_reported:
+      Qwen3.5-27B: false
+      Qwen3.5-397B-A17B: false
+      Gemma4-31B: false
+      Claude 4.5 Opus: false
+      Qwen3.6-27B: true
+      Qwen3.5-35BA3B: false
+      Gemma4-26BA4B: false
+      Qwen3.6-35BA3B: true
+      Devstral 2: false
+      Devstral Small 2: true
+      GLM 4.6: false
+      Qwen 3 Coder Plus: false
+      MiniMax M2: false
+      Kimi K2 Thinking: false
+      DeepSeek v3.2: false
+      GPT 5.1 Codex High: false
+      GPT 5.1 Codex Max: false
+      Gemini 3 Pro: false
+      Claude Sonnet 4.5: false
   live_code_bench:
+    retrieved: '2026-08-31'
     scores:
       Qwen3.7 Max: 0.916
       Qwen3.7 Plus: 0.896
@@ -52,6 +112,20 @@ benchmarks:
       Qwen3.6-35B-A3B: 0.804
       Mercury 2: 0.673
       DeepSeek V3: 0.376
+      Qwen3.5-27B: 0.807
+      Qwen3.5-397B-A17B: 0.836
+      Claude 4.5 Opus: 0.848
+      Qwen3.5-35BA3B: 0.746
+      Qwen3.6-35BA3B: 0.804
+      Qwen3.8-27B: 0.903
+      Qwen3.7-Plus: 0.896
+      Opus4.6 Max: 0.888
+      Gemma 4 31B: 0.8
+      Gemma 4 12B Unified: 0.72
+      Gemma 4 E4B: 0.52
+      Gemma 4 E2B: 0.44
+      Gemma 3 27B (no think): 0.291
+      Gemma 4 26B A4B: 0.771
     providers:
       Qwen3.7 Max: Alibaba
       Qwen3.7 Plus: Alibaba
@@ -68,8 +142,38 @@ benchmarks:
       Qwen3.6-35B-A3B: Open
       Mercury 2: Closed
       DeepSeek V3: Open
-    retrieved: '2026-08-31'
+    sources:
+      Qwen3.5-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-397B-A17B: Qwen/Qwen3.6-27B
+      Claude 4.5 Opus: Qwen/Qwen3.6-27B
+      Qwen3.5-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.6-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.8-27B: Qwen/Qwen3.8-27B
+      Qwen3.7-Plus: Qwen/Qwen3.8-27B
+      Opus4.6 Max: Qwen/Qwen3.8-27B
+      Gemma 4 31B: google/gemma-4-31B-it
+      Gemma 4 12B Unified: google/gemma-4-31B-it
+      Gemma 4 E4B: google/gemma-4-31B-it
+      Gemma 4 E2B: google/gemma-4-31B-it
+      Gemma 3 27B (no think): google/gemma-4-31B-it
+      Gemma 4 26B A4B: google/gemma-4-26B-A4B-it
+    self_reported:
+      Qwen3.5-27B: false
+      Qwen3.5-397B-A17B: false
+      Claude 4.5 Opus: false
+      Qwen3.5-35BA3B: false
+      Qwen3.6-35BA3B: true
+      Qwen3.8-27B: true
+      Qwen3.7-Plus: false
+      Opus4.6 Max: false
+      Gemma 4 31B: true
+      Gemma 4 12B Unified: false
+      Gemma 4 E4B: false
+      Gemma 4 E2B: false
+      Gemma 3 27B (no think): false
+      Gemma 4 26B A4B: true
   terminal_bench_2:
+    retrieved: '2026-08-31'
     scores:
       GPT-5.6 Sol: 0.919
       Claude Mythos 5: 0.88
@@ -81,6 +185,25 @@ benchmarks:
       GPT-5.5: 0.82
       SWE-1.7: 0.815
       GLM-5.2: 0.81
+      Qwen3.5-27B: 0.416
+      Qwen3.5-397B-A17B: 0.525
+      Gemma4-31B: 0.429
+      Claude 4.5 Opus: 0.593
+      Qwen3.6-27B: 0.593
+      Qwen3.5-35BA3B: 0.405
+      Gemma4-26BA4B: 0.342
+      Qwen3.6-35BA3B: 0.515
+      Devstral 2: 0.326
+      Devstral Small 2: 0.225
+      GLM 4.6: 0.246
+      Qwen 3 Coder Plus: 0.254
+      MiniMax M2: 0.3
+      Kimi K2 Thinking: 0.357
+      DeepSeek v3.2: 0.464
+      GPT 5.1 Codex High: 0.528
+      GPT 5.1 Codex Max: 0.604
+      Gemini 3 Pro: 0.542
+      Claude Sonnet 4.5: 0.428
     providers:
       GPT-5.6 Sol: OpenAI
       Claude Mythos 5: Anthropic
@@ -103,4 +226,134 @@ benchmarks:
       GPT-5.5: Closed
       SWE-1.7: Closed
       GLM-5.2: Open
+    sources:
+      Qwen3.5-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-397B-A17B: Qwen/Qwen3.6-27B
+      Gemma4-31B: Qwen/Qwen3.6-27B
+      Claude 4.5 Opus: Qwen/Qwen3.6-27B
+      Qwen3.6-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Gemma4-26BA4B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.6-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Devstral 2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Devstral Small 2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      GLM 4.6: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Qwen 3 Coder Plus: mistralai/Devstral-Small-2-24B-Instruct-2512
+      MiniMax M2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Kimi K2 Thinking: mistralai/Devstral-Small-2-24B-Instruct-2512
+      DeepSeek v3.2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      GPT 5.1 Codex High: mistralai/Devstral-Small-2-24B-Instruct-2512
+      GPT 5.1 Codex Max: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Gemini 3 Pro: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Claude Sonnet 4.5: mistralai/Devstral-Small-2-24B-Instruct-2512
+    self_reported:
+      Qwen3.5-27B: false
+      Qwen3.5-397B-A17B: false
+      Gemma4-31B: false
+      Claude 4.5 Opus: false
+      Qwen3.6-27B: true
+      Qwen3.5-35BA3B: false
+      Gemma4-26BA4B: false
+      Qwen3.6-35BA3B: true
+      Devstral 2: false
+      Devstral Small 2: true
+      GLM 4.6: false
+      Qwen 3 Coder Plus: false
+      MiniMax M2: false
+      Kimi K2 Thinking: false
+      DeepSeek v3.2: false
+      GPT 5.1 Codex High: false
+      GPT 5.1 Codex Max: false
+      Gemini 3 Pro: false
+      Claude Sonnet 4.5: false
+  swe_bench_pro:
+    scores:
+      Qwen3.5-27B: 0.512
+      Qwen3.5-397B-A17B: 0.509
+      Gemma4-31B: 0.357
+      Claude 4.5 Opus: 0.571
+      Qwen3.6-27B: 0.535
+      Qwen3.5-35BA3B: 0.446
+      Gemma4-26BA4B: 0.138
+      Qwen3.6-35BA3B: 0.495
+      Qwen3.8-27B: 0.617
+      Qwen3.7-Plus: 0.576
+      Muse Glimmer-30B: 0.512
+      Opus4.6 Max: 0.534
+    sources:
+      Qwen3.5-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-397B-A17B: Qwen/Qwen3.6-27B
+      Gemma4-31B: Qwen/Qwen3.6-27B
+      Claude 4.5 Opus: Qwen/Qwen3.6-27B
+      Qwen3.6-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Gemma4-26BA4B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.6-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.8-27B: Qwen/Qwen3.8-27B
+      Qwen3.7-Plus: Qwen/Qwen3.8-27B
+      Muse Glimmer-30B: Qwen/Qwen3.8-27B
+      Opus4.6 Max: Qwen/Qwen3.8-27B
+    self_reported:
+      Qwen3.5-27B: false
+      Qwen3.5-397B-A17B: false
+      Gemma4-31B: false
+      Claude 4.5 Opus: false
+      Qwen3.6-27B: true
+      Qwen3.5-35BA3B: false
+      Gemma4-26BA4B: false
+      Qwen3.6-35BA3B: true
+      Qwen3.8-27B: true
+      Qwen3.7-Plus: false
+      Muse Glimmer-30B: false
+      Opus4.6 Max: false
+    retrieved: '2026-08-31'
+  swe_bench_multilingual:
+    scores:
+      Qwen3.5-27B: 0.693
+      Qwen3.5-397B-A17B: 0.693
+      Gemma4-31B: 0.517
+      Claude 4.5 Opus: 0.775
+      Qwen3.6-27B: 0.713
+      Qwen3.5-35BA3B: 0.603
+      Gemma4-26BA4B: 0.173
+      Qwen3.6-35BA3B: 0.672
+      Devstral 2: 0.613
+      Devstral Small 2: 0.557
+      Qwen 3 Coder Plus: 0.547
+      MiniMax M2: 0.565
+      Kimi K2 Thinking: 0.611
+      DeepSeek v3.2: 0.702
+      Claude Sonnet 4.5: 0.68
+    sources:
+      Qwen3.5-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-397B-A17B: Qwen/Qwen3.6-27B
+      Gemma4-31B: Qwen/Qwen3.6-27B
+      Claude 4.5 Opus: Qwen/Qwen3.6-27B
+      Qwen3.6-27B: Qwen/Qwen3.6-27B
+      Qwen3.5-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Gemma4-26BA4B: Qwen/Qwen3.6-35B-A3B
+      Qwen3.6-35BA3B: Qwen/Qwen3.6-35B-A3B
+      Devstral 2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Devstral Small 2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Qwen 3 Coder Plus: mistralai/Devstral-Small-2-24B-Instruct-2512
+      MiniMax M2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Kimi K2 Thinking: mistralai/Devstral-Small-2-24B-Instruct-2512
+      DeepSeek v3.2: mistralai/Devstral-Small-2-24B-Instruct-2512
+      Claude Sonnet 4.5: mistralai/Devstral-Small-2-24B-Instruct-2512
+    self_reported:
+      Qwen3.5-27B: false
+      Qwen3.5-397B-A17B: false
+      Gemma4-31B: false
+      Claude 4.5 Opus: false
+      Qwen3.6-27B: true
+      Qwen3.5-35BA3B: false
+      Gemma4-26BA4B: false
+      Qwen3.6-35BA3B: true
+      Devstral 2: false
+      Devstral Small 2: true
+      Qwen 3 Coder Plus: false
+      MiniMax M2: false
+      Kimi K2 Thinking: false
+      DeepSeek v3.2: false
+      Claude Sonnet 4.5: false
     retrieved: '2026-08-31'
