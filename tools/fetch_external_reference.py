@@ -30,6 +30,9 @@ import urllib.request
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hf_model_cards import harvest as harvest_cards  # noqa: E402
+
 try:
     import yaml
 except ImportError:
@@ -46,6 +49,22 @@ _ROW = re.compile(
     r"^\|\s*\d+\s*\|\s*\[(?P<model>[^\]]+)\]\([^)]*\)\s*\|"
     r"\s*(?P<provider>[^|]*?)\s*\|\s*(?P<license>[^|]*?)\s*\|"
     r"\s*(?P<score>[\d.]+)\s*%?\s*\|", re.M)
+
+
+def load_aliases(ref: Path | None = None) -> dict[str, list[str]]:
+    """{benchmark_key: [card label variants]} from the definitions file.
+
+    The alias list is not cosmetic: hf_model_cards decides a table's ORIENTATION by
+    testing which axis these labels match, so a benchmark with no aliases is invisible to
+    the card harvester even if the card reports it.
+    """
+    doc = yaml.safe_load((ref or REF).read_text()) or {}
+    out = {}
+    for key, b in (doc.get("benchmarks") or {}).items():
+        al = b.get("aliases") or ([b["label"]] if b.get("label") else [])
+        if al:
+            out[key] = al
+    return out
 
 
 def fetch(url: str, timeout: int = 30) -> str:
@@ -134,6 +153,38 @@ def main() -> None:
                 "providers": {k: v["provider"] for k, v in rows.items() if v["provider"]},
                 "licenses": {k: v["license"] for k, v in rows.items() if v["license"]},
             }
+
+    # ---- Hugging Face model cards -------------------------------------------------
+    # Leaderboard mirrors publish a top-N view, which for coding benchmarks is entirely
+    # frontier hosted models. Cards are where open-weight numbers live, so this is what
+    # makes the external panel populate for models a laptop can run.
+    cards = ((doc.get("sources") or {}).get("hf_cards") or [])
+    if cards and not args.only:
+        print(f"  harvesting {len(cards)} model card(s)...")
+        harvested = harvest_cards(cards, load_aliases(path), verbose=True)
+        for key, models in harvested.items():
+            if key not in benches:
+                continue
+            tgt = out_benches.setdefault(key, {})
+            sc = tgt.setdefault("scores", {})
+            src = tgt.setdefault("sources", {})
+            selfrep = tgt.setdefault("self_reported", {})
+            added = 0
+            for model, rec in models.items():
+                # The leaderboard mirror is an aggregator; a vendor card is a primary
+                # claim about its own model. Neither is verification. Keep whichever is
+                # already there for a model the mirror listed, and add the rest.
+                if model in sc and model not in src:
+                    continue
+                if model not in sc:
+                    added += 1
+                sc[model] = rec["score"]
+                src[model] = rec["source"]
+                selfrep[model] = rec["self_reported"]
+            if added:
+                changed.append(f"{key}(+{added} from cards)")
+                tgt["retrieved"] = date.today().isoformat()
+            print(f"    {key}: {added} new model row(s)")
 
     for s in skipped:
         print(f"  SKIP {s}")

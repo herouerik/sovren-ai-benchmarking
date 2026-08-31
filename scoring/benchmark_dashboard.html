@@ -120,6 +120,7 @@ body::after{
   border-right:1px dashed var(--border);background:rgba(200,104,30,.045);text-align:center}
 .td-ext .ext-num{font-style:italic;font-variant-numeric:tabular-nums;color:var(--accent);font-size:13px}
 .td-ext .ext-src{display:block;font-size:8.5px;letter-spacing:.06em;color:var(--dim);margin-top:1px}
+.td-ext .ext-src.is-thirdparty{color:#9a7b3f}   /* competitor-reported: dimmer, not neutral */
 .td-ext .ext-none{color:var(--border);font-size:13px}
 
 .bench-table thead th{
@@ -487,6 +488,20 @@ function normFamily(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]/g, '')
     .replace(/mlx|latest|think|a3b/g, '');
 }
+// Tier and size markers. If one normalised name contains the other and the LEFTOVER is
+// only one of these, the two are different products, not the same family: a local
+// "qwen3-coder:latest" is a prefix of "Qwen 3 Coder Plus", which is a far larger hosted
+// model, and silently inheriting its score would flatter the local row badly.
+const TIER_LEFTOVER = /^(plus|max|mini|flash|air|pro|lite|turbo|next|base|ultra|omni|small|medium|large|chat|instruct|preview|\d+b|v\d+(\.\d+)?)+$/;
+function sameFamily(a, b) {
+  const x = normFamily(a), y = normFamily(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+  if (short.length <= 5 || !long.includes(short)) return false;
+  const leftover = long.replace(short, '');
+  return leftover.length > 0 && !TIER_LEFTOVER.test(leftover);
+}
 function extBenchesWithColumn() {
   const bs = D.external?.benchmarks || {};
   return Object.entries(bs).filter(([, b]) => b.column && b.scores);
@@ -495,11 +510,15 @@ function extBenchesWithColumn() {
 function extMatches(bench) {
   const out = {};
   const models = D.models || [];
+  const srcs = bench.sources || {}, selfrep = bench.self_reported || {};
   Object.entries(bench.scores || {}).forEach(([em, sc]) => {
-    const e = normFamily(em);
     models.forEach(lm => {
-      const l = normFamily(lm);
-      if (l.length > 5 && (l.includes(e) || e.includes(l))) out[lm] = { score: sc, name: em };
+      if (!sameFamily(lm, em)) return;
+      const cand = { score: sc, name: em, src: srcs[em] || null,
+                     self: !!selfrep[em], known: em in selfrep };
+      // A vendor's claim about its OWN model beats a competitor's claim about it.
+      const cur = out[lm];
+      if (!cur || (cand.self && !cur.self)) out[lm] = cand;
     });
   });
   return out;
@@ -507,9 +526,13 @@ function extMatches(bench) {
 // Only columns that actually hit something get rendered. An all-empty column is dead
 // width, which is the opposite of the point on a narrow screen.
 function extColumns() {
+  // Reversed so the FIRST benchmark declared in external_reference.yaml ends up
+  // immediately left of OVERALL — the most-comparable external number sits adjacent to
+  // our own, and any additional ones stack outward from there.
   return extBenchesWithColumn()
     .map(([key, b]) => ({ key: 'ext:' + key, bench: b, hits: extMatches(b) }))
-    .filter(c => Object.keys(c.hits).length > 0);
+    .filter(c => Object.keys(c.hits).length > 0)
+    .reverse();
 }
 function extCellFor(col, m) { return col.hits[m] || null; }
 
@@ -902,11 +925,18 @@ function renderTable() {
       const tdE  = document.createElement('td');
       tdE.className = 'td-ext';
       if (hit) {
+        // Three provenance tiers, and the reader needs to know which: a vendor's own
+        // claim, a competitor's claim about it, or a leaderboard aggregate.
+        const tier = !hit.known ? 'EXT' : (hit.self ? 'SELF' : '3RD');
         tdE.innerHTML = `<span class="ext-num">${(hit.score*100).toFixed(1)}</span>`
-          + `<span class="ext-src">EXT</span>`;
-        tdE.title = `${hit.name} scored ${(hit.score*100).toFixed(1)} on ${c.bench.label} `
-          + `(published, full precision). This row is a local build, so the difference is `
-          + `not a like-for-like comparison — it is roughly the quantisation penalty.`;
+          + `<span class="ext-src${hit.known && !hit.self ? ' is-thirdparty' : ''}">${tier}</span>`;
+        tdE.title = `${hit.name} — ${(hit.score*100).toFixed(1)} on ${c.bench.label}. `
+          + (!hit.known ? 'From the leaderboard mirror. '
+             : hit.self ? `Self-reported by the vendor on ${hit.src}. `
+                        : `Reported by a THIRD PARTY on ${hit.src} — a competitor's card, `
+                          + `which picks the scaffold and the baseline. Treat with care. `)
+          + 'Published figures are full-precision; this row is a local quantised build, so '
+          + 'the difference is not like-for-like.';
       } else {
         tdE.innerHTML = `<span class="ext-none">—</span>`;
       }
