@@ -9,6 +9,12 @@ results/*
 # Per-machine measurement, same category as config.yaml: whoever runs the harness
 # generates their own with tools/measure_context_perf.py. Not a harness artefact.
 data/context_perf.json
+
+# Fetched third-party figures. Code, not data, is what this repo publishes — and this file
+# is fully regenerable, so a clone runs tools/fetch_external_reference.py to populate it.
+# The definitions file (external_reference.yaml) IS tracked: it declares what to fetch and
+# is part of the feature rather than a result of running it.
+data/external_scores.yaml
 __pycache__/
 *.pyc
 *.pyo

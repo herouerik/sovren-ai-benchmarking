@@ -7,18 +7,16 @@ The harness's headline `speeds` figure is decode tok/s measured on benchmark pro
 which are short. For an agentic coding loop that is the wrong operating point, and it
 does not merely understate — **it can invert the ranking.**
 
-Every model decodes more slowly as context grows, but not by the same factor. On
-Apple-Silicon MLX builds we have seen a dense ~27B model lose roughly an order of
-magnitude between a near-empty context and a ~9k one, while a sparse-MoE model of
-comparable total size lost only about half its rate. Rank on short-prompt decode and
-you can pick the slowest model in the fleet while believing it is mid-pack.
+Every model decodes more slowly as context grows, but not by the same factor — the
+collapse is architecture-dependent, and a dense model can fall much further than a
+sparse-MoE one of comparable total size. So a short-prompt ranking need not survive at
+the operating point, and can invert.
 
 Model rows already carry the architecture (`dense` vs `MoE`, active parameters), so the
 information needed to predict this is usually present — what is missing is a measurement
 at the operating point. That is what this tool adds.
 
-(Our own figures are not published here: this repo is public and results live in the
-private companion repo. Run the tool to get numbers for your own hardware.)
+(No measured figures are published in this repo. Run the tool for your own hardware.)
 
 Prefill matters as much as decode, because an agent harness that compacts rewrites the
 transcript and invalidates the KV prefix — so every compaction pays a *full-window*
@@ -28,11 +26,10 @@ wall clock re-reading its own context and appears to make no progress.
 
 DECODE SAMPLE SIZE
 ------------------
-`--predict` must be large enough that per-request overhead is amortised. At 40 tokens we
-measured a 2x spread for the same model on the same machine across two runs, because
-`eval_duration` over so few tokens is mostly startup. Prefill reproduced to within 8%
-over the same runs, so treat prefill as the reliable figure and give decode a real
-sample (200+ tokens, which is the default).
+`--predict` must be large enough that per-request overhead is amortised: over a few dozen
+tokens `eval_duration` is mostly startup, and the same model can vary by ~2x between runs.
+Prefill is far more reproducible than decode, so treat prefill as the reliable figure and
+give decode a real sample (200+ tokens, the default).
 
 Three traps, all learned the hard way
 -------------------------------------
