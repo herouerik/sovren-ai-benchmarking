@@ -26,10 +26,19 @@ wall clock re-reading its own context and appears to make no progress.
 
 DECODE SAMPLE SIZE
 ------------------
-`--predict` must be large enough that per-request overhead is amortised: over a few dozen
-tokens `eval_duration` is mostly startup, and the same model can vary by ~2x between runs.
-Prefill is far more reproducible than decode, so treat prefill as the reliable figure and
-give decode a real sample (200+ tokens, the default).
+Two separate problems, both of which produce a plausible-looking wrong number.
+
+**The generation must be forced.** `num_predict` is a ceiling; a model that answers and
+emits EOS stops there. A probe whose prompt invites a one-word reply measures nothing — an
+early version of this tool reported a full comparison table in which 7 of 10 decode rates
+were computed over 1-2 tokens. The prompt now demands a long, deterministic output.
+
+**And it must be verified after the fact, not assumed.** Below MIN_DECODE_TOKENS the rate
+is withheld and a reason recorded, because a model can still refuse or shortcut the
+instruction. A withheld number is recoverable; a wrong one propagates into decisions.
+
+Prefill has neither problem: it is measured over the whole prompt, so it stays the more
+trustworthy of the two figures.
 
 Three traps, all learned the hard way
 -------------------------------------
@@ -39,7 +48,8 @@ Three traps, all learned the hard way
    every measurement.
 2. **Thinking models spend the output budget on reasoning tokens.** `think: false`,
    or `decode_tps` measures the wrong thing (or returns an empty completion).
-3. **A short generation does not measure decode.** See DECODE SAMPLE SIZE above.
+3. **A short generation does not measure decode**, and `num_predict` will not prevent one.
+   See DECODE SAMPLE SIZE above.
 
 Usage
 -----
@@ -71,6 +81,14 @@ from pathlib import Path
 BYTES_PER_TOKEN = 4.40
 FILLER = "def process_record(record, config, logger):  # one row from the upstream feed\n"
 
+# `num_predict` is a CEILING, not a target: a model that finishes its answer and emits EOS
+# stops there. A prompt ending "Reply: ok" therefore yields one token, and a decode rate
+# computed over one token is noise, not a slow model. The generation has to be *forced*.
+DECODE_PROMPT = ("\n\nNow output the integers from 1 to 250, one per line, "
+                 "with no other text.")
+# Below this, refuse to report a rate at all rather than publish a number that looks real.
+MIN_DECODE_TOKENS = 50
+
 
 def _post(base_url: str, path: str, payload: dict, timeout: int):
     req = urllib.request.Request(
@@ -94,7 +112,7 @@ def unload(base_url: str, model: str) -> None:
 def measure(base_url: str, model: str, context_tokens: int, num_ctx: int,
             predict: int, timeout: int) -> dict | None:
     reps = max(1, int(context_tokens * BYTES_PER_TOKEN / len(FILLER)))
-    prompt = FILLER * reps + "\nReply: ok"
+    prompt = FILLER * reps + DECODE_PROMPT
     unload(base_url, model)
     try:
         d = _post(base_url, "/api/generate", {
@@ -118,9 +136,15 @@ def measure(base_url: str, model: str, context_tokens: int, num_ctx: int,
         "prefill_tps": round(pe / ped, 1),
         "num_ctx": num_ctx,
     }
-    if ec and ed > 0:
+    out["decode_tokens"] = ec
+    if ec >= MIN_DECODE_TOKENS and ed > 0:
         out["decode_tps"] = round(ec / ed, 1)
-        out["decode_tokens"] = ec
+    else:
+        # Report the absence loudly. Silently emitting a rate over a handful of tokens is
+        # how a whole comparison table ends up being noise that reads as data.
+        out["decode_tps"] = None
+        out["decode_note"] = (f"only {ec} tokens generated (<{MIN_DECODE_TOKENS}) — "
+                              "model stopped early; rate withheld")
     return out
 
 
@@ -170,8 +194,10 @@ def main() -> None:
         if "error" in results[m]:
             print(f"    {results[m]['error']}")
         else:
-            print(f"    prefill {r['prefill_tps']} tok/s   "
-                  f"decode {r.get('decode_tps','—')} tok/s   (n={r['prompt_tokens']} tokens)")
+            dec = (f"{r['decode_tps']} tok/s over {r['decode_tokens']}"
+                   if r.get("decode_tps") else f"WITHHELD ({r['decode_tokens']} tokens)")
+            print(f"    prefill {r['prefill_tps']} tok/s over {r['prompt_tokens']}   "
+                  f"decode {dec}")
 
     doc = {
         "schema": 1,
