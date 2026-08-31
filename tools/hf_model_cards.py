@@ -16,19 +16,15 @@ useful.
 
 The two hard parts, and how they are handled
 --------------------------------------------
-**1. Cards have no common format.** Observed in the wild, all on cards for models in one
-small fleet:
-
-    HTML table, benchmarks as rows      most Qwen cards
-    HTML table, capability+name nested  Qwen3.8-27B (two <div>s in the label cell)
-    Markdown table, models as rows      Devstral (transposed, and scores carry '%')
-    Markdown table, no benchmarks       Gemma (architecture tables only)
-    No table at all                     several smaller cards
+**1. Cards have no common format.** A card may use an HTML table with benchmarks as rows,
+an HTML table whose label cell nests capability and benchmark name in separate <div>s, a
+markdown table transposed so models are rows and scores carry '%', markdown tables with no
+benchmarks at all, or no table whatsoever.
 
 So parsing is **shape-based, not markup-based**: pull every table, strip each cell to
-text, then decide orientation by testing which axis matches a known benchmark alias. An
-earlier attempt keyed on a CSS class (`benchmark-name`) and worked on exactly one card.
-Orientation detection against the alias list is what makes one parser cover all of them.
+text, then decide orientation by testing which axis matches a known benchmark alias.
+Anchoring on any one publisher's markup covers that publisher only; anchoring on the
+benchmark names we already know is what lets one parser cover all of them.
 
 **2. Vendors grade their competitors.** A Qwen card reports Gemma's score; a Devstral
 card reports GLM's. Those numbers are second-hand and are not neutral — a vendor picks

@@ -294,36 +294,19 @@ mistaken for a non-thinking one.
 
 ---
 
-## Two things the benchmark grid does not measure
+## Two measurements the benchmark grid does not cover
 
-Both ship as first-class parts of the harness — a tool, a committed data file, a
-generator flag, and a dashboard panel each. Neither is merged into the benchmark grid,
-because neither is the same kind of number.
+Both ship as first-class parts of the harness — a tool, a data file, a generator flag and a
+dashboard panel each. Neither is merged into the benchmark grid, because neither is the
+same kind of number.
 
 ### At-context throughput — `tools/measure_context_perf.py`
 
-The `speeds` column is decode tok/s on benchmark prompts, which are short. For an agentic
-coding loop that is the wrong operating point, and it does not merely understate — **it can
-invert the ranking.**
-
-Every model decodes more slowly as context grows, but by very different factors. On
-Apple-Silicon MLX builds we have measured a dense ~27B model losing roughly an order of
-magnitude between a near-empty context and a ~9k one, while a sparse-MoE model of
-comparable total size lost only about half its rate. Rank on short-prompt decode and you
-can choose the slowest model available while believing it is mid-pack.
-
-Prefill matters as much. A harness that compacts rewrites the transcript and invalidates
-the KV prefix, so **every compaction pays a full-window prefill**, not an incremental one.
-Window size divided by prefill rate is that bill; when it approaches the interval between
-compactions, the agent spends most of its wall clock re-reading its own context.
-
-The model rows already carry `dense` vs `MoE` and active parameters, so the fact needed to
-predict this is usually on screen — what was missing is a measurement at the operating
-point.
-
-> Figures for our own fleet are not published here. This repo is public; runs, summaries,
-> dashboards and findings live in the private companion repo. Run the tool to get numbers
-> for your own hardware.
+The `speeds` column is decode tok/s on benchmark prompts, which are short. Agentic use
+runs at a much larger context, where both prefill and decode are slower — by factors that
+differ per architecture, so a short-prompt ranking need not hold. Prefill matters as much
+as decode: a harness that compacts invalidates the KV prefix, so every compaction pays a
+full-window prefill rather than an incremental one.
 
 ```sh
 python3 tools/measure_context_perf.py --config config.yaml \
@@ -331,131 +314,75 @@ python3 tools/measure_context_perf.py --config config.yaml \
 ```
 
 `data/context_perf.json` is gitignored — a per-machine measurement, same category as
-`config.yaml`. Picked up automatically from `data/context_perf.json`, or pass `--perf <path>`. Renders as
-the **AT-CONTEXT THROUGHPUT** sidebar panel. Read the module docstring before changing
-defaults — it records three traps (a resident model ignores a changed `num_ctx`; thinking
-models spend the output budget on reasoning; a 40-token generation measures startup, not
-decode) that each cost a wrong measurement to find.
+`config.yaml`. Picked up automatically, or pass `--perf <path>`. Renders as the
+**AT-CONTEXT THROUGHPUT** sidebar panel.
 
-### External reference figures — `data/external_reference.yaml`
+Read the module docstring before changing defaults; it records the three traps the
+implementation guards against (a resident model ignores a changed `num_ctx`; thinking
+models spend the output budget on reasoning; too short a generation measures startup
+rather than decode).
 
-Every score here is a "how does it behave on my machine" number: small-n, our scaffold, our
-quantised builds, our hardware. That is the point, and it also means there is no way to
-calibrate against results the wider field agrees on. This file carries a small set of
-*published* figures for that calibration only.
+### External reference figures
 
-They are rendered in a separate panel, **excluded from OVERALL, from ranking, and from every
-model row** — a 500-sample leaderboard result and a 25-sample local run do not belong in one
-column.
-
-Currently pulled: SWE-bench Verified, LiveCodeBench, Terminal-Bench 2.0. Available upstream
-without code changes by adding a `slug`: `osWorldVerified`, `browseComp`, `arcAgi2`, `hle`.
-
-**Two files, deliberately:**
+Published third-party scores, carried for calibration only and rendered in their own tab —
+excluded from `OVERALL`, from ranking, and from every model row.
 
 | file | written by | contains |
 |---|---|---|
-| `data/external_reference.yaml` | hand | which benchmarks to carry, labels, notes, `column` flags |
-| `data/external_scores.yaml` | the refresher | the figures, providers, licences, retrieval date |
+| `data/external_reference.yaml` | hand | which benchmarks to carry, labels, aliases, `column` flags, sources |
+| `data/external_scores.yaml` | the refresher | figures, providers, licences, provenance, retrieval date |
 
 ```sh
 python3 tools/fetch_external_reference.py --dry-run   # show what would change
 python3 tools/fetch_external_reference.py             # rewrite the scores file only
 ```
 
-The refresher rewrites the scores file **wholesale** and never opens the definitions file.
-That split is what makes the refresh safe to run unattended: a single-file design would
-have to re-dump the whole YAML and would silently destroy every comment and note in it.
-So the ingest is fully code-only — no hand-editing, and nothing to restore afterwards.
+The refresher rewrites the scores file wholesale and never opens the definitions file, so
+the refresh is code-only and cannot destroy hand-written prose. Committed rather than
+fetched at report time: a run must not depend on the network, and a published number that
+moves should move in a reviewable diff.
 
-Committed rather than fetched at report time on purpose: a benchmark run must not depend on
-the network, and a published number that moves should move in a reviewable diff.
-
-### Getting figures for models you can actually run
-
-A leaderboard mirror publishes a top-N view, and for coding benchmarks that view is
-entirely frontier hosted models — so it calibrates a local fleet only in the abstract.
-**Hugging Face model cards are where open-weight numbers live.** A vendor publishing an
-open model reports its own benchmarks, usually in a table naming several competitors, so
-one card can yield SWE-bench Verified for three or four models a laptop can run.
-
-`sources.hf_cards` in the definitions file lists cards to harvest, most-trusted first.
-`tools/hf_model_cards.py` reads them. Before adding one, see what it offers:
+**Two source types.** `slug` reads a leaderboard mirror; `sources.hf_cards` reads Hugging
+Face model cards. Cards are the source that covers open-weight models, since leaderboard
+views tend to list only the largest hosted ones. Inspect a card before adding it:
 
 ```sh
-python3 tools/hf_model_cards.py <org>/<model> --all     # every benchmark label on the card
-python3 tools/hf_model_cards.py <org>/<model>           # only the ones we have aliases for
+python3 tools/hf_model_cards.py <org>/<model> --all   # every benchmark label on the card
+python3 tools/hf_model_cards.py <org>/<model>         # only ones with declared aliases
 ```
 
-**Cards have no common format.** Observed across cards for one small fleet: HTML table
-with benchmarks as rows; HTML table with capability and name in nested `<div>`s; markdown
-table *transposed* with models as rows and `%` on the scores; markdown tables with no
-benchmarks at all; and no table whatsoever. Parsing is therefore **shape-based, not
-markup-based** — pull every table, strip cells to text, then decide orientation by testing
-which axis matches a known benchmark alias. An earlier attempt keyed on a CSS class and
-worked on exactly one card.
+Card parsing is shape-based rather than markup-based, because card formats vary widely
+between publishers: every table is reduced to text, then orientation is decided by testing
+which axis matches a declared benchmark alias. **`aliases` is therefore load-bearing — a
+benchmark with none declared is invisible to the card harvester** even when a card reports
+it.
 
-This is why `aliases` on a benchmark is not cosmetic: it is the anchor orientation
-detection uses, so **a benchmark with no aliases is invisible to the card harvester** even
-when the card reports it.
+**Provenance.** Each score is tagged `SELF` (the card's own model), `3RD` (reported on
+another vendor's card) or `EXT` (leaderboard mirror). Self-reported supersedes third-party
+for the same model. None of the three is independent verification; the tag records whose
+claim it is. Rows are deduplicated by model family, since publishers spell the same weights
+differently.
 
-**Three provenance tiers, and the reader is told which.** Vendors grade their competitors,
-and those numbers are not neutral — the vendor picks the configuration, the scaffold and
-the baseline:
-
-| tag | meaning |
-|---|---|
-| `SELF` | the card belongs to this model — the vendor's own claim |
-| `3RD` | a competitor's card reported it — treat with care |
-| `EXT` | from the leaderboard mirror |
-
-A self-reported score always supersedes a third-party one for the same model and
-benchmark. None of the three is independent verification; they are published claims, and
-the tag says whose. Rows are deduplicated by model *family*, because cards disagree on
-punctuation for the same weights (`Qwen3.6-35B-A3B` on one card, `Qwen3.6-35BA3B` on its
-own) and without that the same model appears twice with different provenance.
-
-**Family matching has a guard.** A generic local tag can be a prefix of a much larger
-product — `qwen3-coder:latest` against `Qwen 3 Coder Plus` — so when one normalised name
-contains the other, the leftover is checked against a tier/size list (`plus`, `max`,
-`mini`, `<n>b`, …) and the match is rejected if that is all it is. Silently inheriting a
-bigger model's score would flatter the local row badly.
-
-**Benchmark versions are not interchangeable.** SWE-bench Verified, SWE-bench Pro and
-SWE-bench Multilingual are separate keys with separate columns. Pro is harder and newer;
-never read a Pro number as a Verified one.
+**Matching** is family-level, never tag-level, and rejects a containment match whose
+leftover is only a tier or size marker (`plus`, `max`, `<n>b`, …) — a generic local tag can
+otherwise inherit a much larger product's score. Benchmark variants (`Verified`, `Pro`,
+`Multilingual`) are separate keys and must not be read as each other.
 
 ### Where the external figures appear
 
 **Its own tab.** The tables are long enough to fill a small screen by themselves, so they
-live behind an `EXTERNAL REFERENCE` tab beside `LOCAL BENCHMARKS` rather than below the
-grid. The tab hides itself entirely when no external data is loaded.
+sit behind an `EXTERNAL REFERENCE` tab beside `LOCAL BENCHMARKS`. The tab hides itself when
+no external data is loaded.
 
 **Optionally as an inline column.** Set `column: true` on a benchmark and it also renders
-as a column in the main table, immediately left of `OVERALL` — adjacent for comparison, but
-outside the measured block and drawn unmistakably differently: no heatmap fill, dashed
-rules, an italic figure and an `EXT` tag. It sorts like any other column; the default sort
-stays `OVERALL`.
-
-External columns are ordered so the **first** benchmark declared in the definitions file
-sits immediately left of `OVERALL`, with any others stacking outward from there.
+in the main table, immediately left of `OVERALL` — adjacent for comparison, outside the
+measured block, and drawn unmistakably differently: no heatmap fill, dashed rules, italic
+figure and a provenance tag. It sorts like any other column; the default sort stays
+`OVERALL`. Where several are flagged, the first declared sits closest to `OVERALL`.
 
 A flagged column renders **only if at least one benchmarked model matches** a row in that
-benchmark. An all-empty column is dead width, which is the opposite of the point on a
-narrow screen — so a benchmark can be flagged today and simply appear later, when a model
-you run enters its published list.
-
-**The overlap is partial, and which part matters.** SWE-bench Verified evaluates frontier
-hosted models only — read it as a reference *band*, not a comparison. LiveCodeBench carries
-open-weight rows, so some of them name model families a local fleet can actually host; those
-are genuinely comparable, and because the published figure is full-precision while a local
-build is usually quantised, **the gap is an estimate of the quantisation penalty on your own
-hardware.** The dashboard marks any such row "← runs here" by matching the external model
-name against the models in your run.
-
-Match on family, never on tag: an upstream `Qwen3.6-27B` and a local `qwen3.6:27b-mlx` are
-the same weights at different precision on different hardware, and collapsing them into one
-row would hide exactly the effect worth measuring.
+benchmark, so a benchmark can be flagged now and appear later when a model you run enters
+its published list.
 
 ## Usage
 

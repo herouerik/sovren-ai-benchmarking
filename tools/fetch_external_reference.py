@@ -77,8 +77,8 @@ def parse(text: str, slug: str) -> dict[str, dict]:
     """Read one slug's table. Returns {model: {score, provider, license}}.
 
     `license` is kept because it is the only field that says whether a reference point is
-    even theoretically runnable here — an Open row is a model this fleet could host one
-    day, a Closed row is a permanent external yardstick.
+    even theoretically runnable locally — an Open row is a model a local fleet could host,
+    a Closed row is a permanent external yardstick.
     """
     i = text.find(f"AUTO:START slug={slug}")
     if i < 0:

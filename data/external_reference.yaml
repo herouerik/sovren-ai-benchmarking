@@ -93,11 +93,10 @@ benchmarks:
     scale: fraction_resolved
     n: 500
     column: true
-    # Requested as the inline column. Matches nothing in this fleet today — the upstream
-    # mirror publishes a top-10 view and it is entirely frontier hosted models — so the
-    # column stays hidden until an open-weight model we run enters that view, at which
-    # point it appears on its own with no code change.
-    relevance: "coding — the closest external analogue to what this fleet is used for"
+    # Inline column. A leaderboard top-N view is typically all frontier hosted models, so
+    # coverage for locally-runnable models comes from the hf_cards source above. The column
+    # renders only once at least one benchmarked model matches.
+    relevance: "coding — the closest external analogue to local agentic coding use"
     upstream: "https://benchlm.ai/benchmarks/sweVerified"
     source_url: "https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md"
     attribution: "Mirrored from benchlm.ai via leoncuhk/awesome-llm-bench (top 10 view)"
@@ -114,8 +113,7 @@ benchmarks:
       - LiveCodeBench v6
     scale: fraction_resolved
     column: true
-    # The one benchmark with real local overlap today, so the inline-column feature is
-    # visibly working rather than latent. Remove this line to hide the column.
+    # Remove this line to hide the column.
     relevance: "coding — contamination-resistant, refreshed from recent contest problems"
     upstream: "https://benchlm.ai/benchmarks/liveCodeBench"
     source_url: "https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md"
@@ -133,7 +131,7 @@ benchmarks:
     scale: fraction_resolved
     relevance: >
       agentic — multi-step work in a real terminal, the closest published proxy for
-      "can this model drive a coding CLI", which is exactly this fleet's job
+      "can this model drive a coding CLI"
     upstream: "https://benchlm.ai/benchmarks/terminalBench2"
     source_url: "https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md"
     attribution: "Mirrored from benchlm.ai via leoncuhk/awesome-llm-bench (top 10 view)"
