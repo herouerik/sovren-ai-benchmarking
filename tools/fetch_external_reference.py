@@ -35,7 +35,9 @@ try:
 except ImportError:
     sys.exit("needs pyyaml — pip install -r requirements.txt")
 
-REF = Path(__file__).resolve().parent.parent / "data" / "external_reference.yaml"
+_DATA = Path(__file__).resolve().parent.parent / "data"
+REF = _DATA / "external_reference.yaml"       # hand-authored definitions; never written
+SCORES = _DATA / "external_scores.yaml"       # machine-generated; rewritten wholesale
 
 # Upstream rows are markdown tables delimited by `<!-- AUTO:START slug=... -->`, which is a
 # far more stable anchor than a heading: the slug is machine-generated and survives
@@ -79,12 +81,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", help="refresh a single benchmark key")
-    ap.add_argument("--ref", default=str(REF))
+    ap.add_argument("--ref", default=str(REF), help="definitions file (read-only)")
+    ap.add_argument("--scores", default=str(SCORES), help="scores file (rewritten)")
     args = ap.parse_args()
 
     path = Path(args.ref)
     doc = yaml.safe_load(path.read_text())
     benches = doc.get("benchmarks") or {}
+    scores_path = Path(args.scores)
+    try:
+        scores_doc = yaml.safe_load(scores_path.read_text()) or {}
+    except FileNotFoundError:
+        scores_doc = {}
+    scores_doc.setdefault("_meta", {})
+    out_benches = scores_doc.setdefault("benchmarks", {})
     changed, skipped = [], []
 
     for key, b in benches.items():
@@ -104,7 +114,7 @@ def main() -> None:
             skipped.append(f"{key}: slug {slug!r} matched no rows (upstream format changed?)"); continue
 
         scores = {k: v["score"] for k, v in rows.items()}
-        old = b.get("scores") or {}
+        old = (out_benches.get(key) or {}).get("scores") or {}
         added = {k: v for k, v in scores.items() if k not in old}
         removed = {k: v for k, v in old.items() if k not in scores}
         moved = {k: (old[k], v) for k, v in scores.items() if k in old and old[k] != v}
@@ -118,10 +128,12 @@ def main() -> None:
         for k, v in removed.items(): print(f"     - {k}: {v}")
         for k, (a, v) in moved.items(): print(f"     ~ {k}: {a} -> {v}")
         if not args.dry_run:
-            b["scores"] = scores
-            b["providers"] = {k: v["provider"] for k, v in rows.items() if v["provider"]}
-            b["licenses"] = {k: v["license"] for k, v in rows.items() if v["license"]}
-            b["retrieved"] = date.today().isoformat()
+            out_benches[key] = {
+                "retrieved": date.today().isoformat(),
+                "scores": scores,
+                "providers": {k: v["provider"] for k, v in rows.items() if v["provider"]},
+                "licenses": {k: v["license"] for k, v in rows.items() if v["license"]},
+            }
 
     for s in skipped:
         print(f"  SKIP {s}")
@@ -130,13 +142,24 @@ def main() -> None:
         print("\n--dry-run: nothing written.")
         return
     if changed:
-        # Rewrite only the data; the file's leading comment block explains the policy and
-        # must survive, so the header is preserved verbatim and the body re-dumped after it.
-        text = path.read_text()
-        head = text[: text.index("_meta:")]
-        body = yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=100)
-        path.write_text(head + body)
-        print(f"\nUpdated {path} ({', '.join(changed)}). Review the diff before committing.")
+        # Only the scores file is ever rewritten. The definitions file carries hand-written
+        # prose and comments that a wholesale yaml re-dump would destroy, which would make
+        # this script unsafe to run unattended — the whole point of the split.
+        scores_doc["_meta"] = {
+            "generated_by": "tools/fetch_external_reference.py",
+            "warning": "DO NOT EDIT BY HAND — regenerated wholesale on every refresh.",
+            "definitions_live_in": REF.name,
+            "last_refresh": date.today().isoformat(),
+        }
+        scores_path.write_text(
+            "# Machine-generated. Regenerated wholesale by tools/fetch_external_reference.py.\n"
+            "# Benchmark DEFINITIONS (labels, notes, column flags) live in "
+            "external_reference.yaml\n"
+            "# and are never touched by the refresher — that split is what makes a code-only\n"
+            "# refresh safe to run without losing hand-written prose.\n"
+            + yaml.safe_dump(scores_doc, sort_keys=False, allow_unicode=True, width=100))
+        print(f"\nUpdated {scores_path} ({', '.join(changed)}). "
+              f"{REF.name} untouched. Review the diff before committing.")
     else:
         print("\nNothing to update.")
 

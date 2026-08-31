@@ -1,0 +1,106 @@
+# Machine-generated. Regenerated wholesale by tools/fetch_external_reference.py.
+# Benchmark DEFINITIONS (labels, notes, column flags) live in external_reference.yaml
+# and are never touched by the refresher — that split is what makes a code-only
+# refresh safe to run without losing hand-written prose.
+_meta:
+  generated_by: tools/fetch_external_reference.py
+  warning: DO NOT EDIT BY HAND — regenerated wholesale on every refresh.
+  definitions_live_in: external_reference.yaml
+  last_refresh: '2026-08-31'
+benchmarks:
+  swe_bench_verified:
+    retrieved: '2026-08-31'
+    scores:
+      Claude Opus 5: 0.96
+      Claude Mythos 5: 0.955
+      Claude Fable 5: 0.95
+      Claude Opus 4.8: 0.886
+      Claude Opus 4.7 (Adaptive): 0.876
+      Ornith-1.5-397B: 0.86
+      Claude Sonnet 5: 0.852
+      GPT-5.3 Codex: 0.85
+      Ornith-1.0-397B: 0.824
+      Claude Opus 4.5: 0.809
+    providers:
+      Claude Opus 5: Anthropic
+      Claude Mythos 5: Anthropic
+      Claude Fable 5: Anthropic
+      Claude Opus 4.8: Anthropic
+      Claude Opus 4.7 (Adaptive): Anthropic
+      Ornith-1.5-397B: Ornith AI
+      Claude Sonnet 5: Anthropic
+      GPT-5.3 Codex: OpenAI
+      Ornith-1.0-397B: DeepReinforce AI
+      Claude Opus 4.5: Anthropic
+    licenses:
+      Claude Opus 5: Closed
+      Claude Mythos 5: Closed
+      Claude Fable 5: Closed
+      Claude Opus 4.8: Closed
+      Claude Opus 4.7 (Adaptive): Closed
+      Ornith-1.5-397B: Open
+      Claude Sonnet 5: Closed
+      GPT-5.3 Codex: Closed
+      Ornith-1.0-397B: Open
+      Claude Opus 4.5: Closed
+  live_code_bench:
+    scores:
+      Qwen3.7 Max: 0.916
+      Qwen3.7 Plus: 0.896
+      GLM-4.7: 0.849
+      Qwen3.6-27B: 0.839
+      Qwen3.6-35B-A3B: 0.804
+      Mercury 2: 0.673
+      DeepSeek V3: 0.376
+    providers:
+      Qwen3.7 Max: Alibaba
+      Qwen3.7 Plus: Alibaba
+      GLM-4.7: Z.AI
+      Qwen3.6-27B: Alibaba
+      Qwen3.6-35B-A3B: Alibaba
+      Mercury 2: Inception
+      DeepSeek V3: DeepSeek
+    licenses:
+      Qwen3.7 Max: Closed
+      Qwen3.7 Plus: Closed
+      GLM-4.7: Open
+      Qwen3.6-27B: Open
+      Qwen3.6-35B-A3B: Open
+      Mercury 2: Closed
+      DeepSeek V3: Open
+    retrieved: '2026-08-31'
+  terminal_bench_2:
+    scores:
+      GPT-5.6 Sol: 0.919
+      Claude Mythos 5: 0.88
+      GPT-5.6 Terra: 0.874
+      GPT-5.6 Luna: 0.847
+      Claude Fable 5: 0.843
+      Grok 4.5: 0.833
+      Sakana Fugu-Ultra: 0.821
+      GPT-5.5: 0.82
+      SWE-1.7: 0.815
+      GLM-5.2: 0.81
+    providers:
+      GPT-5.6 Sol: OpenAI
+      Claude Mythos 5: Anthropic
+      GPT-5.6 Terra: OpenAI
+      GPT-5.6 Luna: OpenAI
+      Claude Fable 5: Anthropic
+      Grok 4.5: xAI
+      Sakana Fugu-Ultra: Sakana AI
+      GPT-5.5: OpenAI
+      SWE-1.7: Cognition
+      GLM-5.2: Z.AI
+    licenses:
+      GPT-5.6 Sol: Closed
+      Claude Mythos 5: Closed
+      GPT-5.6 Terra: Closed
+      GPT-5.6 Luna: Closed
+      Claude Fable 5: Closed
+      Grok 4.5: Closed
+      Sakana Fugu-Ultra: Closed
+      GPT-5.5: Closed
+      SWE-1.7: Closed
+      GLM-5.2: Open
+    retrieved: '2026-08-31'

@@ -100,6 +100,28 @@ body::after{
 .ext-match{background:rgba(200,104,30,.07)}
 .ext-match td.m::after{content:' ← runs here';color:var(--accent);font-size:9.5px}
 
+/* ── TABS ──────────────────────────────────────────────────────
+   The external-reference tables are long enough to fill a small screen on their own,
+   so they get their own tab rather than sitting under the grid. */
+.tabbar{display:flex;gap:2px;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);
+  font:inherit;font-size:10.5px;letter-spacing:.1em;padding:7px 13px;cursor:pointer}
+.tab:hover{color:var(--text)}
+.tab.is-active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab .tab-n{color:var(--border);margin-left:6px;font-variant-numeric:tabular-nums}
+.tab.is-active .tab-n{color:var(--accent)}
+.tabpanel[hidden]{display:none}
+
+/* External score shown inline in the main grid. Deliberately unlike a measured cell:
+   no heatmap fill, a dashed left rule, italic figure. It must never read as ours. */
+.bench-table thead th.th-ext{min-width:66px;border-left:1px dashed var(--border);
+  border-right:1px dashed var(--border)}
+.bench-table td.td-ext{border-left:1px dashed var(--border);
+  border-right:1px dashed var(--border);background:rgba(200,104,30,.045);text-align:center}
+.td-ext .ext-num{font-style:italic;font-variant-numeric:tabular-nums;color:var(--accent);font-size:13px}
+.td-ext .ext-src{display:block;font-size:8.5px;letter-spacing:.06em;color:var(--dim);margin-top:1px}
+.td-ext .ext-none{color:var(--border);font-size:13px}
+
 .bench-table thead th{
   position:sticky;top:0;background:var(--bg);z-index:10;
   padding:9px 12px;text-align:center;font-size:9px;letter-spacing:.13em;
@@ -257,14 +279,22 @@ body::after{
       <span class="sample-badge">SAMPLE DATA</span>
       <span class="sample-text">This is the template. For your real results open <code>results/report.html</code> — or drop a <code>results/*.json</code> file into the sidebar.</span>
     </div>
-    <div class="rank-strip-wrap"><div class="rank-strip" id="rank-strip"></div></div>
-    <div class="table-wrap">
-      <table class="bench-table">
-        <thead id="bench-thead"></thead>
-        <tbody id="bench-tbody"></tbody>
-      </table>
+    <div class="tabbar" id="tabbar">
+      <button class="tab is-active" data-tab="local">LOCAL BENCHMARKS<span class="tab-n" id="tab-n-local"></span></button>
+      <button class="tab" data-tab="external" id="tab-external" hidden>EXTERNAL REFERENCE<span class="tab-n" id="tab-n-ext"></span></button>
     </div>
-    <div class="ext-wrap" id="ext-wrap" style="display:none"></div>
+    <div class="tabpanel" id="panel-local">
+      <div class="rank-strip-wrap"><div class="rank-strip" id="rank-strip"></div></div>
+      <div class="table-wrap">
+        <table class="bench-table">
+          <thead id="bench-thead"></thead>
+          <tbody id="bench-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tabpanel" id="panel-external" hidden>
+      <div class="ext-wrap" id="ext-wrap" style="display:none"></div>
+    </div>
   </div>
 
   <aside class="sidebar">
@@ -446,6 +476,43 @@ const BENCH_TIPS = {
 };
 
 /* ── DATA HELPERS ─────────────────────────────── */
+/* ── EXTERNAL DATA, SHARED HELPERS ─────────────────────────────
+   Model identity across the two worlds is family-level, not tag-level: an upstream
+   "Qwen3.6-27B" and a local "qwen3.6:27b-mlx" are the same weights at a different
+   precision on different hardware. Normalise both sides down to the family and compare
+   that; require 6+ characters so short names cannot collide. Deliberately NOT merged
+   into one row anywhere — the gap between them is the quantisation penalty, which is the
+   interesting number. */
+function normFamily(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]/g, '')
+    .replace(/mlx|latest|think|a3b/g, '');
+}
+function extBenchesWithColumn() {
+  const bs = D.external?.benchmarks || {};
+  return Object.entries(bs).filter(([, b]) => b.column && b.scores);
+}
+// {localModel: score} for one external benchmark, over the models actually in this run.
+function extMatches(bench) {
+  const out = {};
+  const models = D.models || [];
+  Object.entries(bench.scores || {}).forEach(([em, sc]) => {
+    const e = normFamily(em);
+    models.forEach(lm => {
+      const l = normFamily(lm);
+      if (l.length > 5 && (l.includes(e) || e.includes(l))) out[lm] = { score: sc, name: em };
+    });
+  });
+  return out;
+}
+// Only columns that actually hit something get rendered. An all-empty column is dead
+// width, which is the opposite of the point on a narrow screen.
+function extColumns() {
+  return extBenchesWithColumn()
+    .map(([key, b]) => ({ key: 'ext:' + key, bench: b, hits: extMatches(b) }))
+    .filter(c => Object.keys(c.hits).length > 0);
+}
+function extCellFor(col, m) { return col.hits[m] || null; }
+
 function getBenches()    { return D.benchmarks || PREV?.benchmarks || []; }
 function getPrimScores(m){ return D.scores?.[m] || null; }
 function getPrevScores(m){ return PREV?.scores?.[m] || null; }
@@ -508,6 +575,10 @@ function sortValue(m, col) {
   if (col === 'model') {
     const mi = D.model_info?.[m];
     return (mi?.official_name || m).toLowerCase();
+  }
+  if (col.startsWith('ext:')) {
+    const c = extColumns().find(x => x.key === col);
+    return c ? (c.hits[m]?.score ?? null) : null;
   }
   return col === 'overall' ? overallOf(m) : getScore(m, col);
 }
@@ -750,6 +821,21 @@ function renderTable() {
   thM.className = 'th-model'; thM.textContent = 'MODEL';
   makeSortable(thM, 'model');
   hr.appendChild(thM);
+  // External columns sit immediately left of OVERALL: adjacent for comparison, but
+  // outside the measured block and styled so they cannot be mistaken for our own.
+  const extCols = extColumns();
+  extCols.forEach(c => {
+    const th = document.createElement('th');
+    th.className = 'th-ext';
+    th.textContent = (c.bench.label || c.key).replace(/ Verified$/, '');
+    th.title = `${c.bench.label} — EXTERNAL, not measured here.`
+      + (c.bench.retrieved ? ` Retrieved ${c.bench.retrieved}.` : '')
+      + (c.bench.attribution ? ` ${c.bench.attribution}.` : '')
+      + ' Matched by model family, so precision and hardware differ from our rows.';
+    th.classList.add('has-tip');
+    makeSortable(th, c.key);
+    hr.appendChild(th);
+  });
   hr.appendChild(makeTipTh('overall', 'OVERALL', 'th-overall'));
   benches.forEach(b => hr.appendChild(makeTipTh(b, BENCH_LABELS[b]||b.toUpperCase())));
   thead.appendChild(hr);
@@ -809,6 +895,24 @@ function renderTable() {
     tr.appendChild(tdM);
 
     // Overall cell
+    // External columns, immediately left of OVERALL: adjacent for comparison, outside the
+    // measured block, and styled so they can never be misread as ours.
+    extCols.forEach(c => {
+      const hit  = extCellFor(c, m);
+      const tdE  = document.createElement('td');
+      tdE.className = 'td-ext';
+      if (hit) {
+        tdE.innerHTML = `<span class="ext-num">${(hit.score*100).toFixed(1)}</span>`
+          + `<span class="ext-src">EXT</span>`;
+        tdE.title = `${hit.name} scored ${(hit.score*100).toFixed(1)} on ${c.bench.label} `
+          + `(published, full precision). This row is a local build, so the difference is `
+          + `not a like-for-like comparison — it is roughly the quantisation penalty.`;
+      } else {
+        tdE.innerHTML = `<span class="ext-none">—</span>`;
+      }
+      tr.appendChild(tdE);
+    });
+
     const tdOv = document.createElement('td');
     tdOv.className = 'td-overall';
     if (ov >= 0) {
@@ -1050,6 +1154,26 @@ function renderExternal() {
   });
 }
 
+/* ── TABS ─────────────────────────────────────────────────────── */
+function initTabs() {
+  const bar = document.getElementById('tabbar');
+  bar.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      bar.querySelectorAll('.tab').forEach(b => b.classList.toggle('is-active', b === btn));
+      document.getElementById('panel-local').hidden    = btn.dataset.tab !== 'local';
+      document.getElementById('panel-external').hidden = btn.dataset.tab !== 'external';
+    });
+  });
+}
+function renderTabCounts() {
+  document.getElementById('tab-n-local').textContent = (D.models || []).length || '';
+  const bs = D.external?.benchmarks || {};
+  const n = Object.values(bs).filter(b => b.scores && Object.keys(b.scores).length).length;
+  const tab = document.getElementById('tab-external');
+  tab.hidden = n === 0;                     // no external data -> no tab at all
+  document.getElementById('tab-n-ext').textContent = n || '';
+}
+
 function renderLegend() {
   const el = document.getElementById('radar-legend');
   el.innerHTML = '';
@@ -1130,7 +1254,7 @@ function parseConfigModels(text) {
 function rerender() {
   activeModel = null;
   renderMeta(); renderStrip(); renderTable(); renderSpeed(); renderContextPerf();
-  renderExternal(); drawRadar(null); renderLegend();
+  renderExternal(); renderTabCounts(); drawRadar(null); renderLegend();
 }
 
 function loadPrimary(file) {
@@ -1195,5 +1319,6 @@ wireDropzone('dz-prev',    'fi-prev',    loadPrev);
 wireDropzone('dz-config',  'fi-config',  loadConfig);
 
 /* ── INIT ─────────────────────────────────────── */
+initTabs();   // binds once; rerender() only refreshes the counts and hidden state
 rerender();
 </script>
