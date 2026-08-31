@@ -238,17 +238,26 @@ def _main() -> None:
     if show_all:
         # No alias filter: report every table row that looks like a benchmark, to help
         # decide which aliases are worth declaring.
-        seen = set()
-        for table in _tables(md):
+        seen, header = set(), None
+        tables = _tables(md)
+        for table in tables:
             if len(table) < 2 or len(table[0]) < 3:
                 continue
+            header = table[0]
             for r in table[1:]:
                 if len(r) == len(table[0]) and r[0] and sum(
                         1 for c in r[1:] if _num(c) is not None) >= 2:
                     if r[0] not in seen:
                         seen.add(r[0])
                         print(f"  {r[0]}")
-        print(f"\n{len(seen)} candidate benchmark labels. Header: {table[0][1:]}")
+        # A card with no benchmark tables is a normal, informative outcome — plenty of
+        # cards publish none — so say so rather than raising. (Reported as a crash before:
+        # `header` was only bound inside the loop.)
+        if not seen:
+            print(f"  no benchmark tables found ({len(tables)} table(s) on the card). "
+                  "This model has no published figures here.")
+            return
+        print(f"\n{len(seen)} candidate benchmark labels. Header: {header[1:]}")
         return
     from fetch_external_reference import load_aliases   # noqa: E402
     rows = harvest(repos, load_aliases(), verbose=True)
