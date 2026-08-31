@@ -189,6 +189,45 @@ def aggregate(raw: list[dict], all_models: list[str] | None = None,
     return payload
 
 
+def load_context_perf(path: Path | None) -> dict | None:
+    """At-context prefill/decode, from tools/measure_context_perf.py.
+
+    Kept separate from the summary's `speeds` field on purpose: `speeds` is decode tok/s on
+    short benchmark prompts, this is both rates at a realistic context size, and the two are
+    not comparable. The collapse between them is architecture-dependent — dense models fall
+    much further than sparse-MoE ones — so merging the two into one column would erase the
+    signal that actually predicts agent behaviour.
+    """
+    if not path or not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception as e:
+        print(f"  warning: could not read {path}: {e}")
+        return None
+
+
+def load_external(path: Path | None) -> dict | None:
+    """Published third-party figures from data/external_reference.yaml.
+
+    Injected under its own key and rendered in its own panel. Never merged into a model row,
+    never averaged into OVERALL, never used for ranking — a 500-sample leaderboard result and
+    a 25-sample local run do not belong in the same column.
+    """
+    if not path or not path.exists():
+        return None
+    try:
+        import yaml
+    except ImportError:
+        print("  note: pyyaml not installed — external reference panel skipped")
+        return None
+    try:
+        return yaml.safe_load(path.read_text())
+    except Exception as e:
+        print(f"  warning: could not read {path}: {e}")
+        return None
+
+
 def find_template() -> Path:
     here = Path(__file__).parent
     candidates = [
@@ -213,6 +252,14 @@ def main() -> None:
              "of several machines, where no single machine holds every row.",
     )
     parser.add_argument("--output", default=None, help="Output HTML path (default: same dir as input, report.html)")
+    parser.add_argument("--perf", default=None,
+                        help="context_perf.json from tools/measure_context_perf.py "
+                             "(default: data/context_perf.json if present)")
+    parser.add_argument("--external", default=None,
+                        help="external reference YAML (default: data/external_reference.yaml "
+                             "if present); --no-external to omit")
+    parser.add_argument("--no-external", action="store_true",
+                        help="omit the external reference panel entirely")
     parser.add_argument("--template", default=None, help="Path to dashboard HTML template")
     parser.add_argument("--config", default=None, help="Path to config.yaml (injects all_models for status markers)")
     parser.add_argument("--live", action="store_true", help="Inject 60s meta-refresh (use during an ongoing run)")
@@ -252,6 +299,23 @@ def main() -> None:
         # Extract model_info from metadata if available
         model_info = raw.get("metadata", {}).get("model_info") if isinstance(raw, dict) else None
         data = aggregate(records, all_models=all_models or None, model_info=model_info)
+
+    # Repo root is two levels up from scoring/, so defaults resolve regardless of cwd.
+    repo = Path(__file__).resolve().parent.parent
+    perf_path = Path(args.perf) if args.perf else repo / "data" / "context_perf.json"
+    perf = load_context_perf(perf_path)
+    if perf:
+        data["context_perf"] = perf
+        print(f"  context perf: {len(perf.get('models', {}))} models "
+              f"@ ~{perf.get('target_context_tokens')} tokens ({perf.get('measured')})")
+
+    if not args.no_external:
+        ext_path = Path(args.external) if args.external else repo / "data" / "external_reference.yaml"
+        ext = load_external(ext_path)
+        if ext:
+            data["external"] = ext
+            n = sum(len(b.get("scores") or {}) for b in (ext.get("benchmarks") or {}).values())
+            print(f"  external reference: {len(ext.get('benchmarks', {}))} benchmarks, {n} rows")
 
     template_path = Path(args.template) if args.template else find_template()
     with open(template_path) as f:

@@ -1,0 +1,179 @@
+# External reference benchmarks — NOT MEASURED BY THIS HARNESS.
+#
+# Why this file exists
+# -------------------
+# Every score this harness produces is a "how does it behave on my machine" number:
+# small-n, our own scaffold, our own quantised builds, our own hardware. That is the
+# point — it answers questions no public leaderboard can. But it gives no way to
+# calibrate against results the wider field agrees on.
+#
+# This file carries a small set of *published* figures for that calibration only. They
+# are rendered in a separate, clearly-labelled panel and are never merged into a model
+# row, never averaged into OVERALL, and never used for ranking. Mixing a 500-sample
+# leaderboard result with a 25-sample local run in one column would be dishonest in
+# both directions.
+#
+# The honest limitation, stated up front
+# --------------------------------------
+# The overlap with a local fleet is partial, and which part matters.
+#
+#   SWE-bench Verified  — frontier hosted models only; no locally-runnable build appears.
+#                         Use it as a reference BAND, not a comparison: it shows what the
+#                         field reports for the work a local model is being asked to
+#                         substitute for.
+#   LiveCodeBench       — carries open-weight rows, so some name model families a local
+#                         fleet can host. Those ARE comparable, and unusually informative:
+#                         the published figure is full-precision while a local build is
+#                         usually quantised, so the gap estimates the quantisation penalty
+#                         on your own hardware. The dashboard flags such rows automatically
+#                         by matching against the models in your run.
+#   Terminal-Bench 2.0  — multi-step terminal work: the closest published proxy for "can
+#                         this model drive a coding CLI".
+#
+# Match on family, never on tag. An upstream `Qwen3.6-27B` and a local `qwen3.6:27b-mlx`
+# are the same weights at different precision on different hardware; treating them as one
+# row would hide exactly the effect worth measuring.
+#
+# Refreshing
+# ----------
+#   python3 tools/fetch_external_reference.py --dry-run   # show what would change
+#   python3 tools/fetch_external_reference.py             # rewrite the scores blocks
+#
+# Committed rather than fetched at report time on purpose: a benchmark run must not
+# depend on the network, and a number that moves should move in a reviewable diff.
+
+_meta:
+  schema: 1
+  warning: Published third-party figures. Not produced by this harness.
+  render: separate panel; excluded from OVERALL, ranking, and all model rows
+  refresh: python3 tools/fetch_external_reference.py --dry-run
+benchmarks:
+  swe_bench_verified:
+    label: SWE-bench Verified
+    slug: sweVerified
+    scale: fraction_resolved
+    n: 500
+    relevance: coding — the closest external analogue to what this fleet is used for
+    upstream: https://benchlm.ai/benchmarks/sweVerified
+    source_url: https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md
+    attribution: Mirrored from benchlm.ai via leoncuhk/awesome-llm-bench (top 10 view)
+    note: 'Real GitHub issues from popular Python repos, human-verified 500-instance subset. Frontier
+      models only — no locally-runnable quantised build is evaluated.
+
+      '
+    scores:
+      Claude Opus 5: 0.96
+      Claude Mythos 5: 0.955
+      Claude Fable 5: 0.95
+      Claude Opus 4.8: 0.886
+      Claude Opus 4.7 (Adaptive): 0.876
+      Ornith-1.5-397B: 0.86
+      Claude Sonnet 5: 0.852
+      GPT-5.3 Codex: 0.85
+      Ornith-1.0-397B: 0.824
+      Claude Opus 4.5: 0.809
+    providers:
+      Claude Opus 5: Anthropic
+      Claude Mythos 5: Anthropic
+      Claude Fable 5: Anthropic
+      Claude Opus 4.8: Anthropic
+      Claude Opus 4.7 (Adaptive): Anthropic
+      Ornith-1.5-397B: Ornith AI
+      Claude Sonnet 5: Anthropic
+      GPT-5.3 Codex: OpenAI
+      Ornith-1.0-397B: DeepReinforce AI
+      Claude Opus 4.5: Anthropic
+    licenses:
+      Claude Opus 5: Closed
+      Claude Mythos 5: Closed
+      Claude Fable 5: Closed
+      Claude Opus 4.8: Closed
+      Claude Opus 4.7 (Adaptive): Closed
+      Ornith-1.5-397B: Open
+      Claude Sonnet 5: Closed
+      GPT-5.3 Codex: Closed
+      Ornith-1.0-397B: Open
+      Claude Opus 4.5: Closed
+    retrieved: '2026-08-31'
+  live_code_bench:
+    label: LiveCodeBench
+    slug: liveCodeBench
+    scale: fraction_resolved
+    relevance: coding — contamination-resistant, refreshed from recent contest problems
+    upstream: https://benchlm.ai/benchmarks/liveCodeBench
+    source_url: https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md
+    attribution: Mirrored from benchlm.ai via leoncuhk/awesome-llm-bench (top 10 view)
+    note: 'Carries open-weight entries, so some rows name families this fleet can host locally — the only
+      place external and local lists genuinely touch.
+
+      '
+    scores:
+      Qwen3.7 Max: 0.916
+      Qwen3.7 Plus: 0.896
+      GLM-4.7: 0.849
+      Qwen3.6-27B: 0.839
+      Qwen3.6-35B-A3B: 0.804
+      Mercury 2: 0.673
+      DeepSeek V3: 0.376
+    providers:
+      Qwen3.7 Max: Alibaba
+      Qwen3.7 Plus: Alibaba
+      GLM-4.7: Z.AI
+      Qwen3.6-27B: Alibaba
+      Qwen3.6-35B-A3B: Alibaba
+      Mercury 2: Inception
+      DeepSeek V3: DeepSeek
+    licenses:
+      Qwen3.7 Max: Closed
+      Qwen3.7 Plus: Closed
+      GLM-4.7: Open
+      Qwen3.6-27B: Open
+      Qwen3.6-35B-A3B: Open
+      Mercury 2: Closed
+      DeepSeek V3: Open
+    retrieved: '2026-08-31'
+  terminal_bench_2:
+    label: Terminal-Bench 2.0
+    slug: terminalBench2
+    scale: fraction_resolved
+    relevance: 'agentic — multi-step work in a real terminal, the closest published proxy for "can this
+      model drive a coding CLI", which is exactly this fleet''s job
+
+      '
+    upstream: https://benchlm.ai/benchmarks/terminalBench2
+    source_url: https://raw.githubusercontent.com/leoncuhk/awesome-llm-bench/main/README.md
+    attribution: Mirrored from benchlm.ai via leoncuhk/awesome-llm-bench (top 10 view)
+    scores:
+      GPT-5.6 Sol: 0.919
+      Claude Mythos 5: 0.88
+      GPT-5.6 Terra: 0.874
+      GPT-5.6 Luna: 0.847
+      Claude Fable 5: 0.843
+      Grok 4.5: 0.833
+      Sakana Fugu-Ultra: 0.821
+      GPT-5.5: 0.82
+      SWE-1.7: 0.815
+      GLM-5.2: 0.81
+    providers:
+      GPT-5.6 Sol: OpenAI
+      Claude Mythos 5: Anthropic
+      GPT-5.6 Terra: OpenAI
+      GPT-5.6 Luna: OpenAI
+      Claude Fable 5: Anthropic
+      Grok 4.5: xAI
+      Sakana Fugu-Ultra: Sakana AI
+      GPT-5.5: OpenAI
+      SWE-1.7: Cognition
+      GLM-5.2: Z.AI
+    licenses:
+      GPT-5.6 Sol: Closed
+      Claude Mythos 5: Closed
+      GPT-5.6 Terra: Closed
+      GPT-5.6 Luna: Closed
+      Claude Fable 5: Closed
+      Grok 4.5: Closed
+      Sakana Fugu-Ultra: Closed
+      GPT-5.5: Closed
+      SWE-1.7: Closed
+      GLM-5.2: Open
+    retrieved: '2026-08-31'
