@@ -64,6 +64,42 @@ body::after{
 /* TABLE */
 .table-wrap{flex:1;overflow:auto}
 .bench-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+/* ── CONTEXT THROUGHPUT + EXTERNAL REFERENCE ───────────────────
+   Two additions that must never be confused with the measured benchmark grid:
+   ctx-* shows prefill/decode at a realistic context size (a different measurement
+   from THROUGHPUT TOK/S, which is short-prompt decode), and ext-* shows published
+   third-party figures. Both are visually separated and labelled at the source. */
+.ctx-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:baseline;
+  padding:4px 0;border-bottom:1px solid var(--border);font-size:11px}
+.ctx-row:last-child{border-bottom:none}
+.ctx-model{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctx-pf,.ctx-dc{font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.ctx-pf{color:var(--dim)}
+.ctx-dc{color:var(--text)}
+.ctx-dc.is-slow{color:#c4483a;font-weight:600}
+.ctx-head{display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:9.5px;
+  letter-spacing:.09em;color:var(--dim);padding-bottom:4px;border-bottom:1px solid var(--border)}
+.ctx-note{font-size:10px;color:var(--dim);line-height:1.45;margin-top:8px}
+.ctx-err{color:#c4483a;font-size:10px}
+
+.ext-wrap{margin-top:26px;border:1px solid var(--border);border-radius:3px;padding:16px 18px}
+.ext-banner{font-size:10px;letter-spacing:.1em;color:var(--accent);margin-bottom:4px}
+.ext-sub{font-size:11px;color:var(--dim);line-height:1.5;max-width:78ch;margin-bottom:14px}
+.ext-bench{margin-top:16px}
+.ext-bench-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:2px}
+.ext-bench-h .n{font-size:12px;color:var(--text);font-weight:600}
+.ext-bench-h .meta{font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
+.ext-bench-note{font-size:10.5px;color:var(--dim);line-height:1.45;max-width:82ch;margin-bottom:8px}
+.ext-table{width:100%;border-collapse:collapse;font-size:11px}
+.ext-table th{text-align:left;font-weight:400;font-size:9.5px;letter-spacing:.08em;
+  color:var(--dim);border-bottom:1px solid var(--border);padding:3px 8px 3px 0}
+.ext-table td{padding:3px 8px 3px 0;border-bottom:1px solid var(--border);color:var(--dim)}
+.ext-table td.m{color:var(--text)}
+.ext-table td.s{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.ext-lic-open{color:#4f8a4f}
+.ext-match{background:rgba(200,104,30,.07)}
+.ext-match td.m::after{content:' ← runs here';color:var(--accent);font-size:9.5px}
+
 .bench-table thead th{
   position:sticky;top:0;background:var(--bg);z-index:10;
   padding:9px 12px;text-align:center;font-size:9px;letter-spacing:.13em;
@@ -228,6 +264,7 @@ body::after{
         <tbody id="bench-tbody"></tbody>
       </table>
     </div>
+    <div class="ext-wrap" id="ext-wrap" style="display:none"></div>
   </div>
 
   <aside class="sidebar">
@@ -239,6 +276,10 @@ body::after{
     <div class="sb-block">
       <div class="sb-label">THROUGHPUT&ensp;TOK/S</div>
       <div id="speed-bars"></div>
+    </div>
+    <div class="sb-block" id="ctx-block" style="display:none">
+      <div class="sb-label">AT-CONTEXT THROUGHPUT</div>
+      <div id="ctx-bars"></div>
     </div>
     <div class="sb-block">
       <div class="sb-label">LOAD DATA</div>
@@ -893,6 +934,122 @@ function drawRadar(hl) {
 }
 
 /* ── LEGEND ───────────────────────────────────── */
+/* ── AT-CONTEXT THROUGHPUT ─────────────────────────────────────
+   Distinct from renderSpeed(): that plots the summary's `speeds`, which is decode
+   tok/s on short benchmark prompts. This plots prefill AND decode measured at a
+   realistic prompt size, because the two rankings disagree — a dense model can lose
+   an order of magnitude between them while a sparse-MoE model of similar size loses
+   about half, so the short-prompt number alone can recommend the slowest model in a
+   fleet. Never merged into the benchmark grid: different measurement, different
+   meaning, and averaging them would hide exactly that asymmetry. */
+function renderContextPerf() {
+  const cp = D.context_perf;
+  const block = document.getElementById('ctx-block');
+  const wrap  = document.getElementById('ctx-bars');
+  if (!cp || !cp.models || !Object.keys(cp.models).length) { block.style.display='none'; return; }
+  block.style.display = '';
+  wrap.innerHTML = '';
+
+  const head = document.createElement('div');
+  head.className = 'ctx-head';
+  head.innerHTML = '<span>MODEL</span><span>PREFILL</span><span>DECODE</span>';
+  wrap.appendChild(head);
+
+  // Slow-decode threshold: a quarter of the fleet's best decode. Relative rather than a
+  // fixed floor so it keeps meaning as the fleet changes.
+  const decs = Object.values(cp.models).map(v => v.decode_tps || 0).filter(v => v > 0);
+  const best = decs.length ? Math.max(...decs) : 0;
+  const slowCut = best / 4;
+
+  Object.entries(cp.models)
+    .sort((a,b) => (b[1].decode_tps||0) - (a[1].decode_tps||0))
+    .forEach(([m, v]) => {
+      const row = document.createElement('div');
+      row.className = 'ctx-row';
+      if (v.error) {
+        row.innerHTML = `<span class="ctx-model">${m}</span>`
+          + `<span class="ctx-err" style="grid-column:2/4;text-align:right">${v.error.slice(0,40)}</span>`;
+      } else {
+        const slow = v.decode_tps && slowCut > 0 && v.decode_tps < slowCut;
+        row.title = `${v.prompt_tokens} prompt tokens, num_ctx ${v.num_ctx}. `
+          + `Prefill ${v.prefill_tps} tok/s means a full ${v.num_ctx}-token window costs `
+          + `${(v.num_ctx/v.prefill_tps/60).toFixed(1)} min — which is what every compaction pays.`;
+        row.innerHTML = `<span class="ctx-model">${m}</span>`
+          + `<span class="ctx-pf">${v.prefill_tps ?? '—'}</span>`
+          + `<span class="ctx-dc${slow?' is-slow':''}">${v.decode_tps ?? '—'}</span>`;
+      }
+      wrap.appendChild(row);
+    });
+
+  const note = document.createElement('div');
+  note.className = 'ctx-note';
+  note.textContent = `Measured at ~${cp.target_context_tokens} prompt tokens`
+    + (cp.host ? ` on ${cp.host}` : '') + (cp.measured ? `, ${cp.measured}` : '')
+    + '. Not comparable to THROUGHPUT TOK/S above, which is short-prompt decode.';
+  wrap.appendChild(note);
+}
+
+/* ── EXTERNAL REFERENCE ────────────────────────────────────────
+   Published third-party figures, rendered apart from everything measured here and
+   never folded into OVERALL or the ranking. A row is highlighted when its model
+   family also exists in this fleet — those are the only genuinely comparable pairs,
+   and the gap between them estimates the local quantisation penalty. */
+function renderExternal() {
+  const ext  = D.external;
+  const wrap = document.getElementById('ext-wrap');
+  if (!ext || !ext.benchmarks) { wrap.style.display='none'; return; }
+  wrap.style.display = '';
+  wrap.innerHTML = '';
+
+  const localFams = allModels().map(m =>
+    m.toLowerCase().replace(/[-_:. ]/g,'').replace(/mlx|latest|think|\+/g,''));
+  const isLocal = name => {
+    const f = name.toLowerCase().replace(/[-_:. ]/g,'').replace(/a3b/g,'');
+    return localFams.some(l => l.length>5 && (l.includes(f) || f.includes(l)));
+  };
+
+  const b = document.createElement('div');
+  b.className = 'ext-banner';
+  b.textContent = 'EXTERNAL REFERENCE — NOT MEASURED HERE';
+  wrap.appendChild(b);
+
+  const sub = document.createElement('div');
+  sub.className = 'ext-sub';
+  sub.textContent = (ext._meta && ext._meta.warning ? ext._meta.warning + ' ' : '')
+    + 'Excluded from OVERALL, from ranking, and from every model row above — a 500-sample '
+    + 'leaderboard result and a 25-sample local run do not belong in one column. Rows marked '
+    + '"runs here" name a model family this fleet hosts locally; the gap between the published '
+    + 'figure and our own is an estimate of the quantisation penalty on this hardware.';
+  wrap.appendChild(sub);
+
+  Object.entries(ext.benchmarks).forEach(([key, bench]) => {
+    const scores = bench.scores || {};
+    if (!Object.keys(scores).length) return;
+    const sec = document.createElement('div');
+    sec.className = 'ext-bench';
+    const meta = [bench.n ? `n=${bench.n}` : null,
+                  bench.retrieved ? `retrieved ${bench.retrieved}` : null,
+                  bench.attribution].filter(Boolean).join(' · ');
+    sec.innerHTML = `<div class="ext-bench-h"><span class="n">${bench.label||key}</span>`
+      + `<span class="meta">${meta}</span></div>`
+      + (bench.relevance ? `<div class="ext-bench-note">${bench.relevance}</div>` : '');
+
+    const rows = Object.entries(scores).sort((a,b2) => b2[1]-a[1]).map(([m, sc]) => {
+      const lic = (bench.licenses||{})[m] || '';
+      const prov = (bench.providers||{})[m] || '';
+      const hit = isLocal(m);
+      return `<tr class="${hit?'ext-match':''}"><td class="m">${m}</td>`
+        + `<td>${prov}</td>`
+        + `<td class="${lic==='Open'?'ext-lic-open':''}">${lic}</td>`
+        + `<td class="s">${(sc*100).toFixed(1)}</td></tr>`;
+    }).join('');
+
+    sec.innerHTML += `<table class="ext-table"><thead><tr><th>MODEL</th><th>PROVIDER</th>`
+      + `<th>LICENSE</th><th style="text-align:right">SCORE</th></tr></thead><tbody>${rows}</tbody></table>`;
+    wrap.appendChild(sec);
+  });
+}
+
 function renderLegend() {
   const el = document.getElementById('radar-legend');
   el.innerHTML = '';
@@ -972,7 +1129,8 @@ function parseConfigModels(text) {
 /* ── LOADERS ──────────────────────────────────── */
 function rerender() {
   activeModel = null;
-  renderMeta(); renderStrip(); renderTable(); renderSpeed(); drawRadar(null); renderLegend();
+  renderMeta(); renderStrip(); renderTable(); renderSpeed(); renderContextPerf();
+  renderExternal(); drawRadar(null); renderLegend();
 }
 
 function loadPrimary(file) {

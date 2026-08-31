@@ -294,6 +294,83 @@ mistaken for a non-thinking one.
 
 ---
 
+## Two things the benchmark grid does not measure
+
+Both ship as first-class parts of the harness — a tool, a committed data file, a
+generator flag, and a dashboard panel each. Neither is merged into the benchmark grid,
+because neither is the same kind of number.
+
+### At-context throughput — `tools/measure_context_perf.py`
+
+The `speeds` column is decode tok/s on benchmark prompts, which are short. For an agentic
+coding loop that is the wrong operating point, and it does not merely understate — **it can
+invert the ranking.**
+
+Every model decodes more slowly as context grows, but by very different factors. On
+Apple-Silicon MLX builds we have measured a dense ~27B model losing roughly an order of
+magnitude between a near-empty context and a ~9k one, while a sparse-MoE model of
+comparable total size lost only about half its rate. Rank on short-prompt decode and you
+can choose the slowest model available while believing it is mid-pack.
+
+Prefill matters as much. A harness that compacts rewrites the transcript and invalidates
+the KV prefix, so **every compaction pays a full-window prefill**, not an incremental one.
+Window size divided by prefill rate is that bill; when it approaches the interval between
+compactions, the agent spends most of its wall clock re-reading its own context.
+
+The model rows already carry `dense` vs `MoE` and active parameters, so the fact needed to
+predict this is usually on screen — what was missing is a measurement at the operating
+point.
+
+> Figures for our own fleet are not published here. This repo is public; runs, summaries,
+> dashboards and findings live in the private companion repo. Run the tool to get numbers
+> for your own hardware.
+
+```sh
+python3 tools/measure_context_perf.py --config config.yaml \
+    --context-tokens 9000 --host "<host label>" --out data/context_perf.json
+```
+
+`data/context_perf.json` is gitignored — a per-machine measurement, same category as
+`config.yaml`. Picked up automatically from `data/context_perf.json`, or pass `--perf <path>`. Renders as
+the **AT-CONTEXT THROUGHPUT** sidebar panel. Read the module docstring before changing
+defaults — it records three traps (a resident model ignores a changed `num_ctx`; thinking
+models spend the output budget on reasoning; a 40-token generation measures startup, not
+decode) that each cost a wrong measurement to find.
+
+### External reference figures — `data/external_reference.yaml`
+
+Every score here is a "how does it behave on my machine" number: small-n, our scaffold, our
+quantised builds, our hardware. That is the point, and it also means there is no way to
+calibrate against results the wider field agrees on. This file carries a small set of
+*published* figures for that calibration only.
+
+They are rendered in a separate panel, **excluded from OVERALL, from ranking, and from every
+model row** — a 500-sample leaderboard result and a 25-sample local run do not belong in one
+column.
+
+Currently pulled: SWE-bench Verified, LiveCodeBench, Terminal-Bench 2.0. Available upstream
+without code changes by adding a `slug`: `osWorldVerified`, `browseComp`, `arcAgi2`, `hle`.
+
+```sh
+python3 tools/fetch_external_reference.py --dry-run   # show what would change
+python3 tools/fetch_external_reference.py             # rewrite the scores blocks
+```
+
+Committed rather than fetched at report time on purpose: a benchmark run must not depend on
+the network, and a published number that moves should move in a reviewable diff.
+
+**The overlap is partial, and which part matters.** SWE-bench Verified evaluates frontier
+hosted models only — read it as a reference *band*, not a comparison. LiveCodeBench carries
+open-weight rows, so some of them name model families a local fleet can actually host; those
+are genuinely comparable, and because the published figure is full-precision while a local
+build is usually quantised, **the gap is an estimate of the quantisation penalty on your own
+hardware.** The dashboard marks any such row "← runs here" by matching the external model
+name against the models in your run.
+
+Match on family, never on tag: an upstream `Qwen3.6-27B` and a local `qwen3.6:27b-mlx` are
+the same weights at different precision on different hardware, and collapsing them into one
+row would hide exactly the effect worth measuring.
+
 ## Usage
 
 ```bash
