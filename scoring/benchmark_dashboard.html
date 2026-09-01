@@ -82,7 +82,8 @@ body::after{
 .ctx-note{font-size:10px;color:var(--dim);line-height:1.45;margin-top:8px}
 .ctx-err{color:#c4483a;font-size:10px}
 
-.ext-wrap{margin-top:26px;border:1px solid var(--border);border-radius:3px;padding:16px 18px}
+.ext-wrap{margin-top:26px;border:1px solid var(--border);border-radius:3px;padding:16px 18px;
+  flex:1;overflow-y:auto;min-height:0}
 .ext-banner{font-size:10px;letter-spacing:.1em;color:var(--accent);margin-bottom:4px}
 .ext-sub{font-size:11px;color:var(--dim);line-height:1.5;max-width:78ch;margin-bottom:14px}
 .ext-bench{margin-top:16px}
@@ -110,6 +111,13 @@ body::after{
 .tab.is-active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab .tab-n{color:var(--border);margin-left:6px;font-variant-numeric:tabular-nums}
 .tab.is-active .tab-n{color:var(--accent)}
+/* Each panel must rejoin the flex-column sizing chain .layout-main starts: without this,
+   flex:1 on .table-wrap/.ext-wrap has no effect (flex-grow only works inside a flex
+   container), the panel grows to its content's natural height, and .layout-main's
+   overflow:hidden clips the rest instead of scrolling it. min-height:0 is required too —
+   a flex child's default min-height is auto (its content size), which alone still
+   overrides overflow and pushes the panel taller than its box. */
+.tabpanel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .tabpanel[hidden]{display:none}
 
 /* External score shown inline in the main grid. Deliberately unlike a measured cell:
