@@ -14,10 +14,14 @@ Built to work fully offline once datasets are cached.
 ```
 sovren-ai-benchmark/
 ├── run_benchmark.py        ← single entry point for everything
+├── prefetch_datasets.py    ← one-time dataset download/caching
 ├── config.example.yaml     ← copy to config.yaml; what to run, against which models
 ├── benchmarks/             ← one file per category
 ├── harness/                ← shared infrastructure
 ├── scoring/                ← result display and analysis
+├── tools/                  ← standalone scripts (context-perf probe, external reference,
+│                              multi-machine summary merging)
+├── data/                   ← dataset definitions and cached third-party reference figures
 └── results/                ← JSON output from each run
 ```
 
@@ -59,6 +63,8 @@ Two standard coding benchmarks. The model generates a Python function; the harne
 - **MBPP** — ~400 crowd-sourced Python problems, `sanitized` split. [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) — Austin et al., 2021. [Paper](https://arxiv.org/abs/2108.07732).
 
 **Tells you:** does the code actually run and pass tests?
+
+**`humaneval_plus` / `mbpp_plus`** — the same problems and the same prompts, but scored against [EvalPlus](https://github.com/evalplus/evalplus)'s test suites, extended roughly 80x over the originals (Liu et al., NeurIPS 2023. [Paper](https://arxiv.org/abs/2305.01210)). The plain suites accept solutions that are wrong on edge cases, so scores run high and compress at the top; these are a drop-in harder replacement rather than a bespoke filter, and stay directly comparable to a widely published leaderboard. Because the prompt is unchanged, the gap between a model's `humaneval`/`mbpp` score and its `_plus` score is its edge-case failure rate.
 
 ---
 
@@ -126,6 +132,24 @@ wheel. The HuggingFace dataset repo still carries only the v3 files, so
 Multi-turn/agentic categories are a separate benchmark
 (`bfcl_multi_turn_long_context`), disabled by default — one sample runs 4 turns
 and ~28 tool calls, measured at ~450–500s.
+
+---
+
+### 8. Speed — latency and throughput probes
+
+Four scripted probes, run `n_runs` times each with the median reported to reduce
+cold-start noise. Unlike the benchmarks above, there is no ground truth — this
+measures how fast, not how correct.
+
+| Probe | Isolates |
+|---|---|
+| `ttft_baseline` | Time-to-first-token, via a short prompt with a 1-word answer |
+| `decode_throughput` | Decode tok/s, via a short prompt forced into a long output |
+| `prefill_speed` | Prefill/encode speed, via a long (~350-token) prompt with a short answer |
+| `realistic_task` | A medium prompt + medium output, typical of an agentic code call |
+
+**Tells you:** is this model fast enough to be worth its accuracy, independent of
+the per-benchmark timings already recorded on every other run?
 
 ---
 
@@ -342,6 +366,15 @@ the refresh is code-only and cannot destroy hand-written prose. Committed rather
 fetched at report time: a run must not depend on the network, and a published number that
 moves should move in a reviewable diff.
 
+**What's tracked today.** `data/external_reference.yaml` currently declares SWE-bench
+Verified, SWE-bench Pro, SWE-bench Multilingual, LiveCodeBench, and Terminal-Bench 2.0.
+Coverage is intentionally partial: SWE-bench Verified's public leaderboard is
+frontier-hosted models only, so it reads as a reference *band* rather than a
+like-for-like comparison; LiveCodeBench carries open-weight rows, so it's the one place
+the external and local lists genuinely overlap and can estimate a quantisation penalty
+on your own hardware. Adding another published benchmark (e.g. `osWorldVerified`,
+`browseComp`, `arcAgi2`, `hle`) is a data-only change — a new block in that file, no code.
+
 **Two source types.** `slug` reads a leaderboard mirror; `sources.hf_cards` reads Hugging
 Face model cards. Cards are the source that covers open-weight models, since leaderboard
 views tend to list only the largest hosted ones. Inspect a card before adding it:
@@ -388,7 +421,7 @@ its published list.
 
 ```bash
 # Set up (first time only)
-cd local-llm-benchmark
+cd sovren-ai-benchmark
 /opt/homebrew/bin/python3.13 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
