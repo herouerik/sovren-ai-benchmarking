@@ -3,7 +3,7 @@
 
 # sovren-ai-benchmarking
 
-A self-contained benchmarking harness for local LLMs served via [Ollama](https://ollama.com). Runs a suite of standard and custom benchmarks against any model available at your local Ollama endpoint, scores them, and produces a comparative summary across models.
+A self-contained benchmarking harness for local LLMs served via e.g. [Ollama](https://ollama.com) (other servers work too). Runs a suite of standard and custom benchmarks against any model available at your sovereign LLM serving endpoint, scores them, and produces a comparative summary across models.
 
 Built to work fully offline once datasets are cached.
 
