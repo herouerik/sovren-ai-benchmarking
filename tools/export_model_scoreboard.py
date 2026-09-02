@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """Export a small, clean model scoreboard from results/merged.summary.json.
 
-2026-08-15: built for pfclabs-codingswarm's Phase 2 "complexity-matched
-execution routing" (#87) — it needs to rank the local/sovereign tier's
-models by fitness for a task (tool-calling reliability, code quality,
-speed) without depending on this repo's own HTML report or its embedded
-JS data blob, which is a fragile interface for another project to parse.
-This reads the same merged summary the HTML report itself renders from,
-so it stays in sync with whatever the dashboard shows without needing to
-scrape rendered markup.
+Built for downstream projects that need to rank locally-run models by fitness
+for a task (tool-calling reliability, code quality, speed) without depending
+on this repo's own HTML report or its embedded JS data blob, which is a
+fragile interface for another project to parse. This reads the same merged
+summary the HTML report itself renders from, so it stays in sync with
+whatever the dashboard shows without needing to scrape rendered markup.
 
 This is a deliberately small first step: a real, versioned, regenerable
 export rather than a one-off scrape. A proper HTTP endpoint, or a
@@ -18,10 +16,9 @@ if it proves useful across more than one consuming project.
 Usage:
     python3 tools/export_model_scoreboard.py [--out PATH]
 
-Output shape (see the `note` field for what's NOT covered): local/
-sovereign-tier models only (GPU server + MacBook, Ollama-hosted) — cloud
-models (Gemini/Claude/NIM) are never locally benchmarked here and won't
-appear.
+Output shape (see the `note` field for what's NOT covered): locally-run
+models only (Ollama-hosted) — hosted cloud models are never benchmarked
+here and won't appear.
 """
 from __future__ import annotations
 
@@ -34,13 +31,11 @@ DEFAULT_SOURCE = REPO_ROOT / "results" / "merged.summary.json"
 DEFAULT_OUT = REPO_ROOT / "results" / "model_scoreboard.summary.json"
 
 _NOTE = (
-    "Local/sovereign-tier only (GPU server + MacBook, Ollama-hosted). Cloud "
-    "models (Gemini/Claude/NIM) are not covered by this benchmark and are "
-    "not in this file. Consumers that also route cloud candidates (e.g. "
-    "pfclabs-codingswarm's atomic_pipeline.py _STRONG_PROVIDERS) need a "
-    "separate mechanism for that half of the decision. Regenerate this file "
-    "by re-running tools/export_model_scoreboard.py whenever a new "
-    "benchmark run completes."
+    "Locally-run models only (Ollama-hosted). Hosted cloud models are not "
+    "covered by this benchmark and are not in this file. Consumers that also "
+    "route cloud candidates need a separate mechanism for that half of the "
+    "decision. Regenerate this file by re-running "
+    "tools/export_model_scoreboard.py whenever a new benchmark run completes."
 )
 
 
