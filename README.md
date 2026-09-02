@@ -1,7 +1,7 @@
 <img width="1509" height="771" alt="image" src="https://github.com/user-attachments/assets/011f3b95-7d8c-4b19-8e30-8103d96257ca" />
 
 
-# sovren-ai-benchmark
+# sovren-ai-benchmarking
 
 A self-contained benchmarking harness for local LLMs served via [Ollama](https://ollama.com). Runs a suite of standard and custom benchmarks against any model available at your local Ollama endpoint, scores them, and produces a comparative summary across models.
 
