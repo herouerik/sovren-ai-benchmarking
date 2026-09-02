@@ -56,15 +56,15 @@ Harder science multiple choice. Same format as MMLU. Uses the `ARC-Challenge` sp
 
 ---
 
-### 4. HumanEval + MBPP — Python coding
-Two standard coding benchmarks. The model generates a Python function; the harness writes it to a temp file and executes it in a subprocess against bundled unit tests. Pass or fail — no partial credit. Never uses `exec()`.
+### 4. HumanEval + MBPP (Mostly Basic Python Problems) — Python coding
+Two standard coding benchmarks. The model generates a Python function; the harness writes it to a temp file and executes it in a subprocess against bundled unit tests. `pass@1` only — one attempt, pass or fail, no partial credit. Never uses `exec()`.
 
-- **HumanEval** — 164 hand-written Python problems with test assertions. [openai/openai_humaneval](https://huggingface.co/datasets/openai/openai_humaneval) — Chen et al., 2021. [Paper](https://arxiv.org/abs/2107.03374).
-- **MBPP** — ~400 crowd-sourced Python problems, `sanitized` split. [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) — Austin et al., 2021. [Paper](https://arxiv.org/abs/2108.07732).
+- **HumanEval** — 164 hand-written Python function stubs from OpenAI. Problems are well-specified and curated; this is the cleaner end of the coding evaluation spectrum. [openai/openai_humaneval](https://huggingface.co/datasets/openai/openai_humaneval) — Chen et al., 2021. [Paper](https://arxiv.org/abs/2107.03374).
+- **MBPP** — ~400 crowd-sourced Python problems, `sanitized` split. Broader and more varied in spec quality than HumanEval, drawn from a wider range of contributors — which makes them harder to overfit to, and complements HumanEval by probing the noisier, real-world end of the coding distribution. [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) — Austin et al., 2021. [Paper](https://arxiv.org/abs/2108.07732).
 
 **Tells you:** does the code actually run and pass tests?
 
-**`humaneval_plus` / `mbpp_plus`** — the same problems and the same prompts, but scored against [EvalPlus](https://github.com/evalplus/evalplus)'s test suites, extended roughly 80x over the originals (Liu et al., NeurIPS 2023. [Paper](https://arxiv.org/abs/2305.01210)). The plain suites accept solutions that are wrong on edge cases, so scores run high and compress at the top; these are a drop-in harder replacement rather than a bespoke filter, and stay directly comparable to a widely published leaderboard. Because the prompt is unchanged, the gap between a model's `humaneval`/`mbpp` score and its `_plus` score is its edge-case failure rate.
+**`humaneval_plus` / `mbpp_plus`** — the same problems and the same prompts (the model is never told it is being graded more strictly), but scored against [EvalPlus](https://github.com/evalplus/evalplus)'s test suites, extended roughly 80x over the originals (Liu et al., NeurIPS 2023. [Paper](https://arxiv.org/abs/2305.01210)). The plain suites accept solutions that are wrong on edge cases — empty inputs, boundary values, type surprises — so scores run high and compress at the top; these are a drop-in harder replacement rather than a bespoke filter, and stay directly comparable to a widely published leaderboard. Because the prompt is unchanged, the gap between a model's `humaneval`/`mbpp` score and its `_plus` score is a clean read on its edge-case failure rate. `mbpp_plus` tends to compress scores into a narrower band than `humaneval_plus`, so read it as a capability ceiling this whole class of model runs into rather than a ranking — `humaneval_plus` is the more discriminating of the two coding columns.
 
 ---
 
@@ -90,7 +90,7 @@ This extracts the 20 validation databases to `data/spider/database/` and all sub
 ---
 
 ### 6. Philosophical discussion (LLM-as-judge)
-Ten curated open-ended philosophical questions — free will, justice, moral realism, suffering, epistemic power, and more. No ground truth exists. A judge model scores each response 1–5 on five rubric axes: depth of reasoning, coherence, acknowledgment of multiple perspectives, originality of insight, and clarity of expression. The mean judge score becomes the benchmark score.
+Ten curated open-ended questions: free will, justice, moral realism, suffering, technology & freedom, lying, obligations to future generations, machine understanding, meaning through suffering, and knowledge & power. No ground truth exists — the rubric is the signal. A judge model scores each response 1–5 on five rubric axes: depth of reasoning, coherence, acknowledgment of multiple perspectives, originality of insight, and clarity of expression. The mean judge score, divided by 5.0, becomes the benchmark score.
 
 **Tells you:** how well does the model reason through open-ended, ambiguous problems with no single correct answer?
 
@@ -100,18 +100,29 @@ The judge is configured via `judge.provider` in `config.yaml` — see the [Judge
 
 ---
 
-### 7. BFCL — function calling / tool use
+### 7. BFCL (Berkeley Function-Calling Leaderboard) — function calling / tool use
 
-**`bfcl`** — the non-live, single-turn AST categories (`simple`, `multiple`,
-`parallel`, `parallel_multiple`). The model gets a request plus a set of
-function schemas and must emit the right call(s). Scored by BFCL's AST-match
-rule — function name plus every ground-truth parameter drawn from an
-acceptable-value set — reimplemented locally in `benchmarks/bfcl.py`.
+**`bfcl`** — the non-live, single-turn AST categories: `simple` (one function,
+no decoys), `multiple` (right function among distractors), `parallel`
+(several calls to the same function in one turn), and `parallel_multiple`
+(several calls across different functions). The model gets a request plus a
+set of function schemas and must emit the right call(s). Scored by BFCL's
+AST-match rule — function name plus every ground-truth parameter drawn from
+an acceptable-value set, not exact string match — reimplemented locally in
+`benchmarks/bfcl.py`.
 
 **`bfcl_irrelevance`** — the inverse. 240 requests that *no* available function
-can satisfy; a pass means the model called nothing. Without this, a model that
-fires a tool at every prompt scores identically to one with judgment, because
-nothing else in the suite penalises over-calling.
+can satisfy; a pass means the model called nothing and answered in plain text
+instead. Nothing else in this suite penalises over-calling, so without this
+category a model that fires a tool at every prompt scores identically to one
+with judgment — tool selection and tool restraint turn out to be separable
+skills that rank models differently. The system prompt states the opt-out
+explicitly, so this measures judgment rather than whether the model guessed
+declining was allowed. The characteristic failure is topical adjacency —
+reaching for a distance calculator when asked how long a drive takes, or a
+date lookup when asked a casualty count — a tool that matches the subject but
+cannot answer the question, which is exactly what a schema check passes and a
+result check catches.
 
 **Tells you:** can this model be trusted inside an agent loop — both to call
 the right tool, and to decline when no tool fits?
@@ -131,7 +142,16 @@ wheel. The HuggingFace dataset repo still carries only the v3 files, so
 
 Multi-turn/agentic categories are a separate benchmark
 (`bfcl_multi_turn_long_context`), disabled by default — one sample runs 4 turns
-and ~28 tool calls, measured at ~450–500s.
+and ~28 tool calls, measured at ~450–500s. It runs a multi-turn tool-call loop
+against a live, stateful simulated environment (file system, trading bot,
+vehicle controls, etc.), with extra state padding injected specifically to
+stress tracking across a long dialogue history: the model calls a function,
+gets a real result back, and continues for several turns. Scored by comparing
+the environment's final state after the model's run against the same
+environment driven by the ground-truth call sequence — not by inspecting
+individual calls. This is the benchmark most likely to actually separate
+large-context models from each other; everything else here is closer to
+single-shot.
 
 ---
 
@@ -576,7 +596,7 @@ python scoring/generate_report.py results/<timestamp>.json
 
 Two Rich tables print at the end of each run:
 
-**Accuracy table** — each cell is the mean score (0–100%) for that model on that benchmark. The OVERALL column is the mean across all benchmarks run.
+**Accuracy table** — each cell is the mean score (0–100%) for that model on that benchmark. The OVERALL column is the mean across the **7 core benchmarks only** (MMLU, ARC, GSM8K, HumanEval, MBPP, Spider, Philosophical) — never the optional/harder ones a model may additionally carry (BFCL, EvalPlus, LiveCodeBench). Those score lower by design on the same underlying problems, so folding them in would rank the most-thoroughly-tested models worse; they stay visible as their own columns instead. A model that hasn't run the full core set yet shows its OVERALL averaged over fewer benchmarks, marked accordingly, and is not directly comparable to a full row.
 
 **Speed table** — tokens/second and average latency per inference call. Relevant for deciding whether a model is fast enough for interactive or agentic use.
 
