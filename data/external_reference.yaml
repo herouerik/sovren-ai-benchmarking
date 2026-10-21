@@ -79,6 +79,7 @@ sources:
     - meta-models/Muse-Glimmer-30B
     - Qwen/Qwen3-Coder-30B-A3B-Instruct
     - nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16
+    - RecursiveSI/flint
 
 benchmarks:
 

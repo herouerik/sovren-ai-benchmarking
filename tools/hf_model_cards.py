@@ -188,6 +188,10 @@ def _family(label: str) -> str:
     return re.sub(r"[^a-z0-9]", "", label.lower())
 
 
+_PROSE_SCORE = re.compile(
+    r"(\d+(?:\.\d+)?)%\s+on\s+([A-Za-z][A-Za-z0-9 \-\.]*?)(?=,|\s+and\s|\.(?:\s|$))")
+
+
 def harvest(repos, aliases, verbose=False):
     """{benchmark_key: {model_label: {score, source, self_reported}}} across cards.
 
@@ -220,6 +224,20 @@ def harvest(repos, aliases, verbose=False):
                 out.setdefault(key, {})[model] = {
                     "score": round(val, 4), "source": repo, "self_reported": self_rep}
                 bench_seen[fam] = model
+                n += 1
+        if n == 0:
+            # Some cards (Flint) state their figures only in a sentence: "scores 54.9% on
+            # X, 89.7% on Y, and 74.2% on Z". Only the card's own model can be named that
+            # way, so these are always self-reported.
+            model = repo.split("/")[-1].title()
+            for pct, bench in _PROSE_SCORE.findall(md):
+                key = next((k for k, names in aliases.items()
+                            if bench.strip().lower() in [a.lower() for a in names]), None)
+                if key is None:
+                    continue
+                out.setdefault(key, {})[model] = {
+                    "score": round(float(pct) / 100, 4), "source": repo, "self_reported": True}
+                seen.setdefault(key, {})[_family(model)] = model
                 n += 1
         if verbose:
             extra = f", {sup} superseded/skipped" if sup else ""
