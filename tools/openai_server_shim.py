@@ -38,6 +38,7 @@ UPSTREAM = ""
 MODEL_NAME = ""
 SIZE_BYTES = 0
 CARD: dict = {}
+TEMPERATURE: float | None = None
 
 
 def _to_openai_messages(messages: list[dict]) -> list[dict]:
@@ -125,7 +126,7 @@ class Handler(BaseHTTPRequestHandler):
             "messages": _to_openai_messages(req.get("messages") or []),
             "stream": True,
             "stream_options": {"include_usage": True},
-            "temperature": opts.get("temperature", 0.0),
+            "temperature": TEMPERATURE if TEMPERATURE is not None else opts.get("temperature", 0.0),
             "max_tokens": opts.get("num_predict", 2048),
         }
         if "seed" in opts:
@@ -189,7 +190,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    global UPSTREAM, MODEL_NAME, SIZE_BYTES, CARD
+    global UPSTREAM, MODEL_NAME, SIZE_BYTES, CARD, TEMPERATURE
     ap = argparse.ArgumentParser()
     ap.add_argument("--upstream", required=True)
     ap.add_argument("--model", required=True, help="name reported to the harness; must match llama-server --alias")
@@ -199,11 +200,15 @@ def main():
     ap.add_argument("--parameter-count", type=int, required=True)
     ap.add_argument("--quantization", required=True)
     ap.add_argument("--context-length", type=int, required=True)
+    ap.add_argument("--temperature", type=float, default=None,
+                    help="override the temperature the harness sends (it always sends 0.0); "
+                         "for models whose card requires sampling")
     ap.add_argument("--port", type=int, default=8091)
     ap.add_argument("--host", default="127.0.0.1")
     args = ap.parse_args()
     UPSTREAM = args.upstream.rstrip("/")
     MODEL_NAME = args.model
+    TEMPERATURE = args.temperature
     SIZE_BYTES = os.path.getsize(args.gguf)
     CARD = {"architecture": args.architecture, "params": args.params,
             "parameter_count": args.parameter_count,

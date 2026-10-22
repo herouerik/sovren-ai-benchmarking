@@ -263,6 +263,10 @@ body::after{
 .bench-table thead th.sortable{cursor:pointer}
 .bench-table thead th.sortable:hover{color:var(--text)}
 .bench-table thead th.sort-active{color:var(--accent)}
+.bench-table thead th .th-sort{cursor:pointer}
+.bench-table thead th .th-sort:hover{color:var(--text)}
+.bench-table thead th .th-sort.sort-active{color:var(--accent)}
+.bench-table thead th .th-sort-date{margin-left:10px;font-size:.85em;opacity:.8}
 .sort-arrow{margin-left:3px;font-size:8px;display:inline-block;opacity:.85}
 </style>
 
@@ -607,6 +611,12 @@ function sortValue(m, col) {
     const mi = D.model_info?.[m];
     return (mi?.official_name || m).toLowerCase();
   }
+  if (col === 'updated') {
+    // When the model's benchmark results were last written; undated rows sort last.
+    const iso = D.model_timestamps?.[m] || PREV?.model_timestamps?.[m];
+    const t = iso ? Date.parse(iso) : NaN;
+    return Number.isNaN(t) ? null : t;
+  }
   if (col.startsWith('ext:')) {
     const c = extColumns().find(x => x.key === col);
     return c ? (c.hits[m]?.score ?? null) : null;
@@ -849,8 +859,22 @@ function renderTable() {
 
   const hr = document.createElement('tr');
   const thM = document.createElement('th');
-  thM.className = 'th-model'; thM.textContent = 'MODEL';
-  makeSortable(thM, 'model');
+  thM.className = 'th-model';
+  // Two sort targets in the one existing cell, so no column or width is added:
+  // MODEL sorts by name, DATE by when the model's results were last updated.
+  [['model', 'MODEL'], ['updated', 'DATE']].forEach(([key, label], i) => {
+    const sp = document.createElement('span');
+    sp.className = 'th-sort' + (i ? ' th-sort-date' : '') + (sortState.col === key ? ' sort-active' : '');
+    sp.textContent = label;
+    if (sortState.col === key) {
+      const arrow = document.createElement('span');
+      arrow.className = 'sort-arrow';
+      arrow.textContent = sortState.dir === 'asc' ? '▲' : '▼';
+      sp.appendChild(arrow);
+    }
+    sp.addEventListener('click', () => onHeaderClick(key));
+    thM.appendChild(sp);
+  });
   hr.appendChild(thM);
   // External columns sit immediately left of OVERALL: adjacent for comparison, but
   // outside the measured block and styled so they cannot be mistaken for our own.
