@@ -15,6 +15,9 @@ API the harness calls, the same approach as tools/needle_shim.py:
 Timings come from llama-server's own `timings` block, so decode tok/s is the
 server's number, not the shim's wall clock.
 
+Sampling: --temperature/--top-p/--top-k override what the harness sends, for
+benchmarking a model at its vendor-recommended settings as a separate row.
+
 Thinking: the shim advertises no `thinking` capability, so the harness never
 sends `think` and the model is benchmarked in whatever mode its chat template
 imposes. Flint's template always reasons; `reasoning_content` is surfaced as
@@ -38,7 +41,7 @@ UPSTREAM = ""
 MODEL_NAME = ""
 SIZE_BYTES = 0
 CARD: dict = {}
-TEMPERATURE: float | None = None
+SAMPLING: dict = {}
 
 
 def _to_openai_messages(messages: list[dict]) -> list[dict]:
@@ -126,9 +129,12 @@ class Handler(BaseHTTPRequestHandler):
             "messages": _to_openai_messages(req.get("messages") or []),
             "stream": True,
             "stream_options": {"include_usage": True},
-            "temperature": TEMPERATURE if TEMPERATURE is not None else opts.get("temperature", 0.0),
+            "temperature": opts.get("temperature", 0.0),
             "max_tokens": opts.get("num_predict", 2048),
         }
+        # A vendor-recommended sampler replaces the harness's temperature 0, which
+        # is a different (greedy) operating point for models tuned to sample.
+        body.update(SAMPLING)
         if "seed" in opts:
             body["seed"] = opts["seed"]
         if req.get("tools"):
@@ -190,7 +196,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    global UPSTREAM, MODEL_NAME, SIZE_BYTES, CARD, TEMPERATURE
+    global UPSTREAM, MODEL_NAME, SIZE_BYTES, CARD, SAMPLING
     ap = argparse.ArgumentParser()
     ap.add_argument("--upstream", required=True)
     ap.add_argument("--model", required=True, help="name reported to the harness; must match llama-server --alias")
@@ -200,19 +206,20 @@ def main():
     ap.add_argument("--parameter-count", type=int, required=True)
     ap.add_argument("--quantization", required=True)
     ap.add_argument("--context-length", type=int, required=True)
-    ap.add_argument("--temperature", type=float, default=None,
-                    help="override the temperature the harness sends (it always sends 0.0); "
-                         "for models whose card requires sampling")
+    ap.add_argument("--temperature", type=float)
+    ap.add_argument("--top-p", type=float)
+    ap.add_argument("--top-k", type=int)
     ap.add_argument("--port", type=int, default=8091)
     ap.add_argument("--host", default="127.0.0.1")
     args = ap.parse_args()
     UPSTREAM = args.upstream.rstrip("/")
     MODEL_NAME = args.model
-    TEMPERATURE = args.temperature
     SIZE_BYTES = os.path.getsize(args.gguf)
     CARD = {"architecture": args.architecture, "params": args.params,
             "parameter_count": args.parameter_count,
             "quantization_level": args.quantization, "context_length": args.context_length}
+    SAMPLING = {k: v for k, v in (("temperature", args.temperature), ("top_p", args.top_p),
+                                  ("top_k", args.top_k)) if v is not None}
     print(f"openai-server shim ({MODEL_NAME}) on http://{args.host}:{args.port} -> {UPSTREAM}")
     ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
 
