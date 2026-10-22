@@ -206,9 +206,13 @@ def main():
     ap.add_argument("--parameter-count", type=int, required=True)
     ap.add_argument("--quantization", required=True)
     ap.add_argument("--context-length", type=int, required=True)
-    ap.add_argument("--temperature", type=float)
-    ap.add_argument("--top-p", type=float)
-    ap.add_argument("--top-k", type=int)
+    ap.add_argument("--temperature", type=float,
+                    help="override the temperature the harness sends (it always sends 0.0); "
+                         "for models whose card requires sampling")
+    ap.add_argument("--top-p", type=float,
+                    help="nucleus sampling cutoff sent on every request; the harness sends none")
+    ap.add_argument("--top-k", type=int,
+                    help="top-k sampling cutoff sent on every request; the harness sends none")
     ap.add_argument("--port", type=int, default=8091)
     ap.add_argument("--host", default="127.0.0.1")
     args = ap.parse_args()
