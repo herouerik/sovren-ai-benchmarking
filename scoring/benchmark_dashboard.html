@@ -122,53 +122,55 @@ body::after{
 
 /* External score shown inline in the main grid. Deliberately unlike a measured cell:
    no heatmap fill, a dashed left rule, italic figure. It must never read as ours. */
-.bench-table thead th.th-ext{min-width:66px;border-left:1px dashed var(--border);
+.bench-table thead th.th-ext{min-width:50px;border-left:1px dashed var(--border);
   border-right:1px dashed var(--border)}
 .bench-table td.td-ext{border-left:1px dashed var(--border);
   border-right:1px dashed var(--border);background:rgba(200,104,30,.045);text-align:center}
-.td-ext .ext-num{font-style:italic;font-variant-numeric:tabular-nums;color:var(--accent);font-size:13px}
-.td-ext .ext-src{display:block;font-size:8.5px;letter-spacing:.06em;color:var(--dim);margin-top:1px}
+.td-ext .ext-num{font-style:italic;font-variant-numeric:tabular-nums;color:var(--accent);font-size:11px}
+.td-ext .ext-src{display:block;font-size:7px;letter-spacing:.06em;color:var(--dim);margin-top:0}
 .td-ext .ext-src.is-thirdparty{color:#9a7b3f}   /* competitor-reported: dimmer, not neutral */
 .td-ext .ext-none{color:var(--border);font-size:13px}
 
 .bench-table thead th{
   position:sticky;top:0;background:var(--bg);z-index:10;
-  padding:9px 12px;text-align:center;font-size:9px;letter-spacing:.13em;
+  padding:4px 6px;text-align:center;font-size:8px;letter-spacing:.1em;
   /* --muted on the near-black ground was 2.6:1 — below AA and unreadable at
      this size. --dim is 5.5:1 and still recessive against the data. */
   text-transform:uppercase;color:var(--dim);
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap
 }
-.bench-table thead th.th-model{text-align:left;min-width:185px}
-.bench-table thead th.th-overall{min-width:78px;border-right:2px solid var(--border)}
+.bench-table thead th.th-model{text-align:left;min-width:150px}
+.bench-table thead th.th-overall{min-width:58px;border-right:2px solid var(--border)}
 .bench-table tbody tr{border-bottom:1px solid var(--border);cursor:default}
 .bench-table tbody tr:hover{background:var(--surf2)}
 .bench-table tbody tr.is-active{background:var(--accentA)}
 .bench-table tbody td{border-right:1px solid var(--border);vertical-align:middle}
-.td-model{padding:13px 15px}
-.model-row{display:flex;align-items:center;gap:8px}
+.td-model{padding:3px 8px}
+.model-row{display:flex;align-items:center;gap:6px}
 .model-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.model-name{font-size:11px;color:var(--text);white-space:nowrap}
-.model-ts{font-size:9px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:2px}
-.model-tags{font-size:9px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:1px}
+.model-name{font-size:10px;color:var(--text);white-space:nowrap}
+.model-ts{font-size:8px;color:var(--dim);white-space:nowrap;letter-spacing:.02em;margin-top:0}
+.model-tags{font-size:8px;color:var(--acc);white-space:nowrap;letter-spacing:.02em;margin-top:0}
 /* Same size and colour as .model-name — this is the identifier you'd actually
    `ollama pull`, so it reads as a peer of the official name rather than a
    footnote. Kept in the mono face and bracketed to mark it as a code
    identifier; the brackets are pseudo-element content so they are not part
    of the text a copy-paste picks up. */
-.model-raw-tag{font-size:11px;color:var(--text);white-space:nowrap;font-family:var(--mono);margin-top:1px}
+.model-raw-tag{font-size:10px;color:var(--text);white-space:nowrap;font-family:var(--mono);margin-top:0}
 .model-raw-tag::before{content:'['}
 .model-raw-tag::after{content:']'}
-.model-host{font-size:8px;letter-spacing:.03em;border:1px solid currentColor;padding:0 4px;display:inline-block;margin-top:3px;margin-right:4px;border-radius:2px}
-.td-overall{text-align:center;padding:12px 8px;border-right:2px solid var(--border)}
-.overall-num{font-family:var(--serif);font-size:19px;font-variant-numeric:tabular-nums;color:inherit}
+.model-host{font-size:7px;letter-spacing:.03em;border:1px solid currentColor;padding:0 3px;display:inline-block;margin-top:1px;margin-right:4px;border-radius:2px}
+.td-overall{text-align:center;padding:3px 5px;border-right:2px solid var(--border)}
+.overall-num{font-family:var(--serif);font-size:14px;font-variant-numeric:tabular-nums;color:inherit}
 .overall-num.is-swapped{color:inherit}
-.td-score{text-align:center;padding:14px 8px;min-width:76px;transition:opacity .15s}
+.td-score{text-align:center;padding:3px 4px;min-width:52px;transition:opacity .15s}
 .td-score.is-swapped{background:rgba(165,140,28,0.08) !important}
-.score-num{font-family:var(--serif);font-size:15px;font-variant-numeric:tabular-nums;color:inherit;display:block}
-.score-num.is-swapped{color:inherit;font-size:11px}
-.score-n{font-size:8px;color:currentColor;opacity:.68;display:block;margin-top:1px}
-.score-swap{font-size:11px;color:currentColor;opacity:.85;display:block;margin-top:1px;letter-spacing:.02em}
+.score-num{font-family:var(--serif);font-size:12px;font-variant-numeric:tabular-nums;color:inherit;display:block}
+.score-num.is-swapped{color:inherit;font-size:10px}
+.score-se{font-size:7px;color:currentColor;opacity:.7;display:block;line-height:1.1;font-variant-numeric:tabular-nums;cursor:help}
+.rank-tie{color:var(--dim);margin-right:1px;cursor:help}
+.score-n{font-size:7px;color:currentColor;opacity:.68;display:block;margin-top:0;line-height:1.1}
+.score-swap{font-size:9px;color:currentColor;opacity:.85;display:block;margin-top:1px;letter-spacing:.02em}
 
 /* SIDEBAR */
 .sidebar{display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none}
@@ -417,7 +419,7 @@ const COLORS = ['#c8681e','#4a9e8a','#8a7ad4','#5a9ed4','#d4a84a','#7ad4c8','#d4
 // an entry here — add one only if a specific color is wanted for it.
 const HOST_COLOR_OVERRIDES = {
   'MacBook M4': '#c8681e',
-  'i9 GPU server': '#5a9ed4',
+  'Offsite NVIDIA server': '#5a9ed4',
 };
 function hostColor(host) {
   if (!host) return COLORS[0];
@@ -430,9 +432,13 @@ function hostColor(host) {
 }
 
 const BENCH_TIPS = {
+  overall_all: {
+    title: 'All-11 Score',
+    body: 'Mean accuracy across all 11 benchmarks (the 7 core plus BFCL, HumanEval+, MBPP+ and BFCL-irrelevance). Core-7 gives 3/7 of its weight to MMLU, ARC and GSM8K, which most strong models score ~100 on, and omits the harder columns where models differ. Shown only for models that have every one of the 11 with no swap-aborted cell — a partial average is a different statistic, so those rows show a dash. Compare rows by it only alongside the ± on OVERALL: differences smaller than that are noise.'
+  },
   overall: {
     title: 'Overall Score',
-    body: 'Mean accuracy across the 7 core benchmarks only (MMLU, ARC, GSM8K, HumanEval, MBPP, Spider, Philosophical) — never the optional/harder ones a model may additionally carry (BFCL, EvalPlus, LiveCodeBench). Those score lower by design on the same problems, so counting them would rank the most-thoroughly-tested models worse; they stay visible as their own columns instead. A "n/7 core" marker means this model has not run the full core set yet, so its overall is an average over fewer benchmarks and not directly comparable to a full row.'
+    body: 'Mean accuracy across the 7 core benchmarks only (MMLU, ARC, GSM8K, HumanEval, MBPP, Spider, Philosophical) — never the optional/harder ones a model may additionally carry (BFCL, EvalPlus, LiveCodeBench). Those score lower by design on the same problems, so counting them would rank the most-thoroughly-tested models worse; they stay visible as their own columns instead. The ± under each score is its sampling error (about one standard error): rows closer together than that are statistically tied. A "n/7 core" marker means this model has not run the full core set yet, so its overall is an average over fewer benchmarks and not directly comparable to a full row.'
   },
   mmlu: {
     title: 'Massive Multitask Language Understanding',
@@ -580,6 +586,40 @@ function overallCoverage(m) {
   return CORE_BENCHES.filter(b => sc[b] !== undefined && sc[b] !== null).length;
 }
 
+// Sampling error of OVERALL. Each benchmark is a proportion over n samples, so its variance is
+// p(1-p)/n; OVERALL is the mean of k of them, so its variance is the sum / k^2. p is shrunk
+// toward 0.5 by one pseudo-sample ((x+1)/(n+2)) so a 100% cell at n=20 still contributes
+// uncertainty instead of zero — the saturated MMLU/ARC/GSM8K cells are exactly where the
+// naive formula lies. Treats every cell as a binomial proportion, which a judge-scored
+// benchmark (Philosophical) is not, so read it as a floor on the real uncertainty.
+function overallSE(m) {
+  const sc = getScores(m);
+  if (!sc) return null;
+  const benches = CORE_BENCHES.filter(b => sc[b] !== undefined && sc[b] !== null);
+  if (!benches.length) return null;
+  let v = 0;
+  benches.forEach(b => {
+    const n = getSampleSize(m, b) || 20;
+    const p = (sc[b] * n + 1) / (n + 2);
+    v += p * (1 - p) / n;
+  });
+  return Math.sqrt(v) / benches.length;
+}
+
+// Second summary number, for when core-7 can't separate models. Core-7 gives 3/7 of its weight
+// to MMLU/ARC/GSM8K, which most strong models saturate, and leaves out the harder columns where
+// models actually differ. This averages ALL 11 benchmarks instead — but only for a model that
+// has every one of them with no swap-aborted cell; a partial average is not the same statistic
+// (the reason OVERALL only averages core), so any gap makes this null rather than a number.
+const ALL_BENCHES = [...CORE_BENCHES, 'bfcl', 'humaneval_plus', 'mbpp_plus', 'bfcl_irrelevance'];
+function overallAll(m) {
+  const sc = getScores(m);
+  if (!sc) return null;
+  const swapped = getSwapBenches(m);
+  if (ALL_BENCHES.some(b => sc[b] === undefined || sc[b] === null || swapped.includes(b))) return null;
+  return ALL_BENCHES.reduce((a, b) => a + sc[b], 0) / ALL_BENCHES.length;
+}
+
 function getTs(m) {
   const iso = D.model_timestamps?.[m] || PREV?.model_timestamps?.[m];
   if (!iso) return '';
@@ -621,6 +661,7 @@ function sortValue(m, col) {
     const c = extColumns().find(x => x.key === col);
     return c ? (c.hits[m]?.score ?? null) : null;
   }
+  if (col === 'overall_all') return overallAll(m);
   return col === 'overall' ? overallOf(m) : getScore(m, col);
 }
 
@@ -815,7 +856,7 @@ function renderStrip() {
   el.innerHTML = '';
   const models = allModels();
   // rank number only counts models that have scores
-  let rankIdx = 0;
+  let rankIdx = 0, prevRanked = null;
   models.forEach((m, i) => {
     const status = modelStatus(m);
     const ov     = overallOf(m);
@@ -824,6 +865,15 @@ function renderStrip() {
     const hasScore = ov >= 0;
     if (hasScore) rankIdx++;
     const rank = hasScore ? rankIdx : null;
+    // Tied with the model ranked just above it when the gap is inside their combined
+    // standard error, so a 0.1 difference does not read as a real placing.
+    let tied = false;
+    if (hasScore && prevRanked) {
+      const gap = Math.abs(prevRanked.ov - ov);
+      const se = Math.hypot(prevRanked.se || 0, overallSE(m) || 0);
+      tied = gap < se;
+    }
+    if (hasScore) prevRanked = { ov, se: overallSE(m) };
 
     const card = document.createElement('div');
     card.className    = `rank-card s-${status}${rank === 1 ? ' rank-first' : ''}`;
@@ -835,7 +885,7 @@ function renderStrip() {
 
     card.innerHTML +=
       `<div class="rank-top">` +
-        (rank ? `<span class="rank-num">#${rank}</span>` : '') +
+        (rank ? `<span class="rank-num">${tied ? '<span class="rank-tie" title="Statistically tied with the model ranked above (gap is inside the combined standard error)">≈</span>' : ''}#${rank}</span>` : '') +
         `<span class="rank-score${hasSwap(m)?' rank-score-swapped':''}">${hasScore ? (ov*100).toFixed(1) : '—'}</span>` +
         (hasSwap(m) ? '<span class="rank-swap">💀</span>' : '') +
         (hasScore && cov < CORE_BENCHES.length ? `<span class="rank-cov" title="Overall averaged over ${cov}/${CORE_BENCHES.length} core benchmarks only — not comparable to a full row">${cov}/${CORE_BENCHES.length}</span>` : '') +
@@ -892,6 +942,7 @@ function renderTable() {
     hr.appendChild(th);
   });
   hr.appendChild(makeTipTh('overall', 'OVERALL', 'th-overall'));
+  hr.appendChild(makeTipTh('overall_all', 'ALL-11', 'th-overall'));
   benches.forEach(b => hr.appendChild(makeTipTh(b, BENCH_LABELS[b]||b.toUpperCase())));
   thead.appendChild(hr);
 
@@ -982,12 +1033,26 @@ function renderTable() {
       tdOv.style.color = scoreFg(ov);   // ink that clears AA on this step
       const swap = hasSwap(m);
       tdOv.innerHTML = `<span class="overall-num${swap?' is-swapped':''}">${(ov*100).toFixed(1)}${swap?'💀':''}</span>` +
+        `<span class="score-se" title="Sampling error (~1 standard error). Rows closer than this are tied.">±${((overallSE(m)||0)*100).toFixed(1)}</span>` +
         (swap ? `<span class="score-swap">partial data</span>` : '') +
         (cov < CORE_BENCHES.length ? `<span class="score-swap" title="Averaged over ${cov}/${CORE_BENCHES.length} core benchmarks only">${cov}/${CORE_BENCHES.length} core</span>` : '');
     } else {
       tdOv.innerHTML = `<span class="overall-num" style="color:var(--border);font-size:13px">—</span>`;
     }
     tr.appendChild(tdOv);
+
+    const tdAll = document.createElement('td');
+    tdAll.className = 'td-overall';
+    const oa = overallAll(m);
+    if (oa !== null) {
+      tdAll.style.background = scoreBg(oa);
+      tdAll.style.color = scoreFg(oa);
+      tdAll.innerHTML = `<span class="overall-num">${(oa*100).toFixed(1)}</span>`;
+    } else {
+      tdAll.innerHTML = `<span class="overall-num" style="color:var(--border);font-size:13px"` +
+        ` title="Needs all 11 benchmarks with no swap-aborted cell">—</span>`;
+    }
+    tr.appendChild(tdAll);
 
     // Benchmark cells
     benches.forEach(b => {
