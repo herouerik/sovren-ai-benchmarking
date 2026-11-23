@@ -31,3 +31,7 @@ data/spider/
 
 # BFCL v4 dataset, extracted from the bfcl-eval wheel by prefetch_datasets.py
 data/bfcl_v4/
+
+# Per-run host configs (real addresses); only the example is tracked
+config.*.yaml
+!config.example.yaml
