@@ -77,6 +77,10 @@ def _clean(cell: str) -> str:
     is the specific label — 'Agentic coding' + 'SWE-bench Pro' must not become one word."""
     divs = re.findall(r"<div[^>]*>(.*?)</div>", cell, re.S)
     txt = divs[-1] if divs else cell
+    # A small-print harness note under the name ('SWEBench Verified<br><span>bash only</span>')
+    # is not part of the label; left in, it fuses into 'SWEBench Verifiedbash only' and no
+    # alias matches.
+    txt = re.sub(r"<br\s*/?>\s*<(span|sub|small)\b.*$", "", txt, flags=re.S | re.I)
     txt = html.unescape(_TAG.sub("", txt))
     return re.sub(r"\s+", " ", txt).replace("*", "").strip()
 

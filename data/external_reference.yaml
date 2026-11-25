@@ -80,6 +80,7 @@ sources:
     - Qwen/Qwen3-Coder-30B-A3B-Instruct
     - nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16
     - RecursiveSI/flint
+    - thinkingmachines/Inkling-2-Mini
 
 benchmarks:
 
@@ -158,6 +159,7 @@ benchmarks:
     aliases:
       - SWE-bench Multilingual
       - SWE Bench Multilingual
+      - SWEbench Multilingual
 
   # Further leaderboard slugs available with no code change, only a block here:
   # osWorldVerified, browseComp, arcAgi2, hle.
