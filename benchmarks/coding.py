@@ -13,7 +13,9 @@ def extract_code(response: str) -> str:
     match = re.search(r'```(?:python)?\n(.*?)```', response, re.DOTALL)
     if match:
         return match.group(1).strip()
-    return response.strip()
+    # An unpaired fence (only the closing or only the opening one) would be a syntax error in the executed code.
+    code = re.sub(r'\A```(?:python)?[ \t]*\n', '', response.strip())
+    return re.sub(r'\n```[ \t]*\Z', '', code).strip()
 
 
 def normalize_completion_indent(code: str) -> str:
